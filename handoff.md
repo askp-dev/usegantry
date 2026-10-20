@@ -28,8 +28,8 @@ The user's answers before the build started:
 |---|---|
 | 0. Monorepo scaffold + data seeds | ✅ Done |
 | 1. Context builder & parsers | ✅ Done and smoke-tested (see §4) |
-| 2. 37 static rules, scoring, compilers, CLI | ⏳ Not started (next) |
-| 3. MCP server, pentest runner, `init` | ⏳ Not started |
+| 2. 37 static rules, scoring, compilers, CLI | ✅ Done: 110 tests pass, typecheck clean, clean fixture 100/100 with 0 findings, 500-file cold scan ≈0.3–0.4 s |
+| 3. MCP server, pentest runner, `init` | ⏳ Not started (next) |
 | 4. Svelte UI, ui-server, VS Code extension | ⏳ Not started |
 | 5. Tests, perf benchmark, final verification | ⏳ Not started (fixture exists) |
 
@@ -78,8 +78,28 @@ The four spec files (`SPEC.md`, `DESIGN.md`, `RULES_SPEC.md`, `WEBSITE_SPEC.md`)
 | `packages/core/src/context/config.ts` | `loadConfig()` reads `preflight.config.json`, `.preflightrc(.json)` or the `package.json#preflight` key. Defaults are in `DEFAULT_CONFIG`. It infers open-source mode from a copyleft root license and fills productName/companyName/contactEmail from package.json. |
 | `packages/core/src/context/builder.ts` | `buildRepoContext(rootDir, {config, only, maxFiles})`. Does a single walk with a hard skip-list and binary filter, keeps lazy text, CodeIndex and ast-grep caches, and categorises files (server/frontend/sql/env/legal). It then builds deps (manifests → lockfiles → node_modules → seed DB, version-gated), env parsing, SQL+ORM table merge (SQL is authoritative for RLS), stack flags (supabase/prisma/drizzle/sqlalchemy/stripe/genAi/deployTarget), routes, sub-processors (from direct prod deps plus env keys) and the git SHA (read from `.git` with no subprocess), with per-phase `timings`. Internal extras hang off `ctx` as `(ctx as any).middleware`, `.prismaModels` and `.drizzleVars`. Exports `parseEnvFile`. |
 
-### Empty directories created (scaffold for remaining sprints)
-`packages/core/src/{bin,pentest,compilers,server,workers,util}`, `packages/core/src/rules/{security,privacy,legal,finops-ops}`, `packages/core/test`, `packages/ui/src/lib/{components,stores}`, `packages/ui/src/routes`, `packages/vscode-ext/src`.
+### Sprint 2 files (`packages/core/`)
+| Path | Purpose |
+|---|---|
+| `src/rules/helpers.ts` | `defineRule(meta, (ctx, emit) => …)`, `makeFinding` (blocking: CRITICAL always, HIGH with strict; sha1 `fingerprint`), `isSuppressed` (`preflight-ignore <IDS>` on the same or previous line, in any comment syntax, plus `config.ignoreRules`), `taintedVars(ci,a,b,extra,sourceRe)` (user input, or auth-derived when given `AUTH_*`), `routeBody`, `isWebhookRoute`, `openingTags` (brace-aware JSX/HTML tag scanner), `isGitIgnored`, `redact`/`redactUrl` (secrets never printed in full), `isPaidVendor`, `USER_INPUT_RE`, `USER_TABLE_RE`. |
+| `src/rules/{security,privacy,legal,finops-ops}/*.ts` | The 37 rules, with names and exports exactly per the registry. Each file has its regex vocabulary at the top, then a single `defineRule`; remediation prompts include `file:line`. |
+| `src/rules/index.ts` | `ALL_STATIC_RULES`, copied verbatim from RULES_SPEC 109–199. |
+| `src/workers/git-entropy.worker.ts` | Bun Worker: `git log -p -50 --unified=0`, SECRET_PATTERNS on `+` lines. Exports `scanDiff` for tests. The SEC-06 main side caps it at 1.5 s + 0.3 s and only starts it if `<root>/.git` exists. |
+| `src/engine.ts` | `runAudit(ctx, {strict, ruleIds, rules})`: rules run in `Promise.all` with per-rule error isolation (→ `report.errors`), fingerprint dedupe, suppression, sorting, scoring (−25/−10/−4, floor 0, per pillar), status, and per-rule timings (`timings["rule:SEC-01"]`). `audit(root, opts)` = build + run. `buildGraph` builds the 4-column graph: `page:<file>`, `route:<METHOD> <url>`, `table:<name>`, `vendor:<id>`. Findings attach via `nodeRef`, or by file and line range for routes. |
+| `src/compilers/legal-compiler.ts` + `legal-templates.ts` + `diff.ts` | `buildLegalManifest`, `compileLegalDocs(ctx,{apply})` → `{manifest, changes[{path,before,after,diff}]}`, `patchDocument` (rewrites only inside `<!-- PREFLIGHT:AUTO:X -->` and appends missing blocks), `renderBlock`, `docStackHash`, and `readLegalVersion`. Writes `src/lib/legal-version.ts` if the repo has `src/`, otherwise `lib/legal-version.ts`. `unifiedDiff` is an LCS line diff for `/api/legal/preview`. |
+| `src/compilers/checklist-writer.ts` | `READINESS_CHECKLIST.md`: only the `PREFLIGHT:AUTO:CHECKLIST` block is rewritten. |
+| `src/compilers/cert-generator.ts` + `pdf.ts` | Ed25519-signed certificate (see quirk 8). `generateCertificate(report,{outDir, allowBlocked, secret?, keyPath?})` throws `CertificateBlockedError` on blockers. `verifyCertificate(fragment, pubKey)`. Hand-rolled 1-page PDF 1.4 writer (Helvetica/Courier, correct xref). |
+| `src/compilers/vendor-pack.ts` | CycloneDX 1.5 `SBOM.json` (purls, licenses, sub-processors as `services`) and `DATA_FLOW.mermaid` (RoPA, from the graph). |
+| `src/reporters/{pretty,sarif}.ts` | Terminal output (honours NO_COLOR/TTY) and SARIF 2.1.0 (`security-severity`, `partialFingerprints`). |
+| `src/bin/cli.ts` | `scan` (`--json --sarif --strict --offline --write-checklist --verbose`), `legal [--apply]`, and `cert [--allow-blocked]` (also writes the vendor pack). `attack`/`ui`/`init`/`mcp` delegate to `src/{pentest/runner,server/ui-server,init,bin/mcp}.ts` → `main({path, flags})` and exit 2 if missing. Exit 1 on blockers. |
+| `src/index.ts` | Public API barrel. |
+| `test/{rules,helpers,engine,compilers,cli}.test.ts` | 110 tests: every rule fires on vulnerable-saas (expected file + evidence) **and** is silent on clean-saas. Also unit tests, compilers on temp copies, CLI exit codes, and the **SLA test** (cold CLI scan of 503 files with git history, asserted < 3000 ms). |
+
+### Empty directories still to fill
+`packages/core/src/{pentest,server,util}`, `packages/ui/src/lib/{components,stores}`, `packages/ui/src/routes`, `packages/vscode-ext/src`.
+
+### Clean fixture (`fixtures/clean-saas/`), the false-positive guard
+It's the same stack as vulnerable-saas, done right: owner-scoped RLS (including `ALTER … ENABLE RLS` for the Prisma tables), a `security_invoker` view, a definer fn with `search_path=''` + `auth.uid()`, and a private bucket. It has `requireUser()` before every mutation, owner-scoped `deleteMany`, a Zod-parsed body, rate limit + `max()` + `maxTokens`/`maxSteps`/`abortSignal`, a signature-verified, idempotent webhook with the full lifecycle, an atomic credit decrement, `/api/health` with `SELECT 1`/503, and account delete + export routes. It also has security headers, `src/env.ts`, a complete `.env.example`, consent-gated PostHog, DOMPurify, accessible markup, metadata/robots/sitemap, and `/privacy`, `/terms`, `/eula` linked from the footer. `legal/*.md` + `src/lib/legal-version.ts` were **generated by `preflight legal --apply`**. If you change detected vendors, PII or clauses, re-run it, or LEG-04 fires on the stale hash.
 
 ### Test fixture (`fixtures/vulnerable-saas/`), deliberately insecure
 This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger most rules:
@@ -127,51 +147,44 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
   bun -e 'import {buildRepoContext} from "./packages/core/src/context/builder.ts"; const c=await buildRepoContext("fixtures/vulnerable-saas"); console.log(c.timings, c.routes.map(r=>[r.method,r.urlPath,r.hasAuthGuard]))'
   bun run scripts/build-known-packages.ts   # regenerates data/known-packages.sqlite
   ```
-- `tsc --noEmit` has **not** been run (no `@types/bun` installed). Run `bun install && bun run typecheck` once network is available and fix any type errors.
+- **Sprint 2 (2026-10-20):**
+  - `bun test packages/core/test` gives 110 pass / 0 fail, and `bun run typecheck` is clean.
+  - Biome is clean on all Sprint 2 files.
+  - `bun run scan fixtures/vulnerable-saas --offline` scores 0, LAUNCH_BLOCKED, with 74 findings across all 37 rules in ≈30 ms (exit 1).
+  - `fixtures/clean-saas` scores 100, LAUNCH_READY, with 0 findings (exit 0).
+  - SLA: cold CLI scan of 503 files + git history takes 0.3–0.4 s wall.
 
 ### Known quirks to address
 1. `RouteNode.hasAuthGuard` is true when an auth call **appears** in the body (e.g. `renamePost` calls `getSession()` but never checks it). SEC-07 must do the **ordering/enforcement** check itself: auth call before the first mutation, plus a throw/return/redirect on failure. Don't rely only on `hasAuthGuard`.
 2. Table keys in `ctx.dbTables` are lowercased (`post`), while `route.dbTablesAccessed` uses the Prisma table name as declared (`Post`). Compare case-insensitively.
 3. `walk()` sorts files and caps at 20k. `ignorePaths` uses Bun.Glob patterns from config.
 4. Seed licenses are version-gated only through `license_from_major`. Lockfile/node_modules licenses always win.
+5. **Option name clash.** `BuildOptions.only` means *files* (incremental scans), while `AuditOptions.ruleIds` means *rule IDs*. `audit(root, opts)` passes the same object to both, so never reuse `only` for rules: it silently scanned zero files once.
+6. **The seed DB is small:** ~958 npm + 246 PyPI packages, with no `repo_url`/downloads/`created_at`. LEG-01 treats seed membership as trusted and skips the Levenshtein check for those packages. Unknown packages that aren't typosquats go to the live registry check (1.2 s timeout), which is skipped `--offline`, so they're left unverified rather than flagged. Run `seed:packages` with network to grow it to 50k.
+7. The test suite always uses `offline: true` (no network). The LEG-01 registry path (404 / <30 days with <500 weekly downloads) has no automated test yet. Add a stubbed-`fetch` test in Sprint 5.
+8. **Cert signing (spec conflict resolved toward the safer option):** the handoff said HMAC-SHA256, but WEBSITE_SPEC's static `/verify` page checks `crypto.subtle.verify("Ed25519", PUBLIC_KEY, …)`, and HMAC can't be verified publicly without leaking the secret. So certs use **Ed25519 over canonical JSON**.
+   - Key: `PREFLIGHT_CERT_SECRET` → seed = sha256(secret), which is deterministic for CI. Otherwise a generated `~/.preflight/cert.key` (PKCS8 PEM, 0600).
+   - URL: `${PREFLIGHT_VERIFY_BASE ?? "https://preflight-ai.dev"}/verify#<b64url payload>.<b64url sig>`. **The default domain is a placeholder.** Set the real one, and publish the public key the verify page trusts, when the website ships.
+9. **Interpretations, all on the stricter side:**
+   - SEC-01 also flags `auth.jwt()->'user_metadata'`. Prisma/Drizzle tables in Supabase projects must have `ALTER TABLE … ENABLE ROW LEVEL SECURITY` in a migration.
+   - SEC-09 fires if *either* the rate limit or the input/max_tokens cap is missing.
+   - PAY-02 doesn't count a plain `$transaction` as safe. It needs `decrement`, Serializable, `FOR UPDATE` or an `rpc`.
+   - OPS-02 flags any non-local Postgres URL on :5432 (including the Supabase session pooler) on serverless targets.
+   - LEG-03 needs a non-prechecked checkbox *and* a `CURRENT_LEGAL_VERSION` reference in code.
+   - SEC-04's bucket-name regex and PRIV-06's export-route regex were truncated in RULES_SPEC (markdown pipes), so I chose broad regexes (see the rule files).
+10. **Deliberate skips:**
+    - SEC-03 skips files that verify a webhook signature, because their ids come from a signed event (SEC-08 covers unverified webhooks).
+    - SEC-07 skips webhook routes (SEC-08 owns them) and trusts `hasAuthGuard` only when no auth call appears in the body (middleware, wrapper or `Depends`).
+    - SEC-06 skips git-ignored `.env*` files, because that's where secrets belong.
+11. **`bun build --compile` (Sprint 5).** The git worker is loaded via `new URL("../../workers/git-entropy.worker.ts", import.meta.url)`, and the CLI's `delegate()` uses dynamic paths. Both need to be passed as extra entrypoints (or switched to static imports) for the compiled binary. If the worker fails to start, SEC-06 just skips history.
+12. **Biome.** Sprint 1's `context/*.ts` files carry ~20 pre-existing lint findings (useTemplate, noAssignInExpressions). `biome check --write packages/core` reformats all of them, so run biome only on the files you touch.
+13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex.
 
 ---
 
 ## 5. Remaining work (in order)
 
-### Sprint 2: rules, scoring, compilers, CLI
-1. **`packages/core/src/rules/helpers.ts`**
-   - `makeFinding(rule, partial)` sets pillar/severity/blocking (CRITICAL → blocking; HIGH → blocking only with `--strict`) and a fingerprint (`sha1(rule+file+normalized evidence)`).
-   - Snippet helper.
-   - Inline suppression: `// preflight-ignore SEC-03` on the same or previous line, plus `config.ignoreRules`.
-2. **37 rule files**, named exactly as in the RULES_SPEC registry. Each exports a `RuleDefinition`:
-   - `security/sec-01-rls.ts` … `sec-12-sql-xss.ts`
-   - `privacy/priv-01-pii-logs.ts` … `priv-07-security-headers.ts`
-   - `legal/leg-01-slopsquatting.ts` … `leg-06-ai-disclaimer.ts`
-   - `finops-ops/fin-01…`, `pay-01…03`, `ops-01…04`, `a11y-01-interactive-dom.ts`, `seo-01-launch-meta.ts`
-   - Follow SPEC §4 for SEC-01/03/07, FIN-01 and PAY-02 exactly.
-   - **SEC-01** applies only when `ctx.stack.supabase` is true (Postgres without PostgREST isn't exposed).
-   - **LEG-01**: seed DB lookup, then a Levenshtein ≤1 check against `topPackages(eco,1000)`, only for names of length ≥4. Then an optional 1.2s-timeout registry lookup, skipped when `config.offline`; a 404 is CRITICAL, and so is `<30 days` old with `<500` weekly downloads. Skip `isLocal` deps.
-   - **LEG-02**: only when `config.mode === "commercial"` and only prod deps. Parse SPDX `OR` expressions and pass if any option is permissive.
-   - **SEC-06**: working tree scan with `SECRET_PATTERNS` plus entropy. Git history goes in `workers/git-entropy.worker.ts`: a Bun Worker running `git log -p -50`, with a timeout so the 3s SLA holds.
-3. **`rules/index.ts`**: the exact registry from RULES_SPEC.md.
-4. **`packages/core/src/engine.ts`** (or `audit.ts`): `runAudit(ctx, opts)` runs the rules in parallel (`Promise.all`) and isolates errors per rule. It applies scoring: start at 100, −25 CRITICAL, −10 HIGH, −4 MEDIUM, floor 0, with per-pillar scores. Status is `LAUNCH_READY` when score ≥ 90 and there are 0 blockers, `LAUNCH_BLOCKED` when there are any blockers, and `NEEDS_REVIEW` otherwise. It also builds the `DataFlowGraph` (4 columns per DESIGN Component 2) and returns `AuditReport`.
-5. **Compilers** in `packages/core/src/compilers/`:
-   - `legal-compiler.ts`:
-     - `buildLegalManifest(ctx)` and `compileLegalDocs()`.
-     - Non-destructive patching between `<!-- PREFLIGHT:AUTO:<BLOCK> -->` … `<!-- /PREFLIGHT:AUTO:<BLOCK> -->` markers. Blocks: SUBPROCESSORS, PII_TABLE, AI_SCHEDULE, NO_TRAINING, PCI, ERASURE, VERSION_META (holds the stack hash).
-     - Templates for `legal/privacy-policy.md`, `legal/eula.md` and `legal/terms.md`.
-     - Writes `src/lib/legal-version.ts` with `CURRENT_LEGAL_VERSION` and `LEGAL_STACK_HASH`.
-     - A unified-diff function for `/api/legal/preview`.
-     - Templates are not legal advice; say so in the CLI output and README.
-   - `checklist-writer.ts`: `READINESS_CHECKLIST.md`, keeping user content outside the auto block.
-   - `cert-generator.ts`: `LAUNCH_CERTIFICATE.html` styled with DESIGN tokens, and `LAUNCH_CERTIFICATE.pdf` from a hand-rolled minimal PDF 1.4 writer. HMAC-SHA256 signature over canonical JSON. The key comes from `PREFLIGHT_CERT_SECRET` or a generated `~/.preflight/cert.key`. Refuse to issue while there are blockers, unless `--allow-blocked` (then stamp it BLOCKED). Include a `/verify#payload.sig` URL (WEBSITE_SPEC).
-   - `vendor-pack.ts`: CycloneDX 1.5 `SBOM.json` and `DATA_FLOW.mermaid` (RoPA).
-6. **`packages/core/src/bin/cli.ts`**:
-   - Subcommands: `scan [path] [--json] [--sarif] [--strict] [--offline] [--write-checklist]`, `attack --target`, `legal [--apply]`, `cert`, `ui [--port 4400]`, `init`, `mcp` (delegates to `mcp.ts`).
-   - Pretty terminal output.
-   - Exit code 1 when there are blockers, for CI.
-7. **Tests** in `packages/core/test/`: one `bun test` per rule against `fixtures/vulnerable-saas`, plus a new `fixtures/clean-saas` that should score ≥90 with 0 blockers (false-positive guard).
+### Sprint 2 ✅ done: 37 rules, engine/scoring/graph, legal/checklist/cert/vendor-pack compilers, CLI and SARIF (see §3 'Sprint 2 files' and quirks 5–13).
 
 ### Sprint 3
 - **`bin/mcp.ts`**: newline-delimited JSON-RPC 2.0 over stdio. Methods: `initialize`, `notifications/initialized`, `ping`, `tools/list`, `tools/call`. Tools: `run_readiness_audit {path?, strict?, pillars?}`, `sync_stack_legal_docs {path?, apply?}`, `run_active_pentest {target, path?}`. Log to stderr only.
@@ -189,7 +202,7 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 
 ### Sprint 5: verification
 - `bun test`.
-- `scripts/bench.ts`: generate a 500-file synthetic repo and assert the cold full scan finishes in **< 3000 ms** (target 850–1400 ms).
+- `scripts/bench.ts` (`bun run bench`): wrap the existing SLA test in `test/cli.test.ts` (503 files, cold CLI, currently ≈0.4 s) as a standalone script that prints timings. Also add a stubbed-fetch test for the LEG-01 registry path (quirk 7).
 - Screenshot the lite UI with Playwright: Chromium is preinstalled in the cloud sandbox at `/opt/pw-browsers`.
 - `bun build --compile` smoke test.
 - Write the README.

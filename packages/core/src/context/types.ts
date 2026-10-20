@@ -263,6 +263,8 @@ export interface AuditReport {
   suppressed: number;
   graph: DataFlowGraph;
   stats: { files: number; routes: number; tables: number; dependencies: number; subprocessors: number };
+  /** Rules that threw; isolated so one bad rule never sinks the scan. */
+  errors?: Array<{ ruleId: string; message: string }>;
 }
 
 export interface DataFlowNode {
