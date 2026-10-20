@@ -1,0 +1,7 @@
+[install]
+exact = false
+optional = true
+
+[test]
+root = "packages/core/test"
+timeout = 20000

@@ -1,0 +1,12 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.codeActionsOnSave": { "source.organizeImports.biome": "explicit", "quickfix.biome": "explicit" },
+  "[svelte]": { "editor.defaultFormatter": "svelte.svelte-vscode" },
+  "[markdown]": { "editor.formatOnSave": false },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.associations": { "*.css": "tailwindcss" },
+  "files.exclude": { "**/node_modules": true, "_to_delete": true },
+  "search.exclude": { "**/node_modules": true, "**/dist": true, "data/**": true, "preflight-web/**": true, "**/bun.lock": true },
+  "errorLens.enabledDiagnosticLevels": ["error", "warning"]
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.bin
+.preflight/
+packages/core/dist/
+packages/vscode-ext/out/
+packages/vscode-ext/*.vsix
+.DS_Store
+_to_delete/
+.claude/settings.local.json

@@ -1,0 +1,18 @@
+{
+  "name": "@preflight/core",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "preflight": "./src/bin/cli.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/context/types.ts"
+  },
+  "scripts": {
+    "build": "bun build --compile --minify ./src/bin/cli.ts --outfile ./dist/preflight",
+    "build:all": "bun run scripts/build-binaries.ts",
+    "dev": "bun run ./src/bin/cli.ts"
+  },
+  "optionalDependencies": {
+    "@ast-grep/napi": "^0.36.0"
+  }
+}

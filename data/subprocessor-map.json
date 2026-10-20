@@ -1,0 +1,3794 @@
+{
+ "version": "2026.10.1",
+ "note": "Vendor legal-entity / DPA metadata. Verify URLs and entity names against each vendor's current legal pages before publishing a privacy policy.",
+ "vendorCount": 144,
+ "sdkCount": 434,
+ "vendors": [
+  {
+   "id": "stripe",
+   "entityName": "Stripe, Inc.",
+   "category": "Payments",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://stripe.com/privacy",
+   "dpaUrl": "https://stripe.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "stripe",
+     "@stripe/stripe-js",
+     "@stripe/react-stripe-js",
+     "@stripe/agent-toolkit"
+    ],
+    "pypi": [
+     "stripe"
+    ]
+   },
+   "envKeys": [
+    "STRIPE_"
+   ]
+  },
+  {
+   "id": "lemonsqueezy",
+   "entityName": "Lemon Squeezy, LLC",
+   "category": "Payments (Merchant of Record)",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.lemonsqueezy.com/privacy",
+   "dpaUrl": "https://www.lemonsqueezy.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "@lemonsqueezy/lemonsqueezy.js",
+     "lemonsqueezy.ts"
+    ],
+    "pypi": [
+     "lemonsqueezy"
+    ]
+   },
+   "envKeys": [
+    "LEMONSQUEEZY_",
+    "LEMON_SQUEEZY_"
+   ]
+  },
+  {
+   "id": "paddle",
+   "entityName": "Paddle.com Market Ltd",
+   "category": "Payments (Merchant of Record)",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://www.paddle.com/legal/privacy",
+   "dpaUrl": "https://www.paddle.com/legal/data-processing-agreement",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "@paddle/paddle-js",
+     "@paddle/paddle-node-sdk"
+    ],
+    "pypi": [
+     "paddle-python-sdk"
+    ]
+   },
+   "envKeys": [
+    "PADDLE_"
+   ]
+  },
+  {
+   "id": "paypal",
+   "entityName": "PayPal Holdings, Inc.",
+   "category": "Payments",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.paypal.com/us/legalhub/privacy-full",
+   "dpaUrl": "https://www.paypal.com/us/legalhub/data-protection",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "@paypal/paypal-js",
+     "@paypal/react-paypal-js",
+     "@paypal/checkout-server-sdk",
+     "@paypal/paypal-server-sdk"
+    ],
+    "pypi": [
+     "paypalrestsdk",
+     "paypal-server-sdk"
+    ]
+   },
+   "envKeys": [
+    "PAYPAL_"
+   ]
+  },
+  {
+   "id": "braintree",
+   "entityName": "Braintree (PayPal, Inc.)",
+   "category": "Payments",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.braintreepayments.com/legal/braintree-privacy-policy",
+   "dpaUrl": "https://www.braintreepayments.com/legal",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "braintree",
+     "braintree-web"
+    ],
+    "pypi": [
+     "braintree"
+    ]
+   },
+   "envKeys": [
+    "BRAINTREE_"
+   ]
+  },
+  {
+   "id": "square",
+   "entityName": "Block, Inc. (Square)",
+   "category": "Payments",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://squareup.com/us/en/legal/general/privacy",
+   "dpaUrl": "https://squareup.com/us/en/legal/general/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "square",
+     "@square/web-sdk"
+    ],
+    "pypi": [
+     "squareup"
+    ]
+   },
+   "envKeys": [
+    "SQUARE_"
+   ]
+  },
+  {
+   "id": "polar",
+   "entityName": "Polar Software, Inc.",
+   "category": "Payments (Merchant of Record)",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://polar.sh/legal/privacy",
+   "dpaUrl": "https://polar.sh/legal/terms",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "@polar-sh/sdk",
+     "@polar-sh/nextjs"
+    ],
+    "pypi": [
+     "polar-sdk"
+    ]
+   },
+   "envKeys": [
+    "POLAR_"
+   ]
+  },
+  {
+   "id": "razorpay",
+   "entityName": "Razorpay Software Pvt. Ltd.",
+   "category": "Payments",
+   "jurisdiction": "IN",
+   "privacyPolicyUrl": "https://razorpay.com/privacy/",
+   "dpaUrl": "https://razorpay.com/terms/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "razorpay"
+    ],
+    "pypi": [
+     "razorpay"
+    ]
+   },
+   "envKeys": [
+    "RAZORPAY_"
+   ]
+  },
+  {
+   "id": "adyen",
+   "entityName": "Adyen N.V.",
+   "category": "Payments",
+   "jurisdiction": "NL",
+   "privacyPolicyUrl": "https://www.adyen.com/policies-and-disclaimer/privacy-policy",
+   "dpaUrl": "https://www.adyen.com/legal/terms-and-conditions",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "payment"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "@adyen/api-library",
+     "@adyen/adyen-web"
+    ],
+    "pypi": [
+     "Adyen"
+    ]
+   },
+   "envKeys": [
+    "ADYEN_"
+   ]
+  },
+  {
+   "id": "revenuecat",
+   "entityName": "RevenueCat, Inc.",
+   "category": "Subscription Billing",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.revenuecat.com/privacy",
+   "dpaUrl": "https://www.revenuecat.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "payment",
+    "usage"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "@revenuecat/purchases-js",
+     "react-native-purchases"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "REVENUECAT_"
+   ]
+  },
+  {
+   "id": "openai",
+   "entityName": "OpenAI, L.L.C.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://openai.com/policies/privacy-policy",
+   "dpaUrl": "https://openai.com/policies/data-processing-addendum",
+   "dataProcessed": [
+    "content",
+    "identifiers"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "openai",
+     "@ai-sdk/openai"
+    ],
+    "pypi": [
+     "openai"
+    ]
+   },
+   "envKeys": [
+    "OPENAI_"
+   ]
+  },
+  {
+   "id": "anthropic",
+   "entityName": "Anthropic, PBC",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.anthropic.com/legal/privacy",
+   "dpaUrl": "https://www.anthropic.com/legal/data-processing-addendum",
+   "dataProcessed": [
+    "content",
+    "identifiers"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@anthropic-ai/sdk",
+     "@ai-sdk/anthropic",
+     "@anthropic-ai/claude-agent-sdk"
+    ],
+    "pypi": [
+     "anthropic"
+    ]
+   },
+   "envKeys": [
+    "ANTHROPIC_"
+   ]
+  },
+  {
+   "id": "google-ai",
+   "entityName": "Google LLC (Gemini API)",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://policies.google.com/privacy",
+   "dpaUrl": "https://cloud.google.com/terms/data-processing-addendum",
+   "dataProcessed": [
+    "content",
+    "identifiers"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@google/generative-ai",
+     "@google/genai",
+     "@ai-sdk/google",
+     "@ai-sdk/google-vertex"
+    ],
+    "pypi": [
+     "google-generativeai",
+     "google-genai"
+    ]
+   },
+   "envKeys": [
+    "GEMINI_",
+    "GOOGLE_GENERATIVE_AI_",
+    "GOOGLE_AI_"
+   ]
+  },
+  {
+   "id": "mistral",
+   "entityName": "Mistral AI SAS",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "FR",
+   "privacyPolicyUrl": "https://mistral.ai/terms#privacy-policy",
+   "dpaUrl": "https://mistral.ai/terms#data-processing-agreement",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@mistralai/mistralai",
+     "@ai-sdk/mistral"
+    ],
+    "pypi": [
+     "mistralai"
+    ]
+   },
+   "envKeys": [
+    "MISTRAL_"
+   ]
+  },
+  {
+   "id": "cohere",
+   "entityName": "Cohere Inc.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "CA",
+   "privacyPolicyUrl": "https://cohere.com/privacy",
+   "dpaUrl": "https://cohere.com/data-processing-addendum",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "cohere-ai",
+     "@ai-sdk/cohere"
+    ],
+    "pypi": [
+     "cohere"
+    ]
+   },
+   "envKeys": [
+    "COHERE_",
+    "CO_API_KEY"
+   ]
+  },
+  {
+   "id": "groq",
+   "entityName": "Groq, Inc.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://groq.com/privacy-policy/",
+   "dpaUrl": "https://groq.com/terms-of-use/",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "groq-sdk",
+     "@ai-sdk/groq"
+    ],
+    "pypi": [
+     "groq"
+    ]
+   },
+   "envKeys": [
+    "GROQ_"
+   ]
+  },
+  {
+   "id": "together",
+   "entityName": "Together Computer, Inc.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.together.ai/privacy",
+   "dpaUrl": "https://www.together.ai/terms-of-service",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "together-ai",
+     "@ai-sdk/togetherai"
+    ],
+    "pypi": [
+     "together"
+    ]
+   },
+   "envKeys": [
+    "TOGETHER_"
+   ]
+  },
+  {
+   "id": "fireworks",
+   "entityName": "Fireworks AI, Inc.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://fireworks.ai/privacy-policy",
+   "dpaUrl": "https://fireworks.ai/terms-of-service",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@ai-sdk/fireworks"
+    ],
+    "pypi": [
+     "fireworks-ai"
+    ]
+   },
+   "envKeys": [
+    "FIREWORKS_"
+   ]
+  },
+  {
+   "id": "deepseek",
+   "entityName": "Hangzhou DeepSeek Artificial Intelligence Co., Ltd.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "CN",
+   "privacyPolicyUrl": "https://platform.deepseek.com/downloads/DeepSeek%20Privacy%20Policy.html",
+   "dpaUrl": "https://platform.deepseek.com/downloads/DeepSeek%20Open%20Platform%20Terms%20of%20Service.html",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@ai-sdk/deepseek"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "DEEPSEEK_"
+   ]
+  },
+  {
+   "id": "xai",
+   "entityName": "X.AI LLC",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://x.ai/legal/privacy-policy",
+   "dpaUrl": "https://x.ai/legal/data-processing-addendum",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@ai-sdk/xai"
+    ],
+    "pypi": [
+     "xai-sdk"
+    ]
+   },
+   "envKeys": [
+    "XAI_",
+    "GROK_"
+   ]
+  },
+  {
+   "id": "perplexity",
+   "entityName": "Perplexity AI, Inc.",
+   "category": "AI / LLM Inference",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.perplexity.ai/hub/legal/privacy-policy",
+   "dpaUrl": "https://www.perplexity.ai/hub/legal/terms-of-service",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@ai-sdk/perplexity"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "PERPLEXITY_"
+   ]
+  },
+  {
+   "id": "openrouter",
+   "entityName": "OpenRouter, Inc.",
+   "category": "AI / LLM Routing",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://openrouter.ai/privacy",
+   "dpaUrl": "https://openrouter.ai/terms",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@openrouter/ai-sdk-provider",
+     "@openrouter/sdk"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "OPENROUTER_"
+   ]
+  },
+  {
+   "id": "replicate",
+   "entityName": "Replicate, Inc.",
+   "category": "AI / Model Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://replicate.com/privacy",
+   "dpaUrl": "https://replicate.com/terms",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "replicate"
+    ],
+    "pypi": [
+     "replicate"
+    ]
+   },
+   "envKeys": [
+    "REPLICATE_"
+   ]
+  },
+  {
+   "id": "huggingface",
+   "entityName": "Hugging Face, Inc.",
+   "category": "AI / Model Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://huggingface.co/privacy",
+   "dpaUrl": "https://huggingface.co/terms-of-service",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@huggingface/inference",
+     "@huggingface/hub"
+    ],
+    "pypi": [
+     "huggingface-hub"
+    ]
+   },
+   "envKeys": [
+    "HF_TOKEN",
+    "HUGGINGFACE_"
+   ]
+  },
+  {
+   "id": "elevenlabs",
+   "entityName": "Eleven Labs, Inc.",
+   "category": "AI / Voice Synthesis",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://elevenlabs.io/privacy-policy",
+   "dpaUrl": "https://elevenlabs.io/dpa",
+   "dataProcessed": [
+    "content",
+    "voice"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "elevenlabs",
+     "@elevenlabs/elevenlabs-js",
+     "@elevenlabs/react"
+    ],
+    "pypi": [
+     "elevenlabs"
+    ]
+   },
+   "envKeys": [
+    "ELEVENLABS_",
+    "ELEVEN_LABS_"
+   ]
+  },
+  {
+   "id": "deepgram",
+   "entityName": "Deepgram, Inc.",
+   "category": "AI / Speech-to-Text",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://deepgram.com/privacy",
+   "dpaUrl": "https://deepgram.com/dpa",
+   "dataProcessed": [
+    "content",
+    "voice"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@deepgram/sdk"
+    ],
+    "pypi": [
+     "deepgram-sdk"
+    ]
+   },
+   "envKeys": [
+    "DEEPGRAM_"
+   ]
+  },
+  {
+   "id": "assemblyai",
+   "entityName": "AssemblyAI, Inc.",
+   "category": "AI / Speech-to-Text",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.assemblyai.com/legal/privacy-policy",
+   "dpaUrl": "https://www.assemblyai.com/legal/data-processing-addendum",
+   "dataProcessed": [
+    "content",
+    "voice"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "assemblyai"
+    ],
+    "pypi": [
+     "assemblyai"
+    ]
+   },
+   "envKeys": [
+    "ASSEMBLYAI_"
+   ]
+  },
+  {
+   "id": "stability",
+   "entityName": "Stability AI Ltd",
+   "category": "AI / Image Generation",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://stability.ai/privacy-policy",
+   "dpaUrl": "https://stability.ai/terms-of-use",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@stability-ai/sdk"
+    ],
+    "pypi": [
+     "stability-sdk"
+    ]
+   },
+   "envKeys": [
+    "STABILITY_"
+   ]
+  },
+  {
+   "id": "fal",
+   "entityName": "Features & Labels, Inc. (fal.ai)",
+   "category": "AI / Model Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://fal.ai/privacy",
+   "dpaUrl": "https://fal.ai/terms",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@fal-ai/client",
+     "@fal-ai/serverless-client"
+    ],
+    "pypi": [
+     "fal-client"
+    ]
+   },
+   "envKeys": [
+    "FAL_KEY",
+    "FAL_"
+   ]
+  },
+  {
+   "id": "langchain",
+   "entityName": "LangChain, Inc. (LangSmith)",
+   "category": "AI / Observability",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.langchain.com/privacy-policy",
+   "dpaUrl": "https://www.langchain.com/terms-of-service",
+   "dataProcessed": [
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "langsmith",
+     "@langchain/langgraph-sdk"
+    ],
+    "pypi": [
+     "langsmith"
+    ]
+   },
+   "envKeys": [
+    "LANGCHAIN_",
+    "LANGSMITH_"
+   ]
+  },
+  {
+   "id": "langfuse",
+   "entityName": "Langfuse GmbH",
+   "category": "AI / Observability",
+   "jurisdiction": "DE",
+   "privacyPolicyUrl": "https://langfuse.com/privacy",
+   "dpaUrl": "https://langfuse.com/security/dpa",
+   "dataProcessed": [
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "langfuse",
+     "langfuse-node",
+     "@langfuse/client"
+    ],
+    "pypi": [
+     "langfuse"
+    ]
+   },
+   "envKeys": [
+    "LANGFUSE_"
+   ]
+  },
+  {
+   "id": "helicone",
+   "entityName": "Helicone, Inc.",
+   "category": "AI / Observability",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.helicone.ai/privacy",
+   "dpaUrl": "https://www.helicone.ai/terms",
+   "dataProcessed": [
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [
+    "AI_OUTPUT_DISCLAIMER",
+    "NO_TRAINING_API"
+   ],
+   "packages": {
+    "npm": [
+     "@helicone/helicone"
+    ],
+    "pypi": [
+     "helicone"
+    ]
+   },
+   "envKeys": [
+    "HELICONE_"
+   ]
+  },
+  {
+   "id": "pinecone",
+   "entityName": "Pinecone Systems, Inc.",
+   "category": "Vector Database",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.pinecone.io/privacy/",
+   "dpaUrl": "https://www.pinecone.io/legal/dpa/",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@pinecone-database/pinecone"
+    ],
+    "pypi": [
+     "pinecone",
+     "pinecone-client"
+    ]
+   },
+   "envKeys": [
+    "PINECONE_"
+   ]
+  },
+  {
+   "id": "weaviate",
+   "entityName": "Weaviate B.V.",
+   "category": "Vector Database",
+   "jurisdiction": "NL",
+   "privacyPolicyUrl": "https://weaviate.io/privacy",
+   "dpaUrl": "https://weaviate.io/service/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "weaviate-client",
+     "weaviate-ts-client"
+    ],
+    "pypi": [
+     "weaviate-client"
+    ]
+   },
+   "envKeys": [
+    "WEAVIATE_"
+   ]
+  },
+  {
+   "id": "qdrant",
+   "entityName": "Qdrant Solutions GmbH",
+   "category": "Vector Database",
+   "jurisdiction": "DE",
+   "privacyPolicyUrl": "https://qdrant.tech/legal/privacy-policy/",
+   "dpaUrl": "https://qdrant.tech/legal/dpa/",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@qdrant/js-client-rest"
+    ],
+    "pypi": [
+     "qdrant-client"
+    ]
+   },
+   "envKeys": [
+    "QDRANT_"
+   ]
+  },
+  {
+   "id": "supabase",
+   "entityName": "Supabase, Inc.",
+   "category": "Database, Auth & Storage Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://supabase.com/privacy",
+   "dpaUrl": "https://supabase.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@supabase/supabase-js",
+     "@supabase/ssr",
+     "@supabase/auth-helpers-nextjs",
+     "@supabase/auth-ui-react"
+    ],
+    "pypi": [
+     "supabase"
+    ]
+   },
+   "envKeys": [
+    "SUPABASE_",
+    "NEXT_PUBLIC_SUPABASE_"
+   ]
+  },
+  {
+   "id": "firebase",
+   "entityName": "Google LLC (Firebase)",
+   "category": "Database, Auth & Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://firebase.google.com/support/privacy",
+   "dpaUrl": "https://firebase.google.com/terms/data-processing-terms",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials",
+    "content",
+    "device"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "firebase",
+     "firebase-admin",
+     "@firebase/app",
+     "reactfire"
+    ],
+    "pypi": [
+     "firebase-admin"
+    ]
+   },
+   "envKeys": [
+    "FIREBASE_",
+    "NEXT_PUBLIC_FIREBASE_"
+   ]
+  },
+  {
+   "id": "neon",
+   "entityName": "Neon, Inc. (Databricks)",
+   "category": "Database Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://neon.com/privacy-policy",
+   "dpaUrl": "https://neon.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@neondatabase/serverless"
+    ],
+    "pypi": [
+     "neon-api"
+    ]
+   },
+   "envKeys": [
+    "NEON_"
+   ]
+  },
+  {
+   "id": "planetscale",
+   "entityName": "PlanetScale, Inc.",
+   "category": "Database Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://planetscale.com/legal/privacy",
+   "dpaUrl": "https://planetscale.com/legal/data-processing-addendum",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@planetscale/database"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "PLANETSCALE_"
+   ]
+  },
+  {
+   "id": "turso",
+   "entityName": "ChiselStrike, Inc. (Turso)",
+   "category": "Database Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://turso.tech/privacy-policy",
+   "dpaUrl": "https://turso.tech/terms-of-service",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@libsql/client"
+    ],
+    "pypi": [
+     "libsql-client",
+     "libsql"
+    ]
+   },
+   "envKeys": [
+    "TURSO_"
+   ]
+  },
+  {
+   "id": "mongodb",
+   "entityName": "MongoDB, Inc. (Atlas)",
+   "category": "Database Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.mongodb.com/legal/privacy/privacy-policy",
+   "dpaUrl": "https://www.mongodb.com/legal/data-processing-agreement",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "mongodb",
+     "mongoose"
+    ],
+    "pypi": [
+     "pymongo",
+     "motor"
+    ]
+   },
+   "envKeys": [
+    "MONGODB_",
+    "MONGO_URI",
+    "MONGO_URL"
+   ]
+  },
+  {
+   "id": "upstash",
+   "entityName": "Upstash, Inc.",
+   "category": "Serverless Redis / Queue",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://upstash.com/trust/privacy.pdf",
+   "dpaUrl": "https://upstash.com/trust/dpa.pdf",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@upstash/redis",
+     "@upstash/ratelimit",
+     "@upstash/qstash",
+     "@upstash/vector"
+    ],
+    "pypi": [
+     "upstash-redis",
+     "upstash-ratelimit"
+    ]
+   },
+   "envKeys": [
+    "UPSTASH_",
+    "KV_REST_API_"
+   ]
+  },
+  {
+   "id": "redis",
+   "entityName": "Redis Ltd. (Redis Cloud)",
+   "category": "Cache Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://redis.io/legal/privacy-policy/",
+   "dpaUrl": "https://redis.io/legal/data-processing-addendum/",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@redis/client"
+    ],
+    "pypi": [
+     "redis-cloud"
+    ]
+   },
+   "envKeys": [
+    "REDIS_CLOUD_"
+   ]
+  },
+  {
+   "id": "convex",
+   "entityName": "Convex, Inc.",
+   "category": "Backend-as-a-Service",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.convex.dev/legal/privacy",
+   "dpaUrl": "https://www.convex.dev/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "convex"
+    ],
+    "pypi": [
+     "convex"
+    ]
+   },
+   "envKeys": [
+    "CONVEX_",
+    "NEXT_PUBLIC_CONVEX_"
+   ]
+  },
+  {
+   "id": "appwrite",
+   "entityName": "Appwrite Code Ltd.",
+   "category": "Backend-as-a-Service",
+   "jurisdiction": "IL",
+   "privacyPolicyUrl": "https://appwrite.io/privacy",
+   "dpaUrl": "https://appwrite.io/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "appwrite",
+     "node-appwrite"
+    ],
+    "pypi": [
+     "appwrite"
+    ]
+   },
+   "envKeys": [
+    "APPWRITE_"
+   ]
+  },
+  {
+   "id": "pocketbase",
+   "entityName": "PocketBase (self-hosted)",
+   "category": "Backend-as-a-Service",
+   "jurisdiction": "Self-hosted",
+   "privacyPolicyUrl": "https://pocketbase.io/",
+   "dpaUrl": "https://pocketbase.io/",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "pocketbase"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "POCKETBASE_"
+   ]
+  },
+  {
+   "id": "clerk",
+   "entityName": "Clerk, Inc.",
+   "category": "Authentication",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://clerk.com/legal/privacy",
+   "dpaUrl": "https://clerk.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials",
+    "device"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@clerk/nextjs",
+     "@clerk/clerk-react",
+     "@clerk/clerk-sdk-node",
+     "@clerk/backend",
+     "@clerk/express",
+     "@clerk/sveltekit"
+    ],
+    "pypi": [
+     "clerk-backend-api"
+    ]
+   },
+   "envKeys": [
+    "CLERK_",
+    "NEXT_PUBLIC_CLERK_"
+   ]
+  },
+  {
+   "id": "auth0",
+   "entityName": "Auth0, Inc. (Okta)",
+   "category": "Authentication",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.okta.com/privacy-policy/",
+   "dpaUrl": "https://www.okta.com/trustandcompliance/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials",
+    "device"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@auth0/nextjs-auth0",
+     "@auth0/auth0-react",
+     "auth0",
+     "@auth0/auth0-spa-js"
+    ],
+    "pypi": [
+     "auth0-python"
+    ]
+   },
+   "envKeys": [
+    "AUTH0_"
+   ]
+  },
+  {
+   "id": "okta",
+   "entityName": "Okta, Inc.",
+   "category": "Authentication",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.okta.com/privacy-policy/",
+   "dpaUrl": "https://www.okta.com/trustandcompliance/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@okta/okta-auth-js",
+     "@okta/okta-react"
+    ],
+    "pypi": [
+     "okta"
+    ]
+   },
+   "envKeys": [
+    "OKTA_"
+   ]
+  },
+  {
+   "id": "workos",
+   "entityName": "WorkOS, Inc.",
+   "category": "Authentication / SSO",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://workos.com/legal/privacy",
+   "dpaUrl": "https://workos.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@workos-inc/node",
+     "@workos-inc/authkit-nextjs"
+    ],
+    "pypi": [
+     "workos"
+    ]
+   },
+   "envKeys": [
+    "WORKOS_"
+   ]
+  },
+  {
+   "id": "stytch",
+   "entityName": "Stytch, Inc.",
+   "category": "Authentication",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://stytch.com/legal/privacy-policy",
+   "dpaUrl": "https://stytch.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "stytch",
+     "@stytch/nextjs",
+     "@stytch/react"
+    ],
+    "pypi": [
+     "stytch"
+    ]
+   },
+   "envKeys": [
+    "STYTCH_"
+   ]
+  },
+  {
+   "id": "kinde",
+   "entityName": "Kinde Australia Pty Ltd",
+   "category": "Authentication",
+   "jurisdiction": "AU",
+   "privacyPolicyUrl": "https://kinde.com/legal/privacy-policy/",
+   "dpaUrl": "https://kinde.com/legal/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@kinde-oss/kinde-auth-nextjs",
+     "@kinde-oss/kinde-typescript-sdk"
+    ],
+    "pypi": [
+     "kinde-python-sdk"
+    ]
+   },
+   "envKeys": [
+    "KINDE_"
+   ]
+  },
+  {
+   "id": "descope",
+   "entityName": "Descope, Inc.",
+   "category": "Authentication",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.descope.com/privacy",
+   "dpaUrl": "https://www.descope.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "@descope/nextjs-sdk",
+     "@descope/node-sdk"
+    ],
+    "pypi": [
+     "descope"
+    ]
+   },
+   "envKeys": [
+    "DESCOPE_"
+   ]
+  },
+  {
+   "id": "magic",
+   "entityName": "Magic Labs, Inc.",
+   "category": "Authentication (Passwordless)",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://magic.link/legal/privacy-policy",
+   "dpaUrl": "https://magic.link/legal/terms-of-service",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "magic-sdk",
+     "@magic-sdk/admin"
+    ],
+    "pypi": [
+     "magic-admin"
+    ]
+   },
+   "envKeys": [
+    "MAGIC_"
+   ]
+  },
+  {
+   "id": "resend",
+   "entityName": "Resend, Inc.",
+   "category": "Transactional Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://resend.com/legal/privacy-policy",
+   "dpaUrl": "https://resend.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "resend"
+    ],
+    "pypi": [
+     "resend"
+    ]
+   },
+   "envKeys": [
+    "RESEND_"
+   ]
+  },
+  {
+   "id": "sendgrid",
+   "entityName": "Twilio Inc. (SendGrid)",
+   "category": "Transactional Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.twilio.com/en-us/legal/privacy",
+   "dpaUrl": "https://www.twilio.com/en-us/legal/data-protection-addendum",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@sendgrid/mail",
+     "@sendgrid/client"
+    ],
+    "pypi": [
+     "sendgrid"
+    ]
+   },
+   "envKeys": [
+    "SENDGRID_"
+   ]
+  },
+  {
+   "id": "postmark",
+   "entityName": "ActiveCampaign, LLC (Postmark)",
+   "category": "Transactional Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://postmarkapp.com/privacy-policy",
+   "dpaUrl": "https://postmarkapp.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "postmark"
+    ],
+    "pypi": [
+     "postmarker"
+    ]
+   },
+   "envKeys": [
+    "POSTMARK_"
+   ]
+  },
+  {
+   "id": "mailgun",
+   "entityName": "Sinch America, Inc. (Mailgun)",
+   "category": "Transactional Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.mailgun.com/legal/privacy-policy/",
+   "dpaUrl": "https://www.mailgun.com/legal/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "mailgun.js",
+     "mailgun-js"
+    ],
+    "pypi": [
+     "mailgun"
+    ]
+   },
+   "envKeys": [
+    "MAILGUN_"
+   ]
+  },
+  {
+   "id": "aws-ses",
+   "entityName": "Amazon Web Services, Inc. (SES)",
+   "category": "Transactional Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://aws.amazon.com/privacy/",
+   "dpaUrl": "https://d1.awsstatic.com/legal/aws-dpa/aws-dpa.pdf",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@aws-sdk/client-ses",
+     "@aws-sdk/client-sesv2"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "SES_"
+   ]
+  },
+  {
+   "id": "loops",
+   "entityName": "Loops Inc.",
+   "category": "Marketing Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://loops.so/privacy",
+   "dpaUrl": "https://loops.so/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "loops"
+    ],
+    "pypi": [
+     "loops-so"
+    ]
+   },
+   "envKeys": [
+    "LOOPS_"
+   ]
+  },
+  {
+   "id": "mailchimp",
+   "entityName": "Intuit Inc. (Mailchimp)",
+   "category": "Marketing Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.intuit.com/privacy/statement/",
+   "dpaUrl": "https://mailchimp.com/legal/data-processing-addendum/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@mailchimp/mailchimp_marketing",
+     "@mailchimp/mailchimp_transactional"
+    ],
+    "pypi": [
+     "mailchimp-marketing",
+     "mailchimp3"
+    ]
+   },
+   "envKeys": [
+    "MAILCHIMP_"
+   ]
+  },
+  {
+   "id": "convertkit",
+   "entityName": "ConvertKit LLC (Kit)",
+   "category": "Marketing Email",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://kit.com/privacy",
+   "dpaUrl": "https://kit.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "convertkit-node",
+     "@kit/sdk"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "CONVERTKIT_",
+    "KIT_API_"
+   ]
+  },
+  {
+   "id": "customerio",
+   "entityName": "Peaberry Software, Inc. (Customer.io)",
+   "category": "Marketing Automation",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://customer.io/legal/privacy-policy",
+   "dpaUrl": "https://customer.io/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "customerio-node",
+     "@customerio/cdp-analytics-browser"
+    ],
+    "pypi": [
+     "customerio"
+    ]
+   },
+   "envKeys": [
+    "CUSTOMERIO_"
+   ]
+  },
+  {
+   "id": "twilio",
+   "entityName": "Twilio Inc.",
+   "category": "SMS / Voice",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.twilio.com/en-us/legal/privacy",
+   "dpaUrl": "https://www.twilio.com/en-us/legal/data-protection-addendum",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "twilio",
+     "@twilio/voice-sdk",
+     "@twilio/conversations"
+    ],
+    "pypi": [
+     "twilio"
+    ]
+   },
+   "envKeys": [
+    "TWILIO_"
+   ]
+  },
+  {
+   "id": "vonage",
+   "entityName": "Vonage Holdings Corp.",
+   "category": "SMS / Voice",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.vonage.com/legal/privacy-policy/",
+   "dpaUrl": "https://www.vonage.com/legal/data-processing-agreement/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@vonage/server-sdk"
+    ],
+    "pypi": [
+     "vonage"
+    ]
+   },
+   "envKeys": [
+    "VONAGE_"
+   ]
+  },
+  {
+   "id": "novu",
+   "entityName": "Novu, Inc.",
+   "category": "Notifications",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://novu.co/privacy",
+   "dpaUrl": "https://novu.co/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@novu/node",
+     "@novu/api",
+     "@novu/react"
+    ],
+    "pypi": [
+     "novu"
+    ]
+   },
+   "envKeys": [
+    "NOVU_"
+   ]
+  },
+  {
+   "id": "knock",
+   "entityName": "Knock Labs, Inc.",
+   "category": "Notifications",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://knock.app/privacy",
+   "dpaUrl": "https://knock.app/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@knocklabs/node",
+     "@knocklabs/react"
+    ],
+    "pypi": [
+     "knockapi"
+    ]
+   },
+   "envKeys": [
+    "KNOCK_"
+   ]
+  },
+  {
+   "id": "onesignal",
+   "entityName": "OneSignal, Inc.",
+   "category": "Push Notifications",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://onesignal.com/privacy_policy",
+   "dpaUrl": "https://onesignal.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "onesignal-node",
+     "react-onesignal",
+     "@onesignal/node-onesignal"
+    ],
+    "pypi": [
+     "onesignal-sdk"
+    ]
+   },
+   "envKeys": [
+    "ONESIGNAL_"
+   ]
+  },
+  {
+   "id": "expo",
+   "entityName": "650 Industries, Inc. (Expo)",
+   "category": "Push Notifications & Builds",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://expo.dev/privacy",
+   "dpaUrl": "https://expo.dev/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "expo-notifications",
+     "expo-server-sdk",
+     "expo-updates"
+    ],
+    "pypi": [
+     "exponent-server-sdk"
+    ]
+   },
+   "envKeys": [
+    "EXPO_"
+   ]
+  },
+  {
+   "id": "pusher",
+   "entityName": "Pusher Ltd (MessageBird)",
+   "category": "Realtime Messaging",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://pusher.com/legal/privacy-policy",
+   "dpaUrl": "https://pusher.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "pusher",
+     "pusher-js"
+    ],
+    "pypi": [
+     "pusher"
+    ]
+   },
+   "envKeys": [
+    "PUSHER_"
+   ]
+  },
+  {
+   "id": "ably",
+   "entityName": "Ably Real-time Ltd",
+   "category": "Realtime Messaging",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://ably.com/legal/privacy",
+   "dpaUrl": "https://ably.com/legal/data-processing-addendum",
+   "dataProcessed": [
+    "identifiers",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "ably"
+    ],
+    "pypi": [
+     "ably"
+    ]
+   },
+   "envKeys": [
+    "ABLY_"
+   ]
+  },
+  {
+   "id": "liveblocks",
+   "entityName": "Liveblocks, Inc.",
+   "category": "Realtime Collaboration",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://liveblocks.io/privacy",
+   "dpaUrl": "https://liveblocks.io/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@liveblocks/client",
+     "@liveblocks/react",
+     "@liveblocks/node"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "LIVEBLOCKS_"
+   ]
+  },
+  {
+   "id": "stream",
+   "entityName": "Stream.io, Inc.",
+   "category": "Chat & Activity Feeds",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://getstream.io/legal/privacy/",
+   "dpaUrl": "https://getstream.io/legal/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "stream-chat",
+     "stream-chat-react",
+     "@stream-io/video-react-sdk",
+     "getstream"
+    ],
+    "pypi": [
+     "stream-chat",
+     "getstream"
+    ]
+   },
+   "envKeys": [
+    "STREAM_"
+   ]
+  },
+  {
+   "id": "livekit",
+   "entityName": "LiveKit, Inc.",
+   "category": "Realtime Audio/Video",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://livekit.io/legal/privacy-policy",
+   "dpaUrl": "https://livekit.io/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "content",
+    "voice"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "livekit-client",
+     "livekit-server-sdk",
+     "@livekit/components-react"
+    ],
+    "pypi": [
+     "livekit",
+     "livekit-api"
+    ]
+   },
+   "envKeys": [
+    "LIVEKIT_"
+   ]
+  },
+  {
+   "id": "daily",
+   "entityName": "Daily.co, Inc.",
+   "category": "Realtime Audio/Video",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.daily.co/legal/privacy/",
+   "dpaUrl": "https://www.daily.co/legal/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "content",
+    "voice"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@daily-co/daily-js",
+     "@daily-co/daily-react"
+    ],
+    "pypi": [
+     "daily-python"
+    ]
+   },
+   "envKeys": [
+    "DAILY_"
+   ]
+  },
+  {
+   "id": "posthog",
+   "entityName": "PostHog, Inc.",
+   "category": "Product Analytics & Session Replay",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://posthog.com/privacy",
+   "dpaUrl": "https://posthog.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "posthog-js",
+     "posthog-node",
+     "posthog-react-native"
+    ],
+    "pypi": [
+     "posthog"
+    ]
+   },
+   "envKeys": [
+    "POSTHOG_",
+    "NEXT_PUBLIC_POSTHOG_"
+   ]
+  },
+  {
+   "id": "google-analytics",
+   "entityName": "Google LLC (Google Analytics)",
+   "category": "Web Analytics",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://policies.google.com/privacy",
+   "dpaUrl": "https://business.safety.google/adsprocessorterms/",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device",
+    "location"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@next/third-parties",
+     "react-ga4",
+     "vue-gtag",
+     "ga-4-react",
+     "@analytics/google-analytics"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "NEXT_PUBLIC_GA_",
+    "GA_MEASUREMENT_ID",
+    "NEXT_PUBLIC_GOOGLE_ANALYTICS"
+   ]
+  },
+  {
+   "id": "vercel-analytics",
+   "entityName": "Vercel Inc. (Web Analytics)",
+   "category": "Web Analytics",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://vercel.com/legal/privacy-policy",
+   "dpaUrl": "https://vercel.com/legal/dpa",
+   "dataProcessed": [
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@vercel/analytics",
+     "@vercel/speed-insights"
+    ],
+    "pypi": []
+   },
+   "envKeys": []
+  },
+  {
+   "id": "mixpanel",
+   "entityName": "Mixpanel, Inc.",
+   "category": "Product Analytics",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://mixpanel.com/legal/privacy-policy/",
+   "dpaUrl": "https://mixpanel.com/legal/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "mixpanel",
+     "mixpanel-browser"
+    ],
+    "pypi": [
+     "mixpanel"
+    ]
+   },
+   "envKeys": [
+    "MIXPANEL_",
+    "NEXT_PUBLIC_MIXPANEL_"
+   ]
+  },
+  {
+   "id": "amplitude",
+   "entityName": "Amplitude, Inc.",
+   "category": "Product Analytics",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://amplitude.com/privacy",
+   "dpaUrl": "https://amplitude.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@amplitude/analytics-browser",
+     "@amplitude/analytics-node",
+     "amplitude-js"
+    ],
+    "pypi": [
+     "amplitude-analytics"
+    ]
+   },
+   "envKeys": [
+    "AMPLITUDE_"
+   ]
+  },
+  {
+   "id": "segment",
+   "entityName": "Twilio Inc. (Segment)",
+   "category": "Customer Data Platform",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.twilio.com/en-us/legal/privacy",
+   "dpaUrl": "https://www.twilio.com/en-us/legal/data-protection-addendum",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@segment/analytics-next",
+     "@segment/analytics-node",
+     "analytics-node"
+    ],
+    "pypi": [
+     "segment-analytics-python",
+     "analytics-python"
+    ]
+   },
+   "envKeys": [
+    "SEGMENT_"
+   ]
+  },
+  {
+   "id": "plausible",
+   "entityName": "Plausible Insights O\u00dc",
+   "category": "Web Analytics (Cookieless)",
+   "jurisdiction": "EE",
+   "privacyPolicyUrl": "https://plausible.io/privacy",
+   "dpaUrl": "https://plausible.io/dpa",
+   "dataProcessed": [
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "plausible-tracker",
+     "next-plausible"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "PLAUSIBLE_",
+    "NEXT_PUBLIC_PLAUSIBLE_"
+   ]
+  },
+  {
+   "id": "fathom",
+   "entityName": "Conva Ventures Inc. (Fathom)",
+   "category": "Web Analytics (Cookieless)",
+   "jurisdiction": "CA",
+   "privacyPolicyUrl": "https://usefathom.com/privacy",
+   "dpaUrl": "https://usefathom.com/data",
+   "dataProcessed": [
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "fathom-client"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "FATHOM_",
+    "NEXT_PUBLIC_FATHOM_"
+   ]
+  },
+  {
+   "id": "hotjar",
+   "entityName": "Hotjar Ltd (Contentsquare)",
+   "category": "Session Replay & Heatmaps",
+   "jurisdiction": "MT",
+   "privacyPolicyUrl": "https://www.hotjar.com/legal/policies/privacy/",
+   "dpaUrl": "https://www.hotjar.com/legal/support/dpa/",
+   "dataProcessed": [
+    "usage",
+    "device",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@hotjar/browser",
+     "react-hotjar"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "HOTJAR_",
+    "NEXT_PUBLIC_HOTJAR_"
+   ]
+  },
+  {
+   "id": "fullstory",
+   "entityName": "FullStory, Inc.",
+   "category": "Session Replay",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.fullstory.com/legal/privacy-policy/",
+   "dpaUrl": "https://www.fullstory.com/legal/dpa/",
+   "dataProcessed": [
+    "usage",
+    "device",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@fullstory/browser",
+     "@fullstory/snippet"
+    ],
+    "pypi": [
+     "fullstory"
+    ]
+   },
+   "envKeys": [
+    "FULLSTORY_"
+   ]
+  },
+  {
+   "id": "logrocket",
+   "entityName": "LogRocket, Inc.",
+   "category": "Session Replay",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://logrocket.com/privacy/",
+   "dpaUrl": "https://logrocket.com/dpa/",
+   "dataProcessed": [
+    "usage",
+    "device",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "logrocket",
+     "logrocket-react"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "LOGROCKET_"
+   ]
+  },
+  {
+   "id": "clarity",
+   "entityName": "Microsoft Corporation (Clarity)",
+   "category": "Session Replay & Heatmaps",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://privacy.microsoft.com/privacystatement",
+   "dpaUrl": "https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA",
+   "dataProcessed": [
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@microsoft/clarity",
+     "react-microsoft-clarity"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "CLARITY_",
+    "NEXT_PUBLIC_CLARITY_"
+   ]
+  },
+  {
+   "id": "meta-pixel",
+   "entityName": "Meta Platforms, Inc. (Pixel)",
+   "category": "Advertising Pixel",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.facebook.com/privacy/policy/",
+   "dpaUrl": "https://www.facebook.com/legal/terms/dataprocessing",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "react-facebook-pixel",
+     "facebook-nodejs-business-sdk"
+    ],
+    "pypi": [
+     "facebook-business"
+    ]
+   },
+   "envKeys": [
+    "FB_PIXEL_",
+    "META_PIXEL_",
+    "NEXT_PUBLIC_FB_PIXEL_"
+   ]
+  },
+  {
+   "id": "tiktok-pixel",
+   "entityName": "TikTok Pte. Ltd. (Pixel)",
+   "category": "Advertising Pixel",
+   "jurisdiction": "SG",
+   "privacyPolicyUrl": "https://www.tiktok.com/legal/page/row/privacy-policy/en",
+   "dpaUrl": "https://ads.tiktok.com/i18n/official/policy/business-products-terms",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "tiktok-pixel"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "TIKTOK_PIXEL_"
+   ]
+  },
+  {
+   "id": "linkedin-insight",
+   "entityName": "LinkedIn Corporation (Insight Tag)",
+   "category": "Advertising Pixel",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.linkedin.com/legal/privacy-policy",
+   "dpaUrl": "https://legal.linkedin.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "react-linkedin-insight"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "LINKEDIN_PARTNER_ID"
+   ]
+  },
+  {
+   "id": "sentry",
+   "entityName": "Functional Software, Inc. (Sentry)",
+   "category": "Error Monitoring & Session Replay",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://sentry.io/privacy/",
+   "dpaUrl": "https://sentry.io/legal/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@sentry/nextjs",
+     "@sentry/node",
+     "@sentry/react",
+     "@sentry/browser",
+     "@sentry/sveltekit",
+     "@sentry/bun",
+     "@sentry/vue"
+    ],
+    "pypi": [
+     "sentry-sdk"
+    ]
+   },
+   "envKeys": [
+    "SENTRY_",
+    "NEXT_PUBLIC_SENTRY_"
+   ]
+  },
+  {
+   "id": "datadog",
+   "entityName": "Datadog, Inc.",
+   "category": "Observability",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.datadoghq.com/legal/privacy/",
+   "dpaUrl": "https://www.datadoghq.com/legal/data-processing-addendum/",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "dd-trace",
+     "@datadog/browser-rum",
+     "@datadog/browser-logs"
+    ],
+    "pypi": [
+     "ddtrace",
+     "datadog"
+    ]
+   },
+   "envKeys": [
+    "DD_",
+    "DATADOG_"
+   ]
+  },
+  {
+   "id": "newrelic",
+   "entityName": "New Relic, Inc.",
+   "category": "Observability",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://newrelic.com/termsandconditions/privacy",
+   "dpaUrl": "https://newrelic.com/termsandconditions/dataprocessing",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "newrelic",
+     "@newrelic/browser-agent"
+    ],
+    "pypi": [
+     "newrelic"
+    ]
+   },
+   "envKeys": [
+    "NEW_RELIC_"
+   ]
+  },
+  {
+   "id": "highlight",
+   "entityName": "Highlight Inc. (LaunchDarkly)",
+   "category": "Observability & Session Replay",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.highlight.io/privacy",
+   "dpaUrl": "https://www.highlight.io/terms",
+   "dataProcessed": [
+    "usage",
+    "device",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@highlight-run/next",
+     "highlight.run",
+     "@highlight-run/node"
+    ],
+    "pypi": [
+     "highlight-io"
+    ]
+   },
+   "envKeys": [
+    "HIGHLIGHT_",
+    "NEXT_PUBLIC_HIGHLIGHT_"
+   ]
+  },
+  {
+   "id": "logtail",
+   "entityName": "Better Stack, Inc. (Logtail)",
+   "category": "Log Management",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://betterstack.com/privacy",
+   "dpaUrl": "https://betterstack.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@logtail/node",
+     "@logtail/js",
+     "@logtail/next"
+    ],
+    "pypi": [
+     "logtail-python"
+    ]
+   },
+   "envKeys": [
+    "LOGTAIL_",
+    "BETTERSTACK_"
+   ]
+  },
+  {
+   "id": "axiom",
+   "entityName": "Axiom, Inc.",
+   "category": "Log Management",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://axiom.co/privacy",
+   "dpaUrl": "https://axiom.co/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@axiomhq/js",
+     "next-axiom",
+     "@axiomhq/winston"
+    ],
+    "pypi": [
+     "axiom-py"
+    ]
+   },
+   "envKeys": [
+    "AXIOM_",
+    "NEXT_PUBLIC_AXIOM_"
+   ]
+  },
+  {
+   "id": "bugsnag",
+   "entityName": "SmartBear Software Inc. (Bugsnag)",
+   "category": "Error Monitoring",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://smartbear.com/privacy/",
+   "dpaUrl": "https://smartbear.com/legal/data-processing-addendum/",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@bugsnag/js",
+     "@bugsnag/plugin-react"
+    ],
+    "pypi": [
+     "bugsnag"
+    ]
+   },
+   "envKeys": [
+    "BUGSNAG_"
+   ]
+  },
+  {
+   "id": "rollbar",
+   "entityName": "Rollbar, Inc.",
+   "category": "Error Monitoring",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://rollbar.com/privacy/",
+   "dpaUrl": "https://rollbar.com/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "rollbar"
+    ],
+    "pypi": [
+     "rollbar"
+    ]
+   },
+   "envKeys": [
+    "ROLLBAR_"
+   ]
+  },
+  {
+   "id": "launchdarkly",
+   "entityName": "Catamorphic Co. (LaunchDarkly)",
+   "category": "Feature Flags",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://launchdarkly.com/policies/privacy/",
+   "dpaUrl": "https://launchdarkly.com/policies/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "launchdarkly-node-server-sdk",
+     "@launchdarkly/node-server-sdk",
+     "launchdarkly-react-client-sdk"
+    ],
+    "pypi": [
+     "launchdarkly-server-sdk"
+    ]
+   },
+   "envKeys": [
+    "LAUNCHDARKLY_",
+    "LD_SDK_KEY"
+   ]
+  },
+  {
+   "id": "statsig",
+   "entityName": "Statsig, Inc.",
+   "category": "Feature Flags & Experimentation",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.statsig.com/privacy",
+   "dpaUrl": "https://www.statsig.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "statsig-node",
+     "@statsig/js-client",
+     "@statsig/react-bindings"
+    ],
+    "pypi": [
+     "statsig"
+    ]
+   },
+   "envKeys": [
+    "STATSIG_"
+   ]
+  },
+  {
+   "id": "growthbook",
+   "entityName": "GrowthBook, Inc.",
+   "category": "Feature Flags & Experimentation",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.growthbook.io/legal/privacy",
+   "dpaUrl": "https://www.growthbook.io/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@growthbook/growthbook",
+     "@growthbook/growthbook-react"
+    ],
+    "pypi": [
+     "growthbook"
+    ]
+   },
+   "envKeys": [
+    "GROWTHBOOK_"
+   ]
+  },
+  {
+   "id": "intercom",
+   "entityName": "Intercom R&D Unlimited Company",
+   "category": "Customer Support Chat",
+   "jurisdiction": "IE",
+   "privacyPolicyUrl": "https://www.intercom.com/legal/privacy",
+   "dpaUrl": "https://www.intercom.com/legal/data-processing-agreement",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@intercom/messenger-js-sdk",
+     "react-use-intercom",
+     "intercom-client"
+    ],
+    "pypi": [
+     "python-intercom"
+    ]
+   },
+   "envKeys": [
+    "INTERCOM_",
+    "NEXT_PUBLIC_INTERCOM_"
+   ]
+  },
+  {
+   "id": "crisp",
+   "entityName": "Crisp IM SAS",
+   "category": "Customer Support Chat",
+   "jurisdiction": "FR",
+   "privacyPolicyUrl": "https://crisp.chat/en/privacy/",
+   "dpaUrl": "https://crisp.chat/en/terms/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "crisp-sdk-web",
+     "crisp-api"
+    ],
+    "pypi": [
+     "crisp-api"
+    ]
+   },
+   "envKeys": [
+    "CRISP_",
+    "NEXT_PUBLIC_CRISP_"
+   ]
+  },
+  {
+   "id": "zendesk",
+   "entityName": "Zendesk, Inc.",
+   "category": "Customer Support",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.zendesk.com/company/agreements-and-terms/privacy-notice/",
+   "dpaUrl": "https://www.zendesk.com/company/data-processing-form/",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "node-zendesk",
+     "react-zendesk"
+    ],
+    "pypi": [
+     "zenpy"
+    ]
+   },
+   "envKeys": [
+    "ZENDESK_"
+   ]
+  },
+  {
+   "id": "hubspot",
+   "entityName": "HubSpot, Inc.",
+   "category": "CRM & Marketing",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://legal.hubspot.com/privacy-policy",
+   "dpaUrl": "https://legal.hubspot.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@hubspot/api-client"
+    ],
+    "pypi": [
+     "hubspot-api-client"
+    ]
+   },
+   "envKeys": [
+    "HUBSPOT_"
+   ]
+  },
+  {
+   "id": "salesforce",
+   "entityName": "Salesforce, Inc.",
+   "category": "CRM",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.salesforce.com/company/privacy/",
+   "dpaUrl": "https://www.salesforce.com/company/legal/agreements/",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "jsforce",
+     "@salesforce/core"
+    ],
+    "pypi": [
+     "simple-salesforce"
+    ]
+   },
+   "envKeys": [
+    "SALESFORCE_",
+    "SF_"
+   ]
+  },
+  {
+   "id": "attio",
+   "entityName": "Attio Ltd",
+   "category": "CRM",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://attio.com/legal/privacy",
+   "dpaUrl": "https://attio.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "attio-js"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "ATTIO_"
+   ]
+  },
+  {
+   "id": "cloudinary",
+   "entityName": "Cloudinary Ltd.",
+   "category": "Media Storage & CDN",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://cloudinary.com/privacy",
+   "dpaUrl": "https://cloudinary.com/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "cloudinary",
+     "next-cloudinary",
+     "@cloudinary/react",
+     "@cloudinary/url-gen"
+    ],
+    "pypi": [
+     "cloudinary"
+    ]
+   },
+   "envKeys": [
+    "CLOUDINARY_",
+    "NEXT_PUBLIC_CLOUDINARY_"
+   ]
+  },
+  {
+   "id": "uploadthing",
+   "entityName": "Ping Labs, Inc. (UploadThing)",
+   "category": "File Uploads",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://uploadthing.com/legal/privacy",
+   "dpaUrl": "https://uploadthing.com/legal/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "uploadthing",
+     "@uploadthing/react"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "UPLOADTHING_"
+   ]
+  },
+  {
+   "id": "aws-s3",
+   "entityName": "Amazon Web Services, Inc. (S3)",
+   "category": "Object Storage",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://aws.amazon.com/privacy/",
+   "dpaUrl": "https://d1.awsstatic.com/legal/aws-dpa/aws-dpa.pdf",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@aws-sdk/client-s3",
+     "@aws-sdk/s3-request-presigner",
+     "aws-sdk"
+    ],
+    "pypi": [
+     "boto3"
+    ]
+   },
+   "envKeys": [
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "S3_"
+   ]
+  },
+  {
+   "id": "cloudflare-r2",
+   "entityName": "Cloudflare, Inc. (R2)",
+   "category": "Object Storage & CDN",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.cloudflare.com/privacypolicy/",
+   "dpaUrl": "https://www.cloudflare.com/cloudflare-customer-dpa/",
+   "dataProcessed": [
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "wrangler",
+     "@cloudflare/workers-sdk"
+    ],
+    "pypi": [
+     "cloudflare"
+    ]
+   },
+   "envKeys": [
+    "CLOUDFLARE_",
+    "R2_",
+    "CF_"
+   ]
+  },
+  {
+   "id": "vercel-blob",
+   "entityName": "Vercel Inc. (Blob Storage)",
+   "category": "Object Storage",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://vercel.com/legal/privacy-policy",
+   "dpaUrl": "https://vercel.com/legal/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@vercel/blob",
+     "@vercel/kv",
+     "@vercel/postgres",
+     "@vercel/edge-config"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "BLOB_READ_WRITE_TOKEN",
+    "EDGE_CONFIG"
+   ]
+  },
+  {
+   "id": "mux",
+   "entityName": "Mux, Inc.",
+   "category": "Video Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.mux.com/privacy",
+   "dpaUrl": "https://www.mux.com/dpa",
+   "dataProcessed": [
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@mux/mux-node",
+     "@mux/mux-player-react"
+    ],
+    "pypi": [
+     "mux-python"
+    ]
+   },
+   "envKeys": [
+    "MUX_"
+   ]
+  },
+  {
+   "id": "algolia",
+   "entityName": "Algolia SAS",
+   "category": "Search",
+   "jurisdiction": "FR",
+   "privacyPolicyUrl": "https://www.algolia.com/policies/privacy/",
+   "dpaUrl": "https://www.algolia.com/policies/dpa/",
+   "dataProcessed": [
+    "content",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "algoliasearch",
+     "react-instantsearch",
+     "instantsearch.js"
+    ],
+    "pypi": [
+     "algoliasearch"
+    ]
+   },
+   "envKeys": [
+    "ALGOLIA_",
+    "NEXT_PUBLIC_ALGOLIA_"
+   ]
+  },
+  {
+   "id": "meilisearch",
+   "entityName": "Meili SAS (Meilisearch Cloud)",
+   "category": "Search",
+   "jurisdiction": "FR",
+   "privacyPolicyUrl": "https://www.meilisearch.com/privacy-policy",
+   "dpaUrl": "https://www.meilisearch.com/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "meilisearch",
+     "instant-meilisearch"
+    ],
+    "pypi": [
+     "meilisearch"
+    ]
+   },
+   "envKeys": [
+    "MEILI_",
+    "MEILISEARCH_"
+   ]
+  },
+  {
+   "id": "typesense",
+   "entityName": "Typesense, Inc.",
+   "category": "Search",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://typesense.org/privacy-policy/",
+   "dpaUrl": "https://cloud.typesense.org/legal",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "typesense",
+     "typesense-instantsearch-adapter"
+    ],
+    "pypi": [
+     "typesense"
+    ]
+   },
+   "envKeys": [
+    "TYPESENSE_"
+   ]
+  },
+  {
+   "id": "mapbox",
+   "entityName": "Mapbox, Inc.",
+   "category": "Maps & Geolocation",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.mapbox.com/legal/privacy",
+   "dpaUrl": "https://www.mapbox.com/legal/dpa",
+   "dataProcessed": [
+    "location",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "mapbox-gl",
+     "@mapbox/mapbox-sdk",
+     "react-map-gl"
+    ],
+    "pypi": [
+     "mapbox"
+    ]
+   },
+   "envKeys": [
+    "MAPBOX_",
+    "NEXT_PUBLIC_MAPBOX_"
+   ]
+  },
+  {
+   "id": "google-maps",
+   "entityName": "Google LLC (Maps Platform)",
+   "category": "Maps & Geolocation",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://policies.google.com/privacy",
+   "dpaUrl": "https://cloud.google.com/terms/data-processing-addendum",
+   "dataProcessed": [
+    "location",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@googlemaps/js-api-loader",
+     "@react-google-maps/api",
+     "@vis.gl/react-google-maps",
+     "@googlemaps/google-maps-services-js"
+    ],
+    "pypi": [
+     "googlemaps"
+    ]
+   },
+   "envKeys": [
+    "GOOGLE_MAPS_",
+    "NEXT_PUBLIC_GOOGLE_MAPS_"
+   ]
+  },
+  {
+   "id": "recaptcha",
+   "entityName": "Google LLC (reCAPTCHA)",
+   "category": "Bot Protection",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://policies.google.com/privacy",
+   "dpaUrl": "https://cloud.google.com/terms/data-processing-addendum",
+   "dataProcessed": [
+    "device",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "react-google-recaptcha",
+     "react-google-recaptcha-v3"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "RECAPTCHA_",
+    "NEXT_PUBLIC_RECAPTCHA_"
+   ]
+  },
+  {
+   "id": "hcaptcha",
+   "entityName": "Intuition Machines, Inc. (hCaptcha)",
+   "category": "Bot Protection",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.hcaptcha.com/privacy",
+   "dpaUrl": "https://www.hcaptcha.com/terms",
+   "dataProcessed": [
+    "device",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@hcaptcha/react-hcaptcha"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "HCAPTCHA_"
+   ]
+  },
+  {
+   "id": "turnstile",
+   "entityName": "Cloudflare, Inc. (Turnstile)",
+   "category": "Bot Protection",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.cloudflare.com/privacypolicy/",
+   "dpaUrl": "https://www.cloudflare.com/cloudflare-customer-dpa/",
+   "dataProcessed": [
+    "device",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@marsidev/react-turnstile",
+     "react-turnstile"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "TURNSTILE_",
+    "NEXT_PUBLIC_TURNSTILE_"
+   ]
+  },
+  {
+   "id": "arcjet",
+   "entityName": "Arcjet, Inc.",
+   "category": "Bot Protection & Rate Limiting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://arcjet.com/privacy",
+   "dpaUrl": "https://arcjet.com/dpa",
+   "dataProcessed": [
+    "device",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@arcjet/next",
+     "@arcjet/node",
+     "@arcjet/sveltekit",
+     "@arcjet/bun"
+    ],
+    "pypi": [
+     "arcjet"
+    ]
+   },
+   "envKeys": [
+    "ARCJET_"
+   ]
+  },
+  {
+   "id": "inngest",
+   "entityName": "Inngest, Inc.",
+   "category": "Background Jobs",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.inngest.com/privacy",
+   "dpaUrl": "https://www.inngest.com/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "inngest"
+    ],
+    "pypi": [
+     "inngest"
+    ]
+   },
+   "envKeys": [
+    "INNGEST_"
+   ]
+  },
+  {
+   "id": "trigger",
+   "entityName": "Trigger.dev Ltd",
+   "category": "Background Jobs",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://trigger.dev/legal/privacy",
+   "dpaUrl": "https://trigger.dev/legal/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@trigger.dev/sdk",
+     "@trigger.dev/nextjs"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "TRIGGER_"
+   ]
+  },
+  {
+   "id": "svix",
+   "entityName": "Svix, Inc.",
+   "category": "Webhook Delivery",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.svix.com/privacy/",
+   "dpaUrl": "https://www.svix.com/dpa/",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "svix"
+    ],
+    "pypi": [
+     "svix"
+    ]
+   },
+   "envKeys": [
+    "SVIX_"
+   ]
+  },
+  {
+   "id": "docusign",
+   "entityName": "Docusign, Inc.",
+   "category": "E-Signature",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.docusign.com/privacy",
+   "dpaUrl": "https://www.docusign.com/trust/privacy/data-processing-agreement",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "docusign-esign"
+    ],
+    "pypi": [
+     "docusign-esign"
+    ]
+   },
+   "envKeys": [
+    "DOCUSIGN_"
+   ]
+  },
+  {
+   "id": "plaid",
+   "entityName": "Plaid Inc.",
+   "category": "Financial Data Aggregation",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://plaid.com/legal/#end-user-privacy-policy",
+   "dpaUrl": "https://plaid.com/legal/#data-processing-agreement",
+   "dataProcessed": [
+    "identifiers",
+    "payment",
+    "financial_accounts"
+   ],
+   "triggersClauses": [
+    "PCI_BILLING_DELEGATION"
+   ],
+   "packages": {
+    "npm": [
+     "plaid",
+     "react-plaid-link"
+    ],
+    "pypi": [
+     "plaid-python"
+    ]
+   },
+   "envKeys": [
+    "PLAID_"
+   ]
+  },
+  {
+   "id": "persona",
+   "entityName": "Persona Identities, Inc.",
+   "category": "Identity Verification (KYC)",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://withpersona.com/legal/privacy-policy",
+   "dpaUrl": "https://withpersona.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "government_id",
+    "biometrics"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "persona",
+     "persona-react"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "PERSONA_"
+   ]
+  },
+  {
+   "id": "onfido",
+   "entityName": "Onfido Ltd (Entrust)",
+   "category": "Identity Verification (KYC)",
+   "jurisdiction": "UK",
+   "privacyPolicyUrl": "https://onfido.com/privacy/",
+   "dpaUrl": "https://onfido.com/dpa/",
+   "dataProcessed": [
+    "identifiers",
+    "government_id",
+    "biometrics"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@onfido/api",
+     "onfido-sdk-ui"
+    ],
+    "pypi": [
+     "onfido-python"
+    ]
+   },
+   "envKeys": [
+    "ONFIDO_"
+   ]
+  },
+  {
+   "id": "calcom",
+   "entityName": "Cal.com, Inc.",
+   "category": "Scheduling",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://cal.com/privacy",
+   "dpaUrl": "https://cal.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@calcom/embed-react",
+     "@calcom/atoms"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "CAL_",
+    "CALCOM_"
+   ]
+  },
+  {
+   "id": "calendly",
+   "entityName": "Calendly LLC",
+   "category": "Scheduling",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://calendly.com/privacy",
+   "dpaUrl": "https://calendly.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "contact"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "react-calendly"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "CALENDLY_"
+   ]
+  },
+  {
+   "id": "google-oauth",
+   "entityName": "Google LLC (Sign in with Google / Workspace APIs)",
+   "category": "Authentication & Workspace APIs",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://policies.google.com/privacy",
+   "dpaUrl": "https://workspace.google.com/terms/dpa_terms.html",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [
+    "GDPR_ERASURE"
+   ],
+   "packages": {
+    "npm": [
+     "googleapis",
+     "google-auth-library",
+     "@react-oauth/google"
+    ],
+    "pypi": [
+     "google-auth",
+     "google-api-python-client"
+    ]
+   },
+   "envKeys": [
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET"
+   ]
+  },
+  {
+   "id": "github-oauth",
+   "entityName": "GitHub, Inc.",
+   "category": "Authentication & Developer APIs",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+   "dpaUrl": "https://github.com/customer-terms/github-data-protection-agreement",
+   "dataProcessed": [
+    "identifiers",
+    "contact",
+    "credentials"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@octokit/rest",
+     "octokit",
+     "@octokit/app"
+    ],
+    "pypi": [
+     "PyGithub"
+    ]
+   },
+   "envKeys": [
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
+    "GITHUB_APP_"
+   ]
+  },
+  {
+   "id": "slack",
+   "entityName": "Slack Technologies, LLC",
+   "category": "Messaging Integration",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://slack.com/trust/privacy/privacy-policy",
+   "dpaUrl": "https://slack.com/terms-of-service/data-processing",
+   "dataProcessed": [
+    "identifiers",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@slack/web-api",
+     "@slack/bolt"
+    ],
+    "pypi": [
+     "slack-sdk",
+     "slack-bolt"
+    ]
+   },
+   "envKeys": [
+    "SLACK_"
+   ]
+  },
+  {
+   "id": "discord",
+   "entityName": "Discord Inc.",
+   "category": "Messaging Integration",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://discord.com/privacy",
+   "dpaUrl": "https://discord.com/terms",
+   "dataProcessed": [
+    "identifiers",
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "discord.js",
+     "@discordjs/rest"
+    ],
+    "pypi": [
+     "discord.py"
+    ]
+   },
+   "envKeys": [
+    "DISCORD_"
+   ]
+  },
+  {
+   "id": "notion",
+   "entityName": "Notion Labs, Inc.",
+   "category": "Content Integration",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.notion.so/notion/Privacy-Policy",
+   "dpaUrl": "https://www.notion.so/notion/Data-Processing-Addendum",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@notionhq/client"
+    ],
+    "pypi": [
+     "notion-client"
+    ]
+   },
+   "envKeys": [
+    "NOTION_"
+   ]
+  },
+  {
+   "id": "airtable",
+   "entityName": "Formagrid Inc. (Airtable)",
+   "category": "Content Integration",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.airtable.com/company/privacy",
+   "dpaUrl": "https://www.airtable.com/company/dpa",
+   "dataProcessed": [
+    "content",
+    "identifiers"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "airtable"
+    ],
+    "pypi": [
+     "pyairtable"
+    ]
+   },
+   "envKeys": [
+    "AIRTABLE_"
+   ]
+  },
+  {
+   "id": "sanity",
+   "entityName": "Sanity Inc.",
+   "category": "Headless CMS",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.sanity.io/legal/privacy",
+   "dpaUrl": "https://www.sanity.io/legal/dpa",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@sanity/client",
+     "next-sanity",
+     "sanity"
+    ],
+    "pypi": [
+     "sanity"
+    ]
+   },
+   "envKeys": [
+    "SANITY_",
+    "NEXT_PUBLIC_SANITY_"
+   ]
+  },
+  {
+   "id": "contentful",
+   "entityName": "Contentful GmbH",
+   "category": "Headless CMS",
+   "jurisdiction": "DE",
+   "privacyPolicyUrl": "https://www.contentful.com/legal/privacy-at-contentful/privacy-notice/",
+   "dpaUrl": "https://www.contentful.com/legal/data-processing-agreement/",
+   "dataProcessed": [
+    "content"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "contentful",
+     "contentful-management"
+    ],
+    "pypi": [
+     "contentful"
+    ]
+   },
+   "envKeys": [
+    "CONTENTFUL_"
+   ]
+  },
+  {
+   "id": "vercel",
+   "entityName": "Vercel Inc.",
+   "category": "Hosting & Edge Network",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://vercel.com/legal/privacy-policy",
+   "dpaUrl": "https://vercel.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@vercel/functions",
+     "@vercel/og",
+     "@vercel/node"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "VERCEL_"
+   ]
+  },
+  {
+   "id": "netlify",
+   "entityName": "Netlify, Inc.",
+   "category": "Hosting & Edge Network",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://www.netlify.com/privacy/",
+   "dpaUrl": "https://www.netlify.com/v3/static/pdf/netlify-dpa.pdf",
+   "dataProcessed": [
+    "identifiers",
+    "usage",
+    "device"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@netlify/functions",
+     "@netlify/blobs"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "NETLIFY_"
+   ]
+  },
+  {
+   "id": "fly",
+   "entityName": "Fly.io, Inc.",
+   "category": "Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://fly.io/legal/privacy-policy",
+   "dpaUrl": "https://fly.io/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [
+     "@fly/sprites"
+    ],
+    "pypi": []
+   },
+   "envKeys": [
+    "FLY_API_TOKEN"
+   ]
+  },
+  {
+   "id": "railway",
+   "entityName": "Railway Corporation",
+   "category": "Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://railway.com/legal/privacy",
+   "dpaUrl": "https://railway.com/legal/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [],
+    "pypi": []
+   },
+   "envKeys": [
+    "RAILWAY_"
+   ]
+  },
+  {
+   "id": "render",
+   "entityName": "Render Services, Inc.",
+   "category": "Hosting",
+   "jurisdiction": "US",
+   "privacyPolicyUrl": "https://render.com/privacy",
+   "dpaUrl": "https://render.com/dpa",
+   "dataProcessed": [
+    "identifiers",
+    "usage"
+   ],
+   "triggersClauses": [],
+   "packages": {
+    "npm": [],
+    "pypi": []
+   },
+   "envKeys": [
+    "RENDER_API_KEY"
+   ]
+  }
+ ]
+}

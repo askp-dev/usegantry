@@ -1,0 +1,21 @@
+{
+  "name": "vibe-saas",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build" },
+  "dependencies": {
+    "next": "15.1.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "@prisma/client": "^5.20.0",
+    "stripe": "^17.0.0",
+    "openai": "^4.70.0",
+    "ai": "^4.0.0",
+    "posthog-js": "^1.180.0",
+    "resend": "^4.0.0",
+    "axois": "^1.7.0",
+    "ffmpeg-static": "^5.2.0"
+  },
+  "devDependencies": { "prisma": "^5.20.0", "typescript": "^5.6.0" }
+}

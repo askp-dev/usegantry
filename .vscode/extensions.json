@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "oven.bun-vscode",
+    "biomejs.biome",
+    "svelte.svelte-vscode",
+    "bradlc.vscode-tailwindcss",
+    "usernamehw.errorlens",
+    "editorconfig.editorconfig",
+    "tamasfe.even-better-toml",
+    "redhat.vscode-yaml",
+    "prisma.prisma",
+    "ms-playwright.playwright",
+    "bierner.markdown-mermaid",
+    "qwtel.sqlite-viewer",
+    "github.vscode-github-actions"
+  ],
+  "unwantedRecommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+}

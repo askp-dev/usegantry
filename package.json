@@ -1,0 +1,32 @@
+{
+  "name": "preflight-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Sub-3-second static readiness scanner, legal/EULA compiler, FinOps burn guard, and AST-guided active pentester for AI-generated repositories.",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "bun": ">=1.2"
+  },
+  "scripts": {
+    "scan": "bun run packages/core/src/bin/cli.ts scan",
+    "preflight": "bun run packages/core/src/bin/cli.ts",
+    "test": "bun test packages/core/test",
+    "bench": "bun run scripts/bench.ts",
+    "seed:packages": "bun run scripts/build-known-packages.ts",
+    "build:ui": "bun run --cwd packages/ui build",
+    "build:bin": "bun run --cwd packages/core build",
+    "build:ext": "bun run --cwd packages/vscode-ext build",
+    "build": "bun run build:ui && bun run build:bin && bun run build:ext",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check packages scripts",
+    "format": "biome format --write packages scripts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.6.0",
+    "@biomejs/biome": "^2.0.0"
+  }
+}
