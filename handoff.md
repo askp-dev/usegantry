@@ -31,7 +31,7 @@ The user's answers before the build started:
 | 2. 37 static rules, scoring, compilers, CLI | ✅ Done: 110 tests pass, typecheck clean, clean fixture 100/100 with 0 findings, 500-file cold scan ≈0.3–0.4 s |
 | 3. MCP server, pentest runner, `init` | ✅ Done: 143 tests pass, typecheck + biome clean, live probes verified against a local vuln/safe target |
 | 4. Svelte UI, ui-server, VS Code extension | ✅ Done: 155 tests pass, typecheck (core + ext + svelte-check) clean, UI builds to `packages/core/dist/ui-assets`, both UIs checked in a browser |
-| 5. Tests, perf benchmark, final verification | ⏳ Not started (fixture exists) |
+| 5. Tests, perf benchmark, final verification | ✅ Done: 158 tests pass, typecheck + biome clean, `bun run bench` ≈0.29 s median (SLA 3 s), compiled binary smoke-tested, `.vsix` packaged, lite UI screenshotted, README written |
 
 ---
 
@@ -114,6 +114,16 @@ The four spec files (`SPEC.md`, `DESIGN.md`, `RULES_SPEC.md`, `WEBSITE_SPEC.md`)
 | `packages/vscode-ext/` | `src/extension.ts` (diagnostics, status-bar score, 1.5 s debounced scan-on-save, "Fix with AI Agent"), `src/codelens-provider.ts`, `src/sidebar-provider.ts` (compiled UI from `media/ui` with a strict CSP, else inline HTML), `src/scan.ts` (spawns `preflight scan --json --offline`), `scripts/build.ts` (Bun bundle → `dist/extension.js`, copies UI build into `media/ui`). |
 | `test/ui-server.test.ts`, `test/vscode-ext.test.ts` | 12 new tests: origin/host guard, every endpoint, legal apply idempotency, cert 409-when-blocked, live WS pentest stream + remote-target refusal, asset serving/traversal, and the extension's CLI bridge on both fixtures. |
 
+### Sprint 5 files
+| File | Purpose |
+|---|---|
+| `scripts/bench.ts` | `bun run bench [--runs=5]`. Builds the 503-file synthetic repo (`makeSlaRepo`) and runs N cold CLI scans (`coldScan`). Prints min/median/max wall time and the builder phase timings. Exits 1 if the slowest run is ≥ 3000 ms. `test/cli.test.ts` imports the same helpers, so test and bench can't drift. |
+| `packages/core/src/workers/git-history.ts` | `scanGitHistory()` + `scanDiff()` + `GitSecretHit`, split out of the worker. `git-entropy.worker.ts` is now a thin `onmessage` wrapper around it. |
+| `test/leg01-registry.test.ts` | Stubbed-`fetch` tests for LEG-01's live registry path (closes quirk 7): npm/PyPI 404s, packages under 30 days old with < 500 weekly downloads, scoped-name encoding and the timeout signal. Old packages, new-but-popular packages and network failures are not flagged, and offline mode makes 0 fetches. |
+| `test/compile.test.ts` | Runs `bun build --compile` into a tmpdir. Checks `--version`, all 37 rules firing on the vulnerable fixture, 0 findings on the clean fixture, a git-history secret caught by SEC-06, and that `attack` is bundled. |
+| `packages/vscode-ext/{.vscodeignore,README.md}` + `package` script | `bun run --cwd packages/vscode-ext package` builds and runs `vsce package` (→ `preflight-ai-0.1.0.vsix`, 9 files, ~34 KB, gitignored). |
+| `README.md`, `docs/screenshots/lite-ui.png` | Project README. The screenshot is the lite UI served by the compiled binary on the vuln fixture (headless Chromium, 1440×1000). |
+
 ### Empty directories still to fill
 `packages/core/src/util`, `packages/ui/src/routes` (unused: the UI is a single-page tab app, no router).
 
@@ -172,6 +182,7 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
   - `bun run scan fixtures/vulnerable-saas --offline` scores 0, LAUNCH_BLOCKED, with 74 findings across all 37 rules in ≈30 ms (exit 1).
   - `fixtures/clean-saas` scores 100, LAUNCH_READY, with 0 findings (exit 0).
   - SLA: cold CLI scan of 503 files + git history takes 0.3–0.4 s wall.
+- **Sprint 5 (2026-10-20):** `bun test packages/core/test` = 158 pass / 0 fail; `bun run typecheck` clean; biome clean on touched files. `bun run bench`: 503 files, wall min 282 / median 284 / max 344 ms. Compiled binary: vuln fixture 37/37 rules, clean fixture 0 findings, git-history leak found, `init`/`mcp` (initialize + tools/list)/`attack` refusal/`ui` all work.
 - **Sprint 4 (2026-10-20):** `bun test packages/core/test` = 155 pass / 0 fail; `bun run typecheck` (now core + vscode-ext + svelte-check) clean; biome clean on touched files. `/api/report` on the vuln fixture ≈45 ms. Svelte UI and lite UI both rendered against a temp copy of the vuln fixture in a browser (matrix graph, legal diff). SLA test ~0.46 s.
 - **Sprint 3 (2026-10-20):** `bun test packages/core/test` = 143 pass / 0 fail; typecheck + biome clean. MCP verified over real stdio (`initialize` + `tools/list`). `preflight init` is non-destructive and idempotent. `preflight attack` exits 2 on a non-local target; against a local vuln target PT-02/03/04/05/06 report EXPLOITED and against a hardened target everything is BLOCKED/SKIPPED. SLA still ~0.3 s.
 
@@ -182,7 +193,7 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 4. Seed licenses are version-gated only through `license_from_major`. Lockfile/node_modules licenses always win.
 5. **Option name clash.** `BuildOptions.only` means *files* (incremental scans), while `AuditOptions.ruleIds` means *rule IDs*. `audit(root, opts)` passes the same object to both, so never reuse `only` for rules: it silently scanned zero files once.
 6. **The seed DB is small:** ~958 npm + 246 PyPI packages, with no `repo_url`/downloads/`created_at`. LEG-01 treats seed membership as trusted and skips the Levenshtein check for those packages. Unknown packages that aren't typosquats go to the live registry check (1.2 s timeout), which is skipped `--offline`, so they're left unverified rather than flagged. Run `seed:packages` with network to grow it to 50k.
-7. The test suite always uses `offline: true` (no network). The LEG-01 registry path (404 / <30 days with <500 weekly downloads) has no automated test yet. Add a stubbed-`fetch` test in Sprint 5.
+7. The test suite always uses `offline: true` (no network). Sprint 5 covers the LEG-01 registry path with a stubbed `fetch` (`test/leg01-registry.test.ts`).
 8. **Cert signing (spec conflict resolved toward the safer option):** the handoff said HMAC-SHA256, but WEBSITE_SPEC's static `/verify` page checks `crypto.subtle.verify("Ed25519", PUBLIC_KEY, …)`, and HMAC can't be verified publicly without leaking the secret. So certs use **Ed25519 over canonical JSON**.
    - Key: `PREFLIGHT_CERT_SECRET` → seed = sha256(secret), which is deterministic for CI. Otherwise a generated `~/.preflight/cert.key` (PKCS8 PEM, 0600).
    - URL: `${PREFLIGHT_VERIFY_BASE ?? "https://preflight-ai.dev"}/verify#<b64url payload>.<b64url sig>`. **The default domain is a placeholder.** Set the real one, and publish the public key the verify page trusts, when the website ships.
@@ -197,7 +208,11 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
     - SEC-03 skips files that verify a webhook signature, because their ids come from a signed event (SEC-08 covers unverified webhooks).
     - SEC-07 skips webhook routes (SEC-08 owns them) and trusts `hasAuthGuard` only when no auth call appears in the body (middleware, wrapper or `Depends`).
     - SEC-06 skips git-ignored `.env*` files, because that's where secrets belong.
-11. **`bun build --compile` (Sprint 5).** The git worker is loaded via `new URL("../../workers/git-entropy.worker.ts", import.meta.url)`, and the CLI's `delegate()` uses dynamic paths. Both need to be passed as extra entrypoints (or switched to static imports) for the compiled binary. If the worker fails to start, SEC-06 just skips history.
+11. **`bun build --compile` (resolved in Sprint 5).**
+    - `delegate()` now uses a static map of lazy `import()`s, so `attack`, `ui`, `init` and `mcp` are bundled (before this, the binary had only 64 modules and those subcommands were missing).
+    - The git worker can't go in as a second entrypoint: on Bun 1.2.10, multiple entrypoints break the embedded `known-packages.sqlite` path (`Cannot find module '/$bunfs/root/../known-packages-*.sqlite'`, even with `--root`). Instead, SEC-06 checks whether the worker file is on disk. If it isn't (as in a compiled binary), SEC-06 runs the same `scanGitHistory()` in-process instead of silently skipping history, which is what used to happen. Revisit when Bun fixes multi-entry assets.
+    - The binary also has no `dist/ui-assets`, so `preflight ui` serves the embedded lite UI.
+    - `bun build --compile` leaves a 57 MB `.*.bun-build` temp copy of bun in the cwd. These are gitignored now, and `compile.test.ts` builds with `cwd` set to its tmpdir.
 12. **Biome.** Sprint 1's `context/*.ts` files carry ~20 pre-existing lint findings (useTemplate, noAssignInExpressions). `biome check --write packages/core` reformats all of them, so run biome only on the files you touch.
 14. **Feature tiers: everything is free at launch.** `src/entitlements.ts` maps features to the WEBSITE_SPEC §6 tiers. `resolveTier()` currently always returns `"agency"`, so nothing is locked.
     - Already gated through `requireFeature()`: `compileLegalDocs` (pro), `generateCertificate` and `writeVendorPack` (agency), and `preflight attack` (pro).
@@ -214,7 +229,11 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 23. **VS Code extension safety.** `preflight.command` and `preflight.agentCommands` are `"scope": "machine"`, so a cloned repo's `.vscode/settings.json` can't swap the scanner binary or trigger arbitrary commands, and `untrustedWorkspaces.supported` is false. The agent command IDs (`composer.startComposerPrompt`, `aichat.newchataction`, `claude-vscode.editor.open`) are best-effort guesses: the prompt is always copied to the clipboard first, and only an installed command is run.
 24. **Webview mode.** Inside VS Code the Svelte app gets the report via `postMessage` (it posts `{type:"ready"}` first) and has no server, so the pentest and legal tabs show "run `preflight ui`" and the header's Export Certificate fails with a toast. The extension isn't packaged (`.vsix`) or run in an Extension Development Host yet: only typechecked, bundled, and its CLI bridge tested.
 25. **Toolchain versions installed this sprint:** svelte 5.57, @sveltejs/vite-plugin-svelte 7.3, vite 8.3, tailwindcss + @tailwindcss/vite 4.3, svelte-check 4.7, TypeScript pinned to ~5.9 in `packages/ui` (TS 7 came in by default and svelte-check targets 5.x), @types/vscode ~1.90. `bun.lock` updated. `cli.ts` became mode 755 via bun's workspace bin link.
-13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports.
+26. **VS Code extension: packaged, but not run in an Extension Development Host.** This Mac has no VS Code or Cursor (`code`/`cursor` aren't on PATH), and downloading a VS Code build for `@vscode/test-electron` was out of scope. The `.vsix` contains only `dist/extension.js`, `media/` and the manifest. It's packaged with `--skip-license --allow-missing-repository` because the repo has no LICENSE or repository URL yet. **Add both before publishing.** The EDH smoke test is still open.
+27. **Lite UI layout nits (seen in the screenshot at 1440 px):** the header's "Fix All in Agent" button is clipped at the top, and the "ENTRYPOINTS" lane label crowds the "ARCHITECTURE DATA FLOW" title. Cosmetic only, not fixed.
+28. **Playwright on this Mac.** There's no `/opt/pw-browsers` (that's the cloud sandbox). The cached `~/Library/Caches/ms-playwright/chromium_headless_shell-1248/.../chrome-headless-shell --headless --screenshot=… --virtual-time-budget=5000 <url>` works without installing the Playwright package.
+29. Engine per-rule timings (`timings["rule:*"]`) overlap because rules run under `Promise.all`, so `bench` prints only the builder phases plus the `rules` total.
+13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed.
 
 ---
 
@@ -226,13 +245,7 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 
 ### Sprint 4 ✅ done: `ui-server` (REST + WS, lite-UI fallback), Svelte 5/Tailwind v4 Mission Control in `packages/ui`, and the VS Code extension (see §3 "Sprint 4 files" and quirks 20–25).
 
-### Sprint 5: verification
-- `bun test`.
-- `scripts/bench.ts` (`bun run bench`): wrap the existing SLA test in `test/cli.test.ts` (503 files, cold CLI, currently ≈0.4 s) as a standalone script that prints timings. Also add a stubbed-fetch test for the LEG-01 registry path (quirk 7).
-- Package the VS Code extension (`vsce package`) and smoke-test it in an Extension Development Host (quirk 24).
-- Screenshot the lite UI with Playwright: Chromium is preinstalled in the cloud sandbox at `/opt/pw-browsers`.
-- `bun build --compile` smoke test.
-- Write the README.
+### Sprint 5 ✅ done: `bun run bench`, LEG-01 stubbed-fetch test, `bun build --compile` fixes and smoke test, `.vsix` packaging, lite-UI screenshot, README (see §3 "Sprint 5 files" and quirks 11, 26–29). Still open: Extension Development Host smoke test (quirk 26), LICENSE and repository URL, real verify domain (quirk 8).
 
 ---
 

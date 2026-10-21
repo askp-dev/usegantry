@@ -8,7 +8,7 @@ import { fingerprint, isGitIgnored, isSuppressed, makeFinding, openingTags, reda
 import { nearestTopPackage } from "../src/rules/legal/leg-01-slopsquatting";
 import { isCopyleft } from "../src/rules/legal/leg-02-copyleft-eula";
 import { sec06GitSecrets } from "../src/rules/security/sec-06-git-secrets";
-import { scanDiff } from "../src/workers/git-entropy.worker";
+import { scanDiff } from "../src/workers/git-history";
 
 const tmp = () => mkdtempSync(join(tmpdir(), "preflight-test-"));
 const write = (root: string, files: Record<string, string>) => {

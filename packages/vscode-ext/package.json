@@ -77,7 +77,8 @@
   },
   "scripts": {
     "build": "bun run scripts/build.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "package": "bun run build && bunx @vscode/vsce@3 package --no-dependencies --skip-license --allow-missing-repository"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

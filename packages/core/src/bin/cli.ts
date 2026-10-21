@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { CertificateBlockedError, generateCertificate } from "../compilers/cert-generator";
 import { writeChecklist } from "../compilers/checklist-writer";
@@ -40,14 +39,16 @@ export function parseArgs(argv: string[]): { cmd: string; path: string; flags: R
 }
 
 /** Commands whose modules land in later sprints are loaded lazily so `scan` stays fast. */
-async function delegate(mod: string, args: { path: string; flags: Record<string, string | boolean> }): Promise<number> {
-  const url = new URL(`../${mod}.ts`, import.meta.url);
-  if (!existsSync(url)) {
-    console.error(color.amber(`\`${mod.split("/").pop()}\` is not available in this build yet.`));
-    return 2;
-  }
-  const m = await import(url.href);
-  return (await m.main?.(args)) ?? 0;
+// Static specifiers (lazily loaded) so `bun build --compile` bundles every subcommand.
+const MODULES = {
+  "pentest/runner": () => import("../pentest/runner"),
+  "server/ui-server": () => import("../server/ui-server"),
+  init: () => import("../init"),
+  "bin/mcp": () => import("./mcp"),
+} as const;
+
+async function delegate(mod: keyof typeof MODULES, args: { path: string; flags: Record<string, string | boolean> }): Promise<number> {
+  return (await MODULES[mod]()).main(args);
 }
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {

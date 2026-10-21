@@ -1,9 +1,10 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { shannonEntropy } from "../../context/code-index";
 import { SECRET_NAME_RE, SECRET_PATTERNS } from "../../context/patterns";
 import type { RepoContext } from "../../context/types";
-import type { GitSecretHit } from "../../workers/git-entropy.worker";
+import { type GitSecretHit, scanGitHistory } from "../../workers/git-history";
 import { defineRule, type Emit, isGitIgnored, lineAt, redact, redactUrl } from "../helpers";
 
 const SKIP_FILE =
@@ -16,14 +17,19 @@ export const GIT_SCAN_TIMEOUT_MS = 1500;
 const fix = (what: string, file: string) =>
   `Rotate the ${what} in the vendor dashboard now (assume it's compromised). Replace the literal in ${file} with \`process.env.<NAME>\`, put the real value only in an untracked \`.env.local\`, add \`.env*\` and \`!.env.example\` to .gitignore, and purge history with \`git filter-repo --replace-text\`.`;
 
+const WORKER_URL = new URL("../../workers/git-entropy.worker.ts", import.meta.url);
+
 function gitHistory(root: string): Promise<GitSecretHit[]> {
   if (!existsSync(join(root, ".git"))) return Promise.resolve([]);
+  // A `bun build --compile` binary has no worker file on disk: scan in-process rather than skip history.
+  const inProcess = () => scanGitHistory(root, GIT_SCAN_TIMEOUT_MS).catch(() => []);
+  if (WORKER_URL.protocol !== "file:" || !existsSync(fileURLToPath(WORKER_URL))) return inProcess();
   return new Promise((resolve) => {
     let w: Worker;
     try {
-      w = new Worker(new URL("../../workers/git-entropy.worker.ts", import.meta.url).href);
+      w = new Worker(WORKER_URL.href);
     } catch {
-      return resolve([]);
+      return resolve(inProcess());
     }
     const done = (hits: GitSecretHit[]) => {
       clearTimeout(t);

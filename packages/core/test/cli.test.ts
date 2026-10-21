@@ -1,8 +1,8 @@
 import { afterAll, expect, test } from "bun:test";
-import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { coldScan, makeSlaRepo, SLA_MS } from "../../../scripts/bench";
 import { parseArgs } from "../src/bin/cli";
 
 const CLI = join(import.meta.dir, "../src/bin/cli.ts");
@@ -65,30 +65,11 @@ test("cert refuses on blockers; usage errors exit 2", () => {
 });
 
 test("SLA: cold scan of 500+ files with git history < 3000 ms", () => {
-  const root = mkdtempSync(join(tmpdir(), "preflight-sla-"));
+  const root = makeSlaRepo();
   dirs.push(root);
-  cpSync("fixtures/vulnerable-saas", root, { recursive: true });
-  const route = readFileSync("fixtures/vulnerable-saas/app/api/posts/route.ts", "utf8");
-  const page = readFileSync("fixtures/vulnerable-saas/app/page.tsx", "utf8");
-  const action = readFileSync("fixtures/vulnerable-saas/app/actions.ts", "utf8");
-  for (let i = 0; i < 160; i++) {
-    mkdirSync(join(root, `app/api/gen${i}`), { recursive: true });
-    writeFileSync(join(root, `app/api/gen${i}/route.ts`), route);
-    mkdirSync(join(root, `app/gen${i}`), { recursive: true });
-    writeFileSync(join(root, `app/gen${i}/page.tsx`), page);
-    writeFileSync(join(root, `app/gen${i}/actions.ts`), action);
-  }
-  const git = (...a: string[]) =>
-    execFileSync("git", ["-C", root, "-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false", ...a], { stdio: "ignore" });
-  git("init", "-q");
-  git("add", ".");
-  git("commit", "-qm", "init");
-  const t0 = performance.now();
-  const r = run("scan", root, "--offline", "--json");
-  const ms = performance.now() - t0;
-  const report = JSON.parse(r.out);
+  const { wallMs, report } = coldScan(root);
   expect(report.stats.files).toBeGreaterThanOrEqual(500);
   expect(report.errors).toBeUndefined();
-  expect(ms).toBeLessThan(3000);
-  console.log(`SLA: ${report.stats.files} files, ${report.findings.length} findings, wall ${Math.round(ms)} ms (engine ${report.durationMs} ms)`);
+  expect(wallMs).toBeLessThan(SLA_MS);
+  console.log(`SLA: ${report.stats.files} files, ${report.findings.length} findings, wall ${Math.round(wallMs)} ms (engine ${report.durationMs} ms)`);
 }, 15_000);

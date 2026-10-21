@@ -9,3 +9,4 @@ packages/vscode-ext/*.vsix
 _to_delete/
 .claude/settings.local.json
 packages/vscode-ext/media/ui/
+*.bun-build
