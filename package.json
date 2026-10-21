@@ -1,7 +1,7 @@
 {
   "name": "usegantry",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "license": "MIT",
   "repository": "github:askp-dev/usegantry",
   "description": "Sub-3-second static readiness scanner, legal/EULA compiler, FinOps burn guard, and AST-guided active pentester for AI-generated repositories.",

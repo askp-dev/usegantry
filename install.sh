@@ -3,7 +3,7 @@
 # Downloads the standalone binary for this OS/arch from GitHub Releases and refuses to install it unless its
 # SHA-256 matches the release's SHA256SUMS. The standalone binary has no Go/Rust coverage; for that, use
 # `bunx @usegantry/cli` (it installs the optional ast-grep grammars).
-#   GANTRY_VERSION=v0.1.0   pin a release (default: latest)
+#   GANTRY_VERSION=v0.1.2   pin a release (default: latest)
 #   GANTRY_INSTALL_DIR=...  where to put `gantry` (default: $HOME/.gantry/bin)
 set -eu
 

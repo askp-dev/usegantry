@@ -26,7 +26,7 @@ runs:
         printf '%s' "$PROFILE" | grep -Eq '^[a-z,-]*$' || { echo "::error::invalid profile"; exit 2; }
     - name: Scan
       shell: bash
-      env: { TARGET: "${{ inputs.path }}", PROFILE: "${{ inputs.profile }}", GANTRY_VERSION: "0.1.0" }
+      env: { TARGET: "${{ inputs.path }}", PROFILE: "${{ inputs.profile }}", GANTRY_VERSION: "0.1.2" }
       run: |
         bun add -g "@usegantry/cli@${GANTRY_VERSION}"
         set -- ; [ -n "$PROFILE" ] && set -- --profile "$PROFILE"

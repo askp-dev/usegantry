@@ -7,7 +7,7 @@ import { isBlocking, isSuppressed, RuleSkipped } from "./rules/helpers";
 import { ALL_STATIC_RULES } from "./rules/index";
 import { assertProfiles, profileSeverity } from "./rules/profiles";
 
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.2";
 export const RULESET_VERSION = "2026.10.0";
 export const PENALTY: Record<Severity, number> = { CRITICAL: 25, HIGH: 10, MEDIUM: 4 };
 const PILLARS: Pillar[] = ["SECURITY", "PRIVACY", "LEGAL", "FINOPS_OPS"];

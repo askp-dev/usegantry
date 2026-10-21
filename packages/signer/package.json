@@ -1,7 +1,7 @@
 {
   "name": "@usegantry/signer",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "license": "MIT",
   "repository": "github:askp-dev/usegantry",
   "description": "Cloudflare Worker that signs Gantry certificates for the official reusable workflow (GitHub OIDC).",

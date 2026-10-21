@@ -31,7 +31,7 @@ jobs:
       score: ${{ steps.gate.outputs.score }}
       status: ${{ steps.gate.outputs.status }}
     env:
-      GANTRY_VERSION: "0.1.0"  # pinned here so a caller can't pick the scanner
+      GANTRY_VERSION: "0.1.2"  # pinned here so a caller can't pick the scanner
       TARGET: ${{ inputs.path }}
       PROFILE: ${{ inputs.profile }}
       STRICT: ${{ inputs.strict }}

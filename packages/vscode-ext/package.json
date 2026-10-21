@@ -4,7 +4,7 @@
   "description": "Launch-readiness diagnostics, CodeLens fixes and Mission Control for AI-generated repos.",
   "publisher": "usegantry",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "license": "MIT",
   "repository": "github:askp-dev/usegantry",
   "engines": {

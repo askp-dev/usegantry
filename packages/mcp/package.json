@@ -1,6 +1,6 @@
 {
   "name": "@usegantry/mcp",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Gantry MCP server: runs `gantry mcp` (stdio JSON-RPC) for Claude Code, Cursor and other MCP clients.",
   "type": "module",
   "license": "MIT",
