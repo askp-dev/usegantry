@@ -1,0 +1,67 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+}
+
+// Append-only record of every PHI read and write (no PHI values stored here).
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String
+  tableName String
+  recordId  String
+  at        DateTime @default(now())
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  name        String
+  dateOfBirth DateTime
+  diagnosis   String
+  medications String[]
+  userId      String
+}
+
+// Append-only: corrections are reversal entries.
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  accountId String
+  amountCents    BigInt
+  idempotencyKey String   @unique
+  reversesId     String?
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id             String  @id @default(cuid())
+  amount         Decimal @db.Decimal(19, 4)
+  idempotencyKey String  @unique
+}
+
+model Matter {
+  id             String           @id @default(cuid())
+  name           String
+  documents      Document[]
+  correspondence Correspondence[]
+}
+
+model Document {
+  id        String  @id @default(cuid())
+  matterId  String
+  matter    Matter  @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  legalHold Boolean @default(false)
+  body      String
+}
+
+model Correspondence {
+  id       String @id @default(cuid())
+  matterId String
+  matter    Matter  @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  legalHold Boolean @default(false)
+  body      String
+}

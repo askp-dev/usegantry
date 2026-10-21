@@ -32,7 +32,10 @@
    },
    "envKeys": [
     "STRIPE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "lemonsqueezy",
@@ -61,7 +64,10 @@
    "envKeys": [
     "LEMONSQUEEZY_",
     "LEMON_SQUEEZY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "paddle",
@@ -89,7 +95,10 @@
    },
    "envKeys": [
     "PADDLE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "paypal",
@@ -120,7 +129,10 @@
    },
    "envKeys": [
     "PAYPAL_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "braintree",
@@ -148,7 +160,10 @@
    },
    "envKeys": [
     "BRAINTREE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "square",
@@ -176,7 +191,10 @@
    },
    "envKeys": [
     "SQUARE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "polar",
@@ -204,7 +222,10 @@
    },
    "envKeys": [
     "POLAR_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "razorpay",
@@ -231,7 +252,10 @@
    },
    "envKeys": [
     "RAZORPAY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "adyen",
@@ -259,7 +283,10 @@
    },
    "envKeys": [
     "ADYEN_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "revenuecat",
@@ -285,7 +312,10 @@
    },
    "envKeys": [
     "REVENUECAT_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "openai",
@@ -313,7 +343,10 @@
    },
    "envKeys": [
     "OPENAI_"
-   ]
+   ],
+   "baa": true,
+   "zdr": true,
+   "trainsOnData": false
   },
   {
    "id": "anthropic",
@@ -342,7 +375,10 @@
    },
    "envKeys": [
     "ANTHROPIC_"
-   ]
+   ],
+   "baa": true,
+   "zdr": true,
+   "trainsOnData": false
   },
   {
    "id": "google-ai",
@@ -375,7 +411,10 @@
     "GEMINI_",
     "GOOGLE_GENERATIVE_AI_",
     "GOOGLE_AI_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mistral",
@@ -402,7 +441,10 @@
    },
    "envKeys": [
     "MISTRAL_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "cohere",
@@ -430,7 +472,10 @@
    "envKeys": [
     "COHERE_",
     "CO_API_KEY"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "groq",
@@ -457,7 +502,10 @@
    },
    "envKeys": [
     "GROQ_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "together",
@@ -484,7 +532,10 @@
    },
    "envKeys": [
     "TOGETHER_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "fireworks",
@@ -510,7 +561,10 @@
    },
    "envKeys": [
     "FIREWORKS_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "deepseek",
@@ -534,7 +588,10 @@
    },
    "envKeys": [
     "DEEPSEEK_"
-   ]
+   ],
+   "baa": false,
+   "zdr": false,
+   "trainsOnData": true
   },
   {
    "id": "xai",
@@ -561,7 +618,10 @@
    "envKeys": [
     "XAI_",
     "GROK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "perplexity",
@@ -585,7 +645,10 @@
    },
    "envKeys": [
     "PERPLEXITY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "openrouter",
@@ -610,7 +673,10 @@
    },
    "envKeys": [
     "OPENROUTER_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "replicate",
@@ -636,7 +702,10 @@
    },
    "envKeys": [
     "REPLICATE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "huggingface",
@@ -664,7 +733,10 @@
    "envKeys": [
     "HF_TOKEN",
     "HUGGINGFACE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "elevenlabs",
@@ -694,7 +766,10 @@
    "envKeys": [
     "ELEVENLABS_",
     "ELEVEN_LABS_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "deepgram",
@@ -721,7 +796,10 @@
    },
    "envKeys": [
     "DEEPGRAM_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "assemblyai",
@@ -748,7 +826,10 @@
    },
    "envKeys": [
     "ASSEMBLYAI_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "stability",
@@ -774,7 +855,10 @@
    },
    "envKeys": [
     "STABILITY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "fal",
@@ -802,7 +886,10 @@
    "envKeys": [
     "FAL_KEY",
     "FAL_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "langchain",
@@ -831,7 +918,10 @@
    "envKeys": [
     "LANGCHAIN_",
     "LANGSMITH_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "langfuse",
@@ -860,7 +950,10 @@
    },
    "envKeys": [
     "LANGFUSE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "helicone",
@@ -887,7 +980,10 @@
    },
    "envKeys": [
     "HELICONE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "pinecone",
@@ -911,7 +1007,10 @@
    },
    "envKeys": [
     "PINECONE_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "weaviate",
@@ -935,7 +1034,10 @@
    },
    "envKeys": [
     "WEAVIATE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "qdrant",
@@ -958,7 +1060,10 @@
    },
    "envKeys": [
     "QDRANT_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "supabase",
@@ -990,7 +1095,10 @@
    "envKeys": [
     "SUPABASE_",
     "NEXT_PUBLIC_SUPABASE_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "firebase",
@@ -1023,7 +1131,10 @@
    "envKeys": [
     "FIREBASE_",
     "NEXT_PUBLIC_FIREBASE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "neon",
@@ -1050,7 +1161,10 @@
    },
    "envKeys": [
     "NEON_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "planetscale",
@@ -1075,7 +1189,10 @@
    },
    "envKeys": [
     "PLANETSCALE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "turso",
@@ -1103,7 +1220,10 @@
    },
    "envKeys": [
     "TURSO_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mongodb",
@@ -1134,7 +1254,10 @@
     "MONGODB_",
     "MONGO_URI",
     "MONGO_URL"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "upstash",
@@ -1163,7 +1286,10 @@
    "envKeys": [
     "UPSTASH_",
     "KV_REST_API_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "redis",
@@ -1187,7 +1313,10 @@
    },
    "envKeys": [
     "REDIS_CLOUD_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "convex",
@@ -1215,7 +1344,10 @@
    "envKeys": [
     "CONVEX_",
     "NEXT_PUBLIC_CONVEX_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "appwrite",
@@ -1243,7 +1375,10 @@
    },
    "envKeys": [
     "APPWRITE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "pocketbase",
@@ -1265,7 +1400,10 @@
    },
    "envKeys": [
     "POCKETBASE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "clerk",
@@ -1299,7 +1437,10 @@
    "envKeys": [
     "CLERK_",
     "NEXT_PUBLIC_CLERK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "auth0",
@@ -1330,7 +1471,10 @@
    },
    "envKeys": [
     "AUTH0_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "okta",
@@ -1358,7 +1502,10 @@
    },
    "envKeys": [
     "OKTA_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "workos",
@@ -1386,7 +1533,10 @@
    },
    "envKeys": [
     "WORKOS_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "stytch",
@@ -1415,7 +1565,10 @@
    },
    "envKeys": [
     "STYTCH_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "kinde",
@@ -1443,7 +1596,10 @@
    },
    "envKeys": [
     "KINDE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "descope",
@@ -1471,7 +1627,10 @@
    },
    "envKeys": [
     "DESCOPE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "magic",
@@ -1499,7 +1658,10 @@
    },
    "envKeys": [
     "MAGIC_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "resend",
@@ -1524,7 +1686,10 @@
    },
    "envKeys": [
     "RESEND_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "sendgrid",
@@ -1550,7 +1715,10 @@
    },
    "envKeys": [
     "SENDGRID_"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "postmark",
@@ -1575,7 +1743,10 @@
    },
    "envKeys": [
     "POSTMARK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mailgun",
@@ -1601,7 +1772,10 @@
    },
    "envKeys": [
     "MAILGUN_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "aws-ses",
@@ -1625,7 +1799,10 @@
    },
    "envKeys": [
     "SES_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "loops",
@@ -1650,7 +1827,10 @@
    },
    "envKeys": [
     "LOOPS_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mailchimp",
@@ -1677,7 +1857,10 @@
    },
    "envKeys": [
     "MAILCHIMP_"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "convertkit",
@@ -1702,7 +1885,10 @@
    "envKeys": [
     "CONVERTKIT_",
     "KIT_API_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "customerio",
@@ -1728,7 +1914,10 @@
    },
    "envKeys": [
     "CUSTOMERIO_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "twilio",
@@ -1755,7 +1944,10 @@
    },
    "envKeys": [
     "TWILIO_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "vonage",
@@ -1780,7 +1972,10 @@
    },
    "envKeys": [
     "VONAGE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "novu",
@@ -1806,7 +2001,10 @@
    },
    "envKeys": [
     "NOVU_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "knock",
@@ -1831,7 +2029,10 @@
    },
    "envKeys": [
     "KNOCK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "onesignal",
@@ -1857,7 +2058,10 @@
    },
    "envKeys": [
     "ONESIGNAL_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "expo",
@@ -1883,7 +2087,10 @@
    },
    "envKeys": [
     "EXPO_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "pusher",
@@ -1908,7 +2115,10 @@
    },
    "envKeys": [
     "PUSHER_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "ably",
@@ -1932,7 +2142,10 @@
    },
    "envKeys": [
     "ABLY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "liveblocks",
@@ -1956,7 +2169,10 @@
    },
    "envKeys": [
     "LIVEBLOCKS_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "stream",
@@ -1984,7 +2200,10 @@
    },
    "envKeys": [
     "STREAM_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "livekit",
@@ -2012,7 +2231,10 @@
    },
    "envKeys": [
     "LIVEKIT_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "daily",
@@ -2038,7 +2260,10 @@
    },
    "envKeys": [
     "DAILY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "posthog",
@@ -2066,7 +2291,10 @@
    "envKeys": [
     "POSTHOG_",
     "NEXT_PUBLIC_POSTHOG_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "google-analytics",
@@ -2096,7 +2324,10 @@
     "NEXT_PUBLIC_GA_",
     "GA_MEASUREMENT_ID",
     "NEXT_PUBLIC_GOOGLE_ANALYTICS"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "vercel-analytics",
@@ -2117,7 +2348,10 @@
     ],
     "pypi": []
    },
-   "envKeys": []
+   "envKeys": [],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mixpanel",
@@ -2144,7 +2378,10 @@
    "envKeys": [
     "MIXPANEL_",
     "NEXT_PUBLIC_MIXPANEL_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "amplitude",
@@ -2171,7 +2408,10 @@
    },
    "envKeys": [
     "AMPLITUDE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "segment",
@@ -2199,7 +2439,10 @@
    },
    "envKeys": [
     "SEGMENT_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "plausible",
@@ -2222,7 +2465,10 @@
    "envKeys": [
     "PLAUSIBLE_",
     "NEXT_PUBLIC_PLAUSIBLE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "fathom",
@@ -2244,7 +2490,10 @@
    "envKeys": [
     "FATHOM_",
     "NEXT_PUBLIC_FATHOM_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "hotjar",
@@ -2269,7 +2518,10 @@
    "envKeys": [
     "HOTJAR_",
     "NEXT_PUBLIC_HOTJAR_"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "fullstory",
@@ -2295,7 +2547,10 @@
    },
    "envKeys": [
     "FULLSTORY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "logrocket",
@@ -2319,7 +2574,10 @@
    },
    "envKeys": [
     "LOGROCKET_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "clarity",
@@ -2343,7 +2601,10 @@
    "envKeys": [
     "CLARITY_",
     "NEXT_PUBLIC_CLARITY_"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "meta-pixel",
@@ -2371,7 +2632,10 @@
     "FB_PIXEL_",
     "META_PIXEL_",
     "NEXT_PUBLIC_FB_PIXEL_"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "tiktok-pixel",
@@ -2394,7 +2658,10 @@
    },
    "envKeys": [
     "TIKTOK_PIXEL_"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "linkedin-insight",
@@ -2417,7 +2684,10 @@
    },
    "envKeys": [
     "LINKEDIN_PARTNER_ID"
-   ]
+   ],
+   "baa": false,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "sentry",
@@ -2450,7 +2720,10 @@
    "envKeys": [
     "SENTRY_",
     "NEXT_PUBLIC_SENTRY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "datadog",
@@ -2479,7 +2752,10 @@
    "envKeys": [
     "DD_",
     "DATADOG_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "newrelic",
@@ -2505,7 +2781,10 @@
    },
    "envKeys": [
     "NEW_RELIC_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "highlight",
@@ -2533,7 +2812,10 @@
    "envKeys": [
     "HIGHLIGHT_",
     "NEXT_PUBLIC_HIGHLIGHT_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "logtail",
@@ -2560,7 +2842,10 @@
    "envKeys": [
     "LOGTAIL_",
     "BETTERSTACK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "axiom",
@@ -2587,7 +2872,10 @@
    "envKeys": [
     "AXIOM_",
     "NEXT_PUBLIC_AXIOM_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "bugsnag",
@@ -2613,7 +2901,10 @@
    },
    "envKeys": [
     "BUGSNAG_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "rollbar",
@@ -2638,7 +2929,10 @@
    },
    "envKeys": [
     "ROLLBAR_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "launchdarkly",
@@ -2665,7 +2959,10 @@
    "envKeys": [
     "LAUNCHDARKLY_",
     "LD_SDK_KEY"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "statsig",
@@ -2691,7 +2988,10 @@
    },
    "envKeys": [
     "STATSIG_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "growthbook",
@@ -2716,7 +3016,10 @@
    },
    "envKeys": [
     "GROWTHBOOK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "intercom",
@@ -2745,7 +3048,10 @@
    "envKeys": [
     "INTERCOM_",
     "NEXT_PUBLIC_INTERCOM_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "crisp",
@@ -2772,7 +3078,10 @@
    "envKeys": [
     "CRISP_",
     "NEXT_PUBLIC_CRISP_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "zendesk",
@@ -2798,7 +3107,10 @@
    },
    "envKeys": [
     "ZENDESK_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "hubspot",
@@ -2823,7 +3135,10 @@
    },
    "envKeys": [
     "HUBSPOT_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "salesforce",
@@ -2849,7 +3164,10 @@
    "envKeys": [
     "SALESFORCE_",
     "SF_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "attio",
@@ -2871,7 +3189,10 @@
    },
    "envKeys": [
     "ATTIO_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "cloudinary",
@@ -2898,7 +3219,10 @@
    "envKeys": [
     "CLOUDINARY_",
     "NEXT_PUBLIC_CLOUDINARY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "uploadthing",
@@ -2920,7 +3244,10 @@
    },
    "envKeys": [
     "UPLOADTHING_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "aws-s3",
@@ -2947,7 +3274,10 @@
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
     "S3_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "cloudflare-r2",
@@ -2974,7 +3304,10 @@
     "CLOUDFLARE_",
     "R2_",
     "CF_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "vercel-blob",
@@ -2999,7 +3332,10 @@
    "envKeys": [
     "BLOB_READ_WRITE_TOKEN",
     "EDGE_CONFIG"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mux",
@@ -3024,7 +3360,10 @@
    },
    "envKeys": [
     "MUX_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "algolia",
@@ -3051,7 +3390,10 @@
    "envKeys": [
     "ALGOLIA_",
     "NEXT_PUBLIC_ALGOLIA_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "meilisearch",
@@ -3076,7 +3418,10 @@
    "envKeys": [
     "MEILI_",
     "MEILISEARCH_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "typesense",
@@ -3100,7 +3445,10 @@
    },
    "envKeys": [
     "TYPESENSE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "mapbox",
@@ -3127,7 +3475,10 @@
    "envKeys": [
     "MAPBOX_",
     "NEXT_PUBLIC_MAPBOX_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "google-maps",
@@ -3155,7 +3506,10 @@
    "envKeys": [
     "GOOGLE_MAPS_",
     "NEXT_PUBLIC_GOOGLE_MAPS_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "recaptcha",
@@ -3179,7 +3533,10 @@
    "envKeys": [
     "RECAPTCHA_",
     "NEXT_PUBLIC_RECAPTCHA_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "hcaptcha",
@@ -3201,7 +3558,10 @@
    },
    "envKeys": [
     "HCAPTCHA_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "turnstile",
@@ -3225,7 +3585,10 @@
    "envKeys": [
     "TURNSTILE_",
     "NEXT_PUBLIC_TURNSTILE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "arcjet",
@@ -3252,7 +3615,10 @@
    },
    "envKeys": [
     "ARCJET_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "inngest",
@@ -3275,7 +3641,10 @@
    },
    "envKeys": [
     "INNGEST_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "trigger",
@@ -3297,7 +3666,10 @@
    },
    "envKeys": [
     "TRIGGER_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "svix",
@@ -3320,7 +3692,10 @@
    },
    "envKeys": [
     "SVIX_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "docusign",
@@ -3345,7 +3720,10 @@
    },
    "envKeys": [
     "DOCUSIGN_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "plaid",
@@ -3373,7 +3751,10 @@
    },
    "envKeys": [
     "PLAID_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "persona",
@@ -3397,7 +3778,10 @@
    },
    "envKeys": [
     "PERSONA_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "onfido",
@@ -3423,7 +3807,10 @@
    },
    "envKeys": [
     "ONFIDO_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "calcom",
@@ -3447,7 +3834,10 @@
    "envKeys": [
     "CAL_",
     "CALCOM_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "calendly",
@@ -3469,7 +3859,10 @@
    },
    "envKeys": [
     "CALENDLY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "google-oauth",
@@ -3500,7 +3893,10 @@
    "envKeys": [
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "github-oauth",
@@ -3529,7 +3925,10 @@
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
     "GITHUB_APP_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "slack",
@@ -3555,7 +3954,10 @@
    },
    "envKeys": [
     "SLACK_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "discord",
@@ -3580,7 +3982,10 @@
    },
    "envKeys": [
     "DISCORD_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "notion",
@@ -3603,7 +4008,10 @@
    },
    "envKeys": [
     "NOTION_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "airtable",
@@ -3627,7 +4035,10 @@
    },
    "envKeys": [
     "AIRTABLE_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "sanity",
@@ -3653,7 +4064,10 @@
    "envKeys": [
     "SANITY_",
     "NEXT_PUBLIC_SANITY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "contentful",
@@ -3677,7 +4091,10 @@
    },
    "envKeys": [
     "CONTENTFUL_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "vercel",
@@ -3702,7 +4119,10 @@
    },
    "envKeys": [
     "VERCEL_"
-   ]
+   ],
+   "baa": true,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "netlify",
@@ -3726,7 +4146,10 @@
    },
    "envKeys": [
     "NETLIFY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "fly",
@@ -3748,7 +4171,10 @@
    },
    "envKeys": [
     "FLY_API_TOKEN"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "railway",
@@ -3768,7 +4194,10 @@
    },
    "envKeys": [
     "RAILWAY_"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   },
   {
    "id": "render",
@@ -3788,7 +4217,10 @@
    },
    "envKeys": [
     "RENDER_API_KEY"
-   ]
+   ],
+   "baa": null,
+   "zdr": null,
+   "trainsOnData": null
   }
  ]
 }

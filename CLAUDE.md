@@ -27,11 +27,12 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Privacy rules PRIV-01..07 + VEC-03 + EDGE-01 + SOV-01 | RULES_SPEC.md 52–66 |
 | Legal rules LEG-01..06 | RULES_SPEC.md 69–79 |
 | FIN / PAY / OPS / A11Y / SEO / CACHE-02 / PY-02 rules | RULES_SPEC.md 82–100 |
-| Pentest probes PT-01..06 | RULES_SPEC.md 103–127 |
-| Rule registry (`rules/index.ts`) | RULES_SPEC.md 130–277 |
+| Compliance profile packs HIPAA-01..03 + PCI-01..03 + LGL-01..03 + AIA-01 | RULES_SPEC.md 103–117 |
+| Pentest probes PT-01..06 | RULES_SPEC.md 120–144 |
+| Rule registry (`rules/index.ts`) | RULES_SPEC.md 147–316 |
 | Design tokens / typography | DESIGN.md 9–50 |
 | UI components (header, data-flow graph, pentest console, legal studio) | DESIGN.md 51–101 |
-| Handoff: status / quirks / remaining work | handoff.md 25–42 / 273–366 / 368–449 |
+| Handoff: status / quirks / remaining work | handoff.md 25–44 / 288–390 / 392–451 |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.
@@ -51,7 +52,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 - `bun run bench` runs the perf SLA check (Sprint 5).
 
 ## Conventions
-- Rule file names and export names must match the registry in RULES_SPEC.md 130–277 exactly.
+- Rule file names and export names must match the registry in RULES_SPEC.md 147–316 exactly.
 - Every finding needs `evidence` (a snippet), plain-English `impact`, and a surgical `agentRemediationPrompt`. Add `autoFixPatch` only when the fix is deterministic.
 - Each rule gets a test asserting it fires on `fixtures/vulnerable-saas`. Every rule must also pass on `fixtures/clean-saas` (create it in Sprint 2) with no findings.
 - Commit after each sprint with message `feat(sprint-N): …`.

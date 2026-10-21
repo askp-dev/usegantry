@@ -149,10 +149,16 @@ V=[
 ("railway","Railway Corporation","Hosting","US","https://railway.com/legal/privacy","https://railway.com/legal/dpa",[ID,USG],[],[],[],["RAILWAY_"]),
 ("render","Render Services, Inc.","Hosting","US","https://render.com/privacy","https://render.com/dpa",[ID,USG],[],[],[],["RENDER_API_KEY"]),
 ]
+# Compliance flags (Sprint 13). True/False only where the vendor's public terms are well known; None = unknown, verify before relying on it.
+# baa: signs a HIPAA Business Associate Agreement on some plan. zdr: zero-data-retention available. trainsOnData: default API terms allow training on inputs.
+BAA_YES={"openai","pinecone","anthropic","aws-ses","aws-s3","supabase","neon","mongodb","twilio","datadog","newrelic","auth0","okta","posthog","zendesk","salesforce","docusign","vercel","cloudflare-r2"}
+BAA_NO={"sendgrid","google-analytics","meta-pixel","tiktok-pixel","linkedin-insight","hotjar","clarity","mailchimp","deepseek"}
+ZDR={"openai":True,"anthropic":True,"deepseek":False}
+TRAINS={"openai":False,"anthropic":False,"deepseek":True}
 vendors=[]
 pkgcount=0
 for (i,e,c,j,pp,dpa,data,cl,npm,py,env) in V:
-    vendors.append(dict(id=i,entityName=e,category=c,jurisdiction=j,privacyPolicyUrl=pp,dpaUrl=dpa,dataProcessed=data,triggersClauses=cl,packages=dict(npm=npm,pypi=py),envKeys=env))
+    vendors.append(dict(id=i,entityName=e,category=c,jurisdiction=j,privacyPolicyUrl=pp,dpaUrl=dpa,dataProcessed=data,triggersClauses=cl,packages=dict(npm=npm,pypi=py),envKeys=env,baa=True if i in BAA_YES else False if i in BAA_NO else None,zdr=ZDR.get(i),trainsOnData=TRAINS.get(i)))
     pkgcount+=len(npm)+len(py)
 out=dict(version="2026.10.1",note="Vendor legal-entity / DPA metadata. Verify URLs and entity names against each vendor's current legal pages before publishing a privacy policy.",vendorCount=len(vendors),sdkCount=pkgcount,vendors=vendors)
 here=os.path.dirname(os.path.abspath(__file__))

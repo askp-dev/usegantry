@@ -2,8 +2,10 @@
 import { basename } from "node:path";
 import { type BuildOptions, buildRepoContext } from "./context/builder";
 import type { AuditReport, DataFlowGraph, DataFlowNode, Finding, Pillar, PillarScore, RepoContext, RuleDefinition, Severity } from "./context/types";
+import { requireFeature } from "./entitlements";
 import { isBlocking, isSuppressed } from "./rules/helpers";
 import { ALL_STATIC_RULES } from "./rules/index";
+import { assertProfiles, profileSeverity } from "./rules/profiles";
 
 export const VERSION = "0.1.0";
 export const RULESET_VERSION = "2026.10.0";
@@ -32,8 +34,12 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
   const strict = opts.strict ?? ctx.config.strict;
   const changed = opts.changedFiles && new Set(opts.changedFiles);
   // Profile-only rules (e.g. SOV-01 under `airgap`) run when their profile is active or they're requested by id.
-  const active = (r: RuleDefinition) => !r.profiles || !!opts.ruleIds?.includes(r.id) || r.profiles.some((p) => ctx.config.profiles?.includes(p));
+  const profiles = ctx.config.profiles ?? [];
+  assertProfiles(profiles);
+  const active = (r: RuleDefinition) => !r.profiles || !!opts.ruleIds?.includes(r.id) || r.profiles.some((p) => profiles.includes(p));
   const rules = (opts.rules ?? ALL_STATIC_RULES).filter((r) => (!opts.ruleIds || opts.ruleIds.includes(r.id)) && !(changed && r.scope === "repo") && active(r));
+  // Compliance packs are agency-tier, whether enabled by profile or by requesting a profile rule's id.
+  if (profiles.length || rules.some((r) => r.profiles)) requireFeature("profiles");
   const timings: Record<string, number> = { ...ctx.timings };
   const errors: NonNullable<AuditReport["errors"]> = [];
   const results = await Promise.all(
@@ -60,7 +66,8 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
       suppressed++;
       continue;
     }
-    findings.push({ ...f, blocking: isBlocking(f.severity, strict) });
+    const severity = profileSeverity(f.ruleId, f.severity, profiles);
+    findings.push({ ...f, severity, blocking: isBlocking(severity, strict) });
   }
   findings.sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity] || a.ruleId.localeCompare(b.ruleId) || a.file.localeCompare(b.file) || a.line - b.line);
   const blockers = findings.filter((f) => f.blocking).length;

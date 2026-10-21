@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
+import { compileAiInventory } from "../compilers/ai-inventory";
 import { CertificateBlockedError, generateCertificate } from "../compilers/cert-generator";
 import { writeChecklist } from "../compilers/checklist-writer";
-import { compileLegalDocs } from "../compilers/legal-compiler";
+import { compileLegalDocs, writeChanges } from "../compilers/legal-compiler";
 import { LEGAL_DISCLAIMER } from "../compilers/legal-templates";
 import { compileSafeHarbor } from "../compilers/safe-harbor";
 import { writeVendorPack } from "../compilers/vendor-pack";
@@ -18,8 +19,8 @@ import { toSarif } from "../reporters/sarif";
 const HELP = `preflight ${VERSION}: launch readiness for AI-generated repos
 
 Usage:
-  preflight scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--profile airgap] [--write-checklist] [--verbose]
-  preflight legal [path] [--apply]
+  preflight scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--profile hipaa,fintech-pci,legal-privilege,eu-ai-act,airgap] [--write-checklist] [--verbose]
+  preflight legal [path] [--apply] [--profile eu-ai-act]
   preflight cert [path] [--allow-blocked] [--strict] [--offline]
   preflight attack --target <url> [path]
   preflight ui [path] [--port 4400]
@@ -86,7 +87,11 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       const ctx = await buildRepoContext(path, { config });
       const { manifest, changes: legalChanges } = compileLegalDocs(ctx, { apply: flags.apply === true });
       const harbor = compileSafeHarbor(ctx, { apply: flags.apply === true });
-      const changes = [...legalChanges, ...harbor.changes];
+      // eu-ai-act also compiles AI_INVENTORY.md (agency tier, like every profile).
+      const aiAct = ctx.config.profiles?.includes("eu-ai-act");
+      if (aiAct) requireFeature("profiles");
+      const inventory = aiAct ? writeChanges(ctx, compileAiInventory(ctx), flags.apply === true) : [];
+      const changes = [...legalChanges, ...harbor.changes, ...inventory];
       console.log(`${color.bold("Legal manifest")} v${manifest.version} · stack hash ${manifest.stackHash} · ${manifest.subprocessors.length} sub-processors`);
       if (!changes.length) console.log(color.green("Legal docs are up to date."));
       for (const c of changes) {

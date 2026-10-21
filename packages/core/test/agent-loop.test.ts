@@ -27,7 +27,7 @@ const git = (root: string, ...args: string[]) =>
     stderr: "ignore",
   }).exitCode;
 
-const REPO_SCOPE = ["OPS-01", "OPS-04", "SEO-01", "LEG-03", "LEG-04", "LEG-05", "LEG-06", "PRIV-02", "PRIV-06", "PRIV-07"];
+const REPO_SCOPE = ["OPS-01", "OPS-04", "SEO-01", "LEG-03", "LEG-04", "LEG-05", "LEG-06", "PRIV-02", "PRIV-06", "PRIV-07", "HIPAA-01", "HIPAA-02", "LGL-03", "AIA-01"];
 
 describe("compact reporter", () => {
   const f: Finding = {

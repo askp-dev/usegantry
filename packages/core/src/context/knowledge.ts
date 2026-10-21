@@ -18,6 +18,10 @@ export interface VendorRecord {
   triggersClauses: string[];
   packages: { npm: string[]; pypi: string[] };
   envKeys: string[];
+  /** Compliance flags (null = unknown, verify): signs a HIPAA BAA / offers zero data retention / trains on API inputs by default. */
+  baa: boolean | null;
+  zdr: boolean | null;
+  trainsOnData: boolean | null;
 }
 
 export interface KnownPackage {

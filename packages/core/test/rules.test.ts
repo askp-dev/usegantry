@@ -16,8 +16,12 @@ const FASTAPI = "fixtures/vulnerable-fastapi";
 const CLEAN_FASTAPI = "fixtures/clean-fastapi";
 /** Python rules: positive cases in the FastAPI sibling fixture, held silent on its clean twin too. */
 const ON_PY = new Set(["PY-01", "PY-02", "PY-03", "PY-04"]);
-const vulnRoot = (id: string) => (ON_BAAS.has(id) ? BAAS : ON_INFRA.has(id) ? INFRA : ON_PY.has(id) ? FASTAPI : VULN);
-const cleanTwin = (id: string) => (ON_INFRA.has(id) ? CLEAN_INFRA : ON_PY.has(id) ? CLEAN_FASTAPI : undefined);
+const COMPLIANCE = "fixtures/vulnerable-compliance";
+const CLEAN_COMPLIANCE = "fixtures/clean-compliance";
+/** Compliance-profile rules (hipaa, fintech-pci, legal-privilege, eu-ai-act): positive cases in their own fixture, held silent on its clean twin. */
+const ON_COMP = new Set(["HIPAA-01", "HIPAA-02", "HIPAA-03", "PCI-01", "PCI-02", "PCI-03", "LGL-01", "LGL-02", "LGL-03", "AIA-01"]);
+const vulnRoot = (id: string) => (ON_BAAS.has(id) ? BAAS : ON_INFRA.has(id) ? INFRA : ON_PY.has(id) ? FASTAPI : ON_COMP.has(id) ? COMPLIANCE : VULN);
+const cleanTwin = (id: string) => (ON_INFRA.has(id) ? CLEAN_INFRA : ON_PY.has(id) ? CLEAN_FASTAPI : ON_COMP.has(id) ? CLEAN_COMPLIANCE : undefined);
 
 /** What each rule must report on the vulnerable fixture: [file, evidence substring]. */
 const EXPECT: Record<string, Array<[string, string]>> = {
@@ -205,6 +209,25 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     ["app/chat.py", "ConversationBufferMemory()"],
     ["app/chat.py", "chat_histories = {}"],
   ],
+  "HIPAA-01": [
+    ["package.json", "@sendgrid/mail"],
+    ["package.json", "mixpanel"],
+  ],
+  "HIPAA-02": [["prisma/schema.prisma", "Patient (diagnosis, medications)"]],
+  "HIPAA-03": [["auth.ts", "maxAge: 30 * 24 * 60 * 60"]],
+  "PCI-01": [["prisma/schema.prisma", "LedgerEntry.amount: Float"]],
+  "PCI-02": [
+    ["app/api/ledger/[id]/route.ts", "prisma.ledgerEntry.update"],
+    ["app/api/ledger/[id]/route.ts", "prisma.ledgerEntry.delete"],
+  ],
+  "PCI-03": [["app/api/transfers/route.ts", "export async function POST"]],
+  "LGL-01": [["lib/rag.ts", "index.query"]],
+  "LGL-02": [
+    ["prisma/schema.prisma", "Document.matterId → Matter ON DELETE CASCADE (and Document.legalHold exists)"],
+    ["prisma/schema.prisma", "Correspondence has no legal-hold flag"],
+  ],
+  "LGL-03": [["package.json", "@ai-sdk/deepseek"]],
+  "AIA-01": [["package.json", "AI_INVENTORY.md not found"]],
 };
 
 let vuln: RepoContext;
@@ -214,6 +237,8 @@ let infra: RepoContext;
 let cleanInfra: RepoContext;
 let fastapi: RepoContext;
 let cleanFastapi: RepoContext;
+let compliance: RepoContext;
+let cleanCompliance: RepoContext;
 const vulnOut = new Map<string, Finding[]>();
 const cleanOut = new Map<string, Finding[]>();
 
@@ -225,18 +250,21 @@ beforeAll(async () => {
   cleanInfra = await buildRepoContext(CLEAN_INFRA, { config: { offline: true } });
   fastapi = await buildRepoContext(FASTAPI, { config: { offline: true } });
   cleanFastapi = await buildRepoContext(CLEAN_FASTAPI, { config: { offline: true } });
-  const vulnCtx = (id: string) => (ON_BAAS.has(id) ? baas : ON_INFRA.has(id) ? infra : ON_PY.has(id) ? fastapi : vuln);
+  compliance = await buildRepoContext(COMPLIANCE, { config: { offline: true } });
+  cleanCompliance = await buildRepoContext(CLEAN_COMPLIANCE, { config: { offline: true } });
+  const vulnCtx = (id: string) => (ON_BAAS.has(id) ? baas : ON_INFRA.has(id) ? infra : ON_PY.has(id) ? fastapi : ON_COMP.has(id) ? compliance : vuln);
   await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(vulnCtx(r.id)))));
   // Profile-only rules (SOV-01) never run on clean-saas without their profile, so they're held to the clean twin instead.
   await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, r.profiles ? [] : await r.run(clean))));
   await Promise.all([...ON_INFRA].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanInfra)))));
   await Promise.all([...ON_PY].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanFastapi)))));
+  await Promise.all([...ON_COMP].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanCompliance)))));
 });
 
-test("registry has 58 unique rules covering every expectation", () => {
+test("registry has 68 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(58);
-  expect(new Set(ids).size).toBe(58);
+  expect(ids.length).toBe(68);
+  expect(new Set(ids).size).toBe(68);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 

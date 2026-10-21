@@ -16,6 +16,8 @@ export const FEATURE_TIER = {
   ide: "pro",
   cert: "agency",
   vendorPack: "agency",
+  /** Compliance rule packs (`--profile hipaa|fintech-pci|legal-privilege|eu-ai-act|airgap`). */
+  profiles: "agency",
 } as const satisfies Record<string, Tier>;
 export type Feature = keyof typeof FEATURE_TIER;
 

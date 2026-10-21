@@ -1,0 +1,15 @@
+{
+  "name": "vulnerable-compliance",
+  "private": true,
+  "dependencies": {
+    "next": "15.0.3",
+    "next-auth": "5.0.0-beta.25",
+    "@prisma/client": "5.20.0",
+    "openai": "4.67.0",
+    "@ai-sdk/deepseek": "0.1.0",
+    "@sendgrid/mail": "8.1.4",
+    "mixpanel": "0.18.0",
+    "@pinecone-database/pinecone": "3.0.3",
+    "stripe": "16.12.0"
+  }
+}

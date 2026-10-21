@@ -1,0 +1,58 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+}
+
+// HIPAA-02: clinical data, and no audit-log table anywhere in the schema.
+model Patient {
+  id          String   @id @default(cuid())
+  name        String
+  dateOfBirth DateTime
+  diagnosis   String
+  medications String[]
+  userId      String
+}
+
+// PCI-01: money in a binary float.
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  accountId String
+  amount    Float
+  createdAt DateTime @default(now())
+}
+
+// OK: exact decimal + idempotency key.
+model Payment {
+  id             String  @id @default(cuid())
+  amount         Decimal @db.Decimal(19, 4)
+  idempotencyKey String  @unique
+}
+
+model Matter {
+  id             String           @id @default(cuid())
+  name           String
+  documents      Document[]
+  correspondence Correspondence[]
+}
+
+// LGL-02: a held document is wiped when its matter is deleted.
+model Document {
+  id        String  @id @default(cuid())
+  matterId  String
+  matter    Matter  @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  legalHold Boolean @default(false)
+  body      String
+}
+
+// LGL-02: privileged correspondence cascades with no hold flag at all.
+model Correspondence {
+  id       String @id @default(cuid())
+  matterId String
+  matter   Matter @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  body     String
+}

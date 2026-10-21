@@ -9,6 +9,16 @@ import { baas03NosqlInjection } from "./baas/baas-03-nosql-injection";
 // Client apps (2)
 import { client01TauriScopes } from "./client/client-01-tauri-scopes";
 import { client02AsyncstorageTokens } from "./client/client-02-asyncstorage-tokens";
+import { aia01AiInventory } from "./compliance/aia-01-ai-inventory"; // profiles: ["eu-ai-act"]
+import { hipaa01NonBaaVendor } from "./compliance/hipaa-01-non-baa-vendor"; // profiles: ["hipaa"]
+import { hipaa02PhiAuditLog } from "./compliance/hipaa-02-phi-audit-log"; // profiles: ["hipaa"]
+import { hipaa03SessionIdle } from "./compliance/hipaa-03-session-idle"; // profiles: ["hipaa"]
+import { lgl01MatterNamespace } from "./compliance/lgl-01-matter-namespace"; // profiles: ["legal-privilege"]
+import { lgl02LegalHoldCascade } from "./compliance/lgl-02-legal-hold-cascade"; // profiles: ["legal-privilege"]
+import { lgl03AiRetention } from "./compliance/lgl-03-ai-retention"; // profiles: ["legal-privilege"]
+import { pci01FloatMoney } from "./compliance/pci-01-float-money"; // profiles: ["fintech-pci"]
+import { pci02LedgerMutation } from "./compliance/pci-02-ledger-mutation"; // profiles: ["fintech-pci"]
+import { pci03MutationIdempotency } from "./compliance/pci-03-mutation-idempotency"; // profiles: ["fintech-pci"]
 // Vector & cache data layer (5)
 import { cache01GlobalKeys } from "./data/cache-01-global-keys";
 import { cache02NoTtl } from "./data/cache-02-no-ttl";
@@ -135,4 +145,15 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   ops04EnvValidator,
   a11y01InteractiveDom,
   seo01LaunchMeta,
+  // Compliance profiles (10, profile-only)
+  hipaa01NonBaaVendor,
+  hipaa02PhiAuditLog,
+  hipaa03SessionIdle,
+  pci01FloatMoney,
+  pci02LedgerMutation,
+  pci03MutationIdempotency,
+  lgl01MatterNamespace,
+  lgl02LegalHoldCascade,
+  lgl03AiRetention,
+  aia01AiInventory,
 ] as const;

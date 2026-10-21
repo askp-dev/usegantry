@@ -8,9 +8,9 @@
 | **`HIGH`**     | `-10 pts`     | `false` (Default) / `true` (`--strict`) | Secondary vulnerability, missing GDPR erasure cascade, unverified clickwrap consent, sub-processor drift, or payment race condition.                  |
 | **`MEDIUM`**   | `-4 pts`      | `false`                                 | Defense-in-depth hardening, missing security headers, unencrypted non-critical tokens, accessibility/SEO launch gate.                                 |
 
-**Partial scans** (`scan --changed-only`, agent hooks, IDE incremental `BuildOptions.only`): findings are reported only on changed files, SEC-06 skips git history, and rules tagged `scope: "repo"` (whole-repo absence checks) are skipped: `OPS-01`, `OPS-04`, `SEO-01`, `LEG-03`, `LEG-04`, `LEG-05`, `LEG-06`, `PRIV-02`, `PRIV-06`, `PRIV-07`. New rules default to `scope: "file"`; tag a rule `"repo"` when an unchanged file elsewhere could make it fire or clear.
+**Partial scans** (`scan --changed-only`, agent hooks, IDE incremental `BuildOptions.only`): findings are reported only on changed files, SEC-06 skips git history, and rules tagged `scope: "repo"` (whole-repo absence checks) are skipped: `OPS-01`, `OPS-04`, `SEO-01`, `LEG-03`, `LEG-04`, `LEG-05`, `LEG-06`, `PRIV-02`, `PRIV-06`, `PRIV-07`, `HIPAA-01`, `HIPAA-02`, `LGL-03`, `AIA-01`. New rules default to `scope: "file"`; tag a rule `"repo"` when an unchanged file elsewhere could make it fire or clear.
 
-**Profile-only rules** (`profiles` on the rule) run only when one of their profiles is active (`scan --profile airgap`, or `"profiles": ["airgap"]` in config) or when requested by id (`ruleIds`). Today: `SOV-01` (`airgap`). `report.rulesRun` lists what actually ran, so certificates and the checklist never claim a skipped rule passed.
+**Profile-only rules** (`profiles` on the rule) run only when one of their profiles is active (`scan --profile airgap`, or `"profiles": ["airgap"]` in config) or when requested by id (`ruleIds`). Today: `SOV-01` (`airgap`) and the compliance packs below (`hipaa`, `fintech-pci`, `legal-privilege`, `eu-ai-act`). Unknown profile names are an error. Any profile, or any profile rule requested by id, needs `requireFeature("profiles")` (agency). Active profiles also **raise** (never lower) existing rules' severities: `hipaa` → PRIV-01/03/05 CRITICAL; `fintech-pci` → PAY-01/02 CRITICAL; `legal-privilege` → VEC-01/VEC-03/PRIV-05 CRITICAL; `eu-ai-act` → LEG-06 CRITICAL (`rules/profiles.ts`). `report.rulesRun` lists what actually ran, so certificates and the checklist never claim a skipped rule passed.
 
 ---
 
@@ -97,6 +97,23 @@
 | **`PY-02`** | **Blocking Call Inside an `async def` FastAPI Route (Event-Loop Freeze)** | `HIGH` | `async def` functions with a route decorator (`@x.get/post/…/api_route/websocket`) | Non-awaited calls (outside nested defs/lambdas and `to_thread`/`run_in_threadpool`/`run_in_executor` arguments) to `time.sleep`, `requests.*`, top-level `httpx.*`, `urllib.request.urlopen`, `subprocess.run/call/check_*`, `os.system/popen`, sync DB `connect` (psycopg2, pymysql, sqlite3, …), `boto3.client/resource`; methods on instances of sync SDK clients (`OpenAI`, `Anthropic`, `Groq`, `Mistral`, `cohere.Client`, `redis.Redis`, `MongoClient`, `Elasticsearch`, `QdrantClient`); `query/execute/commit/…` on a param typed `Session` when sync SQLAlchemy/SQLModel/psycopg2 is imported. | Async client + `await`, `asyncio.to_thread`, or plain `def` (threadpool). |
 | **`A11Y-01`** | **EAA / ADA Lawsuit Triggers (Interactive A11y Blockers)**       | `MEDIUM`   | `.tsx`, `.jsx`, `.svelte`, `.vue`                                        | AST check on JSX/Svelte DOM elements. Flags: (1) `<div onClick>` or `<span onClick>` without `role="button"` and `tabIndex={0}`, (2) `<input>` without `aria-label`, `id`+`<label>`, or `title`, and (3) `<img>` without `alt`.                                             | Convert clickable `<div>` tags to semantic `<button type="button">` elements and add accessible labels to form inputs and images.                         |
 | **`SEO-01`**  | **Missing Launch Metadata (`robots.txt`, `sitemap`, OpenGraph)** | `MEDIUM`   | Root layout + `public/` or `src/app/`                                    | Checks root layout for `title`, `description`, `openGraph.images`, and checks for `robots.ts`/`robots.txt` and `sitemap.ts`/`sitemap.xml`.                                                                                                                                  | Scaffold dynamic `robots.ts`, `sitemap.ts`, and root OpenGraph/Twitter Card metadata tags.                                                                |
+
+---
+
+## Compliance Profile Packs (profile-only, agency tier: `--profile hipaa|fintech-pci|legal-privilege|eu-ai-act`)
+
+| Rule ID | Profile | Pillar | Detection Target | Severity | Logic |
+|---|---|---|---|---|---|
+| **`HIPAA-01`** | `hipaa` | PRIVACY | Detected sub-processors × `subprocessor-map.json` `baa` | `CRITICAL` (`baa: false`) / `HIGH` (unknown) | Every detected vendor that doesn't sign a BAA. Payments/billing vendors are exempt (HIPAA §1179). Anchored at the manifest/env line. |
+| **`HIPAA-02`** | `hipaa` | PRIVACY | `ctx.dbTables`, `.sql` | `HIGH` | A table with clinical columns (diagnosis, medications, ICD, MRN, lab results, …) or a clinical name (patients, encounters, …) when no audit/access-log table, audit trigger or `pgaudit` exists. |
+| **`HIPAA-03`** | `hipaa` | SECURITY | Auth.js/NextAuth `maxAge`, better-auth `expiresIn`, express-session `cookie.maxAge` (ms), iron-session `ttl`, Django `SESSION_COOKIE_AGE`, Flask `PERMANENT_SESSION_LIFETIME`, Supabase `inactivity_timeout` | `HIGH` | Session lifetime > 15 min, or omitted (library default applies). Literal products and one-level `const` are evaluated; anything else is skipped, never guessed. |
+| **`PCI-01`** | `fintech-pci` | FINOPS_OPS | `ctx.dbTables` | `CRITICAL` on ledger tables, else `HIGH` | A money-named column (amount, price, balance, credits, fee, …) typed FLOAT/REAL/DOUBLE/Prisma `Float`. |
+| **`PCI-02`** | `fintech-pci` | FINOPS_OPS | JS/TS/Python/Svelte code (tests, seeds skipped) | `CRITICAL` delete / `HIGH` update | Prisma `.<ledger>.update/upsert/delete*`, Drizzle `db.update/delete(<ledger>)`, Supabase `.from("<ledger>").update/delete/upsert`, raw `UPDATE <ledger> … SET` / `DELETE FROM <ledger>` on ledger/journal/posting/transaction tables. |
+| **`PCI-03`** | `fintech-pci` | FINOPS_OPS | `ctx.routes` POST/PUT/PATCH/server actions (webhooks excluded → PAY-01) | `HIGH` | Calls a payments SDK or writes a money table (payments, transfers, ledgers, orders, wallets, …) with no `idempotency…` / `ON CONFLICT … DO NOTHING` in the handler. |
+| **`LGL-01`** | `legal-privilege` | SECURITY | `ctx.dataQueries` vector searches | `CRITICAL` | No matter/client/case/engagement key in the filter, namespace or collection. Fires in single-user apps too (unlike VEC-01): user/org scoping isn't an ethical wall. |
+| **`LGL-02`** | `legal-privilege` | LEGAL | `ctx.dbTables` FKs | `CRITICAL` (table has a legal-hold column) / `HIGH` (privileged table, no hold column) | An `ON DELETE CASCADE` FK on a table with `legal_hold`/`litigation_hold`/`retention_hold`/`preserve*`, or on a privileged-content table (matters, documents, memos, correspondence, evidence, …). |
+| **`LGL-03`** | `legal-privilege` | LEGAL | Detected AI sub-processors × `zdr` / `trainsOnData` | `CRITICAL` (trains on inputs) / `HIGH` (no ZDR or unknown) | AI providers that receive prompt content without a confirmed zero-retention, no-training posture. |
+| **`AIA-01`** | `eu-ai-act` | LEGAL | `AI_INVENTORY.md` vs `compileAiInventory(ctx)` | `HIGH` missing / `MEDIUM` stale | The repo uses AI (AI vendor or model-id literal) and the generated part of `AI_INVENTORY.md` is missing or differs from what the code shows now. `preflight legal --apply --profile eu-ai-act` (re)writes it, keeping everything below the end marker. |
 
 ---
 
@@ -204,6 +221,17 @@ import { ops03SwallowedErrors } from "./finops-ops/ops-03-swallowed-errors";
 import { ops04EnvValidator } from "./finops-ops/ops-04-env-validator";
 import { a11y01InteractiveDom } from "./finops-ops/a11y-01-interactive-dom";
 import { seo01LaunchMeta } from "./finops-ops/seo-01-launch-meta";
+// Compliance profiles (10)
+import { hipaa01NonBaaVendor } from "./compliance/hipaa-01-non-baa-vendor"; // profiles: ["hipaa"]
+import { hipaa02PhiAuditLog } from "./compliance/hipaa-02-phi-audit-log"; // profiles: ["hipaa"]
+import { hipaa03SessionIdle } from "./compliance/hipaa-03-session-idle"; // profiles: ["hipaa"]
+import { pci01FloatMoney } from "./compliance/pci-01-float-money"; // profiles: ["fintech-pci"]
+import { pci02LedgerMutation } from "./compliance/pci-02-ledger-mutation"; // profiles: ["fintech-pci"]
+import { pci03MutationIdempotency } from "./compliance/pci-03-mutation-idempotency"; // profiles: ["fintech-pci"]
+import { lgl01MatterNamespace } from "./compliance/lgl-01-matter-namespace"; // profiles: ["legal-privilege"]
+import { lgl02LegalHoldCascade } from "./compliance/lgl-02-legal-hold-cascade"; // profiles: ["legal-privilege"]
+import { lgl03AiRetention } from "./compliance/lgl-03-ai-retention"; // profiles: ["legal-privilege"]
+import { aia01AiInventory } from "./compliance/aia-01-ai-inventory"; // profiles: ["eu-ai-act"]
 
 export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   // Security (12)
@@ -273,5 +301,16 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   ops04EnvValidator,
   a11y01InteractiveDom,
   seo01LaunchMeta,
+  // Compliance profiles (10, profile-only)
+  hipaa01NonBaaVendor,
+  hipaa02PhiAuditLog,
+  hipaa03SessionIdle,
+  pci01FloatMoney,
+  pci02LedgerMutation,
+  pci03MutationIdempotency,
+  lgl01MatterNamespace,
+  lgl02LegalHoldCascade,
+  lgl03AiRetention,
+  aia01AiInventory,
 ] as const;
 ```
