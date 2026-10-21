@@ -1,10 +1,9 @@
-import { GENAI_PACKAGES } from "../../context/patterns";
+import { GENAI_PACKAGES, PII_FIELD_NAMES, PII_RECORD } from "../../context/patterns";
 import { defineRule } from "../helpers";
 
 const LLM_CALLS =
   /\b(?:\w+\.)*(?:chat\.completions\.create|completions\.create|responses\.create|messages\.create|messages\.stream)|(?<![\w.])(?:generateText|streamText|generateObject|streamObject)/;
-const PII =
-  /JSON\.stringify\(\s*(?:user|profile|customer|account|member|currentUser)\b|\.(?:email|phone|phoneNumber|phone_number|ip|ipAddress|ip_address|address|street|ssn|dob|dateOfBirth|date_of_birth|fullName|full_name|lastName|last_name)\b/;
+const PII = new RegExp(`JSON\\.stringify\\(\\s*${PII_RECORD}\\b|\\.(?:${PII_FIELD_NAMES})\\b`);
 const ANON = /anonymi[sz]e|pseudonym|redact|maskPII|stripPII|scrub/i;
 
 export const priv05LlmPii = defineRule(

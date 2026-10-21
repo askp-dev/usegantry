@@ -1,7 +1,7 @@
 # End User License Agreement
 
 <!-- PREFLIGHT:AUTO:VERSION_META -->
-Version: 2026-10-20 · Last updated: 2026-10-20 · Stack hash: `100667c873647bc4`
+Version: 2026-10-21 · Last updated: 2026-10-21 · Stack hash: `9ee4db7ea1f3367c`
 <!-- /PREFLIGHT:AUTO:VERSION_META -->
 
 This agreement is between you and Northwind Labs for use of Clean Saas. By creating an account you accept it.

@@ -2,6 +2,12 @@ import type { RuleDefinition } from "../context/types";
 // Agent / MCP config (2)
 import { mcp01HardcodedCreds } from "./agent/mcp-01-hardcoded-creds";
 import { mcp02UnpinnedServers } from "./agent/mcp-02-unpinned-servers";
+// Vector & cache data layer (5)
+import { cache01GlobalKeys } from "./data/cache-01-global-keys";
+import { cache02NoTtl } from "./data/cache-02-no-ttl";
+import { vec01TenantFilter } from "./data/vec-01-tenant-filter";
+import { vec02UnauthClient } from "./data/vec-02-unauth-client";
+import { vec03MetadataPii } from "./data/vec-03-metadata-pii";
 import { a11y01InteractiveDom } from "./finops-ops/a11y-01-interactive-dom";
 // Pillar 4: FinOps, Payments, Ops & Accessibility (12)
 import { fin01InfiniteLoop } from "./finops-ops/fin-01-infinite-loop";
@@ -61,6 +67,12 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   // Agent / MCP config (2)
   mcp01HardcodedCreds,
   mcp02UnpinnedServers,
+  // Vector & cache data layer (5)
+  vec01TenantFilter,
+  vec02UnauthClient,
+  vec03MetadataPii,
+  cache01GlobalKeys,
+  cache02NoTtl,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

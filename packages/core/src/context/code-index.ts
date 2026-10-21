@@ -880,8 +880,9 @@ export class CodeIndex {
     if (this.lang === "py") {
       for (const m of this.findAll(/^[ \t]*import[ \t]+([\w.]+(?:[ \t]*,[ \t]*[\w.]+)*)/gm, "noComments"))
         for (const src of m[1].split(",")) out.push({ source: src.trim(), names: [], line: this.lineOf(m.index), typeOnly: false });
-      for (const m of this.findAll(/^[ \t]*from[ \t]+([\w.]+)[ \t]+import[ \t]+\(?([\w\s,]+)/gm, "noComments"))
-        out.push({ source: m[1], names: m[2].split(",").map((x) => x.trim().split(/\s+as\s+/)[0]).filter(Boolean), line: this.lineOf(m.index), typeOnly: false });
+      // names stop at end of line unless parenthesized (`from x import (\n a,\n b)`)
+      for (const m of this.findAll(/^[ \t]*from[ \t]+([\w.]+)[ \t]+import[ \t]+(?:\(([\w\s,]+)\)|([\w \t,]+))/gm, "noComments"))
+        out.push({ source: m[1], names: (m[2] ?? m[3]).split(",").map((x) => x.trim().split(/\s+as\s+/)[0]).filter(Boolean), line: this.lineOf(m.index), typeOnly: false });
     } else {
       for (const m of this.findAll(/\bimport\s+(type\s+)?([\w$*{},\s]+?)\s+from\s+(['"])([^'"]+)\3/g, "noComments")) {
         const clause = m[2];

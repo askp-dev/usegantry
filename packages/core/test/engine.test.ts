@@ -24,7 +24,7 @@ test("vulnerable fixture: blocked, all pillars penalised, graph has 4 columns", 
   const r = await audit("fixtures/vulnerable-saas", { config: { offline: true } });
   expect(r.status).toBe("LAUNCH_BLOCKED");
   expect(r.blockers).toBeGreaterThan(0);
-  expect(new Set(r.findings.map((f) => f.ruleId)).size).toBe(39);
+  expect(new Set(r.findings.map((f) => f.ruleId)).size).toBe(44);
   expect(r.errors).toBeUndefined();
   for (const p of r.pillars) expect(p.score).toBeLessThan(100);
   expect(new Set(r.graph.nodes.map((n) => n.column))).toEqual(new Set(["entrypoint", "api", "database", "vendor"]));

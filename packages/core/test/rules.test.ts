@@ -67,6 +67,14 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     [".mcp.json", "likely typosquat"],
     [".vscode/mcp.json", "mcp-server-fetch"],
   ],
+  "VEC-01": [["app/api/rag/route.ts", 'qdrant.search("documents"']],
+  "VEC-02": [
+    ["lib/vector.ts", "new QdrantClient"],
+    ["docker-compose.yml", '"6333:6333"'],
+  ],
+  "VEC-03": [["app/api/ingest/route.ts", "`email`"]],
+  "CACHE-01": [["app/api/rag/route.ts", '"rag_last_results"']],
+  "CACHE-02": [["app/api/rag/route.ts", "Date.now()"]],
   "PRIV-01": [["app/api/chat/route.ts", 'console.log("chat request", body)']],
   "PRIV-02": [
     ["supabase/migrations/20240101000000_init.sql", "documents.owner_id"],
@@ -132,10 +140,10 @@ beforeAll(async () => {
   await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, await r.run(clean))));
 });
 
-test("registry has 39 unique rules covering every expectation", () => {
+test("registry has 44 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(39);
-  expect(new Set(ids).size).toBe(39);
+  expect(ids.length).toBe(44);
+  expect(new Set(ids).size).toBe(44);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 

@@ -1,7 +1,7 @@
 # Privacy Policy
 
 <!-- PREFLIGHT:AUTO:VERSION_META -->
-Version: 2026-10-20 · Last updated: 2026-10-20 · Stack hash: `100667c873647bc4`
+Version: 2026-10-21 · Last updated: 2026-10-21 · Stack hash: `9ee4db7ea1f3367c`
 <!-- /PREFLIGHT:AUTO:VERSION_META -->
 
 Northwind Labs ("we", "us") operates Clean Saas. This policy explains what personal data we collect, why, and who we share it with. Questions: privacy@northwind.example.
@@ -27,6 +27,7 @@ We share personal data only with the service providers below, under data process
 | [OpenAI, L.L.C.](https://openai.com/policies/privacy-policy) | AI / LLM Inference | content, identifiers | US | [DPA](https://openai.com/policies/data-processing-addendum) |
 | [PostHog, Inc.](https://posthog.com/privacy) | Product Analytics & Session Replay | identifiers, usage, device | US | [DPA](https://posthog.com/dpa) |
 | [Upstash, Inc.](https://upstash.com/trust/privacy.pdf) | Serverless Redis / Queue | identifiers, usage | US | [DPA](https://upstash.com/trust/dpa.pdf) |
+| [Qdrant Solutions GmbH](https://qdrant.tech/legal/privacy-policy/) | Vector Database | content | DE | [DPA](https://qdrant.tech/legal/dpa/) |
 <!-- /PREFLIGHT:AUTO:SUBPROCESSORS -->
 
 ## AI providers

@@ -1,0 +1,8 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.12.1
+    # VEC-02: published on 0.0.0.0 with no QDRANT__SERVICE__API_KEY
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant_data:/qdrant/storage

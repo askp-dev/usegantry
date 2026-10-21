@@ -23,19 +23,20 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Exact algorithms for SEC-01 / SEC-03 / SEC-07 / FIN-01 / PAY-02 | SPEC.md 173–221 |
 | UI server REST + WS protocol | SPEC.md 222–232 |
 | Scoring & blocking matrix | RULES_SPEC.md 3–12 |
-| Security rules SEC-01..12 + MCP-01..02 | RULES_SPEC.md 13–33 |
-| Privacy rules PRIV-01..07 | RULES_SPEC.md 34–47 |
-| Legal rules LEG-01..06 | RULES_SPEC.md 48–60 |
-| FIN / PAY / OPS / A11Y / SEO rules | RULES_SPEC.md 61–79 |
-| Pentest probes PT-01..06 | RULES_SPEC.md 80–106 |
-| Rule registry (`rules/index.ts`) | RULES_SPEC.md 107–210 |
+| Security rules SEC-01..12 + MCP-01..02 + VEC-01..02 + CACHE-01 | RULES_SPEC.md 13–37 |
+| Privacy rules PRIV-01..07 + VEC-03 | RULES_SPEC.md 38–52 |
+| Legal rules LEG-01..06 | RULES_SPEC.md 53–65 |
+| FIN / PAY / OPS / A11Y / SEO / CACHE-02 rules | RULES_SPEC.md 66–85 |
+| Pentest probes PT-01..06 | RULES_SPEC.md 86–112 |
+| Rule registry (`rules/index.ts`) | RULES_SPEC.md 113–227 |
 | Design tokens / typography | DESIGN.md 9–50 |
 | UI components (header, data-flow graph, pentest console, legal studio) | DESIGN.md 51–101 |
 | Handoff: status / quirks / remaining work | handoff.md 25–38 / 217–274 / 275–372 |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.
-- Use `ctx.getCode(rel)`, which returns a `CodeIndex` (`code-index.ts`). Pattern-match on `.masked` (strings/comments blanked); read literals from `.noComments`. It provides `calls()`, `args()`, `objectEntries()`, `functions()`, `enclosingFunction()`, `imports()` and `snippet()`. Don't require `@ast-grep/napi`: it's optional and `getAst()` throws if it's missing.
+- Use `ctx.getCode(rel)`, which returns a `CodeIndex` (`code-index.ts`). Pattern-match on `.masked` (strings/comments blanked); read literals from `.noComments`. It provides `calls()`, `args()`, `objectEntries()`, `functions()`, `enclosingFunction()`, `imports()` and `snippet()`. Don't require `@ast-grep/napi`: it's optional and `getAst()` throws if it's missing. The Sprint 9 spike kept it optional (outcome B, handoff quirk 37).
+- ORM/DDL sources go through the `SchemaAdapter` registry (`context/adapters.ts`): to support a new ORM, add one adapter. Vector-DB and cache client calls are pre-collected, lazily, in `ctx.dataQueries` (`context/data-queries.ts`).
 - Shared regexes live in `context/patterns.ts`; vendor/package lookups in `context/knowledge.ts`. Reuse them; don't duplicate them.
 - `ctx.dbTables` keys are lowercase, so compare table names case-insensitively. PyPI deps are keyed `pypi:<name>`.
 - `RouteNode.hasAuthGuard` only means an auth call appears. SEC-07 must check order (auth before first mutation) and enforcement itself.
@@ -50,7 +51,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 - `bun run bench` runs the perf SLA check (Sprint 5).
 
 ## Conventions
-- Rule file names and export names must match the registry in RULES_SPEC.md 107–210 exactly.
+- Rule file names and export names must match the registry in RULES_SPEC.md 113–227 exactly.
 - Every finding needs `evidence` (a snippet), plain-English `impact`, and a surgical `agentRemediationPrompt`. Add `autoFixPatch` only when the fix is deterministic.
 - Each rule gets a test asserting it fires on `fixtures/vulnerable-saas`. Every rule must also pass on `fixtures/clean-saas` (create it in Sprint 2) with no findings.
 - Commit after each sprint with message `feat(sprint-N): …`.

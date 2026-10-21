@@ -28,7 +28,7 @@ describe("legal compiler", () => {
   test("manifest reflects detected vendors, PII and clauses", async () => {
     const ctx = await buildRepoContext("fixtures/vulnerable-saas", { config: { offline: true } });
     const m = buildLegalManifest(ctx, new Date("2026-01-02T00:00:00Z"));
-    expect(m.subprocessors.map((s) => s.id).sort()).toEqual(["openai", "posthog", "resend", "stripe", "supabase"]);
+    expect(m.subprocessors.map((s) => s.id).sort()).toEqual(["openai", "posthog", "qdrant", "resend", "stripe", "supabase", "upstash"]);
     expect(m.piiCategories.find((c) => c.category === "Contact details")?.fields).toContain("email");
     expect(m.clauses.find((c) => c.id === "AI_OUTPUT_DISCLAIMER")?.enabled).toBe(true);
     expect(m.stackHash).toMatch(/^[0-9a-f]{16}$/);
@@ -104,7 +104,7 @@ describe("certificate", () => {
     const r = await audit(root, { config: { offline: true } });
     const res = generateCertificate(r, { outDir: root, ...SECRET });
     expect(res.payload.overallScore).toBe(100);
-    expect(res.payload.passedRules.length).toBe(39);
+    expect(res.payload.passedRules.length).toBe(44);
     const fragment = res.url.split("#")[1];
     expect(verifyCertificate(fragment, res.publicKey)?.overallScore).toBe(100);
     const [body, sig] = fragment.split(".");
@@ -126,7 +126,7 @@ describe("certificate", () => {
 
   test("payload lists failed rules", async () => {
     const r = await audit("fixtures/vulnerable-saas", { config: { offline: true } });
-    expect(buildPayload(r).failedRules.length).toBe(39);
+    expect(buildPayload(r).failedRules.length).toBe(44);
   });
 
   test("renderPdf escapes parentheses", () => {
@@ -157,7 +157,7 @@ describe("vendor pack & SARIF", () => {
     expect(mm).toContain("-.->");
     const sarif = toSarif(r) as any;
     expect(sarif.version).toBe("2.1.0");
-    expect(sarif.runs[0].tool.driver.rules.length).toBe(39);
+    expect(sarif.runs[0].tool.driver.rules.length).toBe(44);
     expect(sarif.runs[0].results.length).toBe(r.findings.length);
     expect(sarif.runs[0].results[0]).toMatchObject({ level: "error", locations: [{ physicalLocation: { region: { startLine: expect.any(Number) } } }] });
   });

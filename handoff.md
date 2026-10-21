@@ -34,6 +34,8 @@ The user's answers before the build started:
 | 5. Tests, perf benchmark, final verification | ✅ Done: 158 tests pass, typecheck + biome clean, `bun run bench` ≈0.29 s median (SLA 3 s), compiled binary smoke-tested, `.vsix` packaged, lite UI screenshotted, README written |
 | 6. Agent loop: compact output, `--changed-only`, agent hooks | ✅ Done: 168 tests pass, typecheck + biome clean (touched files), bench 276 ms median, compact = −70% bytes/finding (measured), changed-only scan ≈33 ms in-process / ≈80 ms CLI wall on the vuln fixture |
 | 7. Agent-config auditor (MCP-01/02) + safe-harbor bundle | ✅ Done: 185 tests pass, typecheck + biome clean (touched files), bench 277 ms median, vuln fixture 39/39 rules, clean fixture 100/100 with 0 findings |
+| 8. Distribution (badge, Action, roast) | ⏸ Deferred at the user's request (see §5) |
+| 9. napi spike, SchemaAdapter registry, `ctx.dataQueries`, VEC-01..03 + CACHE-01/02 | ✅ Done: 206 tests pass, typecheck + biome clean (touched files), bench 287 ms median, vuln fixture 44/44 rules, clean fixture 100/100 with 0 findings. Spike → **outcome B** (stay hybrid, quirk 37) |
 
 ---
 
@@ -214,6 +216,20 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 | `test/agent-config.test.ts`, `test/safe-harbor.test.ts` | Parsing, ref vs literal, git-ignored skip, runner parsing, stubbed-fetch 404, `init` output passes both rules; RFC 9116 fields, robots groups, SEO-01 satisfied, idempotency, no overwrite, robots-route deferral, init. |
 | Fixtures | vuln: `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json` (JSONC), `.claude/settings.json` with literals + unpinned/typosquat servers. clean: `.mcp.json` + `.vscode/mcp.json` using refs, pinned known servers, and the generated `public/ai.txt`. |
 
+### Sprint 9 files
+| File | Purpose |
+|---|---|
+| `context/adapters.ts` | `SchemaAdapter` registry (prisma, drizzle, sqlalchemy) + `collectSchema()`: the builder's former inline SQL+ORM merge, moved unchanged. SQL stays authoritative. New ORMs = one adapter entry. |
+| `context/data-queries.ts` | `collectDataQueries()` → `ctx.dataQueries` (lazy getter in `builder.ts`, cached on first read). Receiver-tracked: names imported from a known client module, factory results (`new X`, `X.fromEnv()`, `createClient()`, `chromadb.HttpClient()`), derived handles (`pc.index()`, `getCollection()`), and those names re-imported from local files (depth 2). pgvector: `<=>`/`<->`/`<#>` inside SQL strings, attributed to the nearest `$queryRaw`/`sql`/`.execute`/`.query`; Supabase `rpc("match_*")`. Each entry has `kind`, `vendor`, `op` (client/search/upsert/write/read), `method` and the argument span. |
+| `context/knowledge.ts` `dataClientFor()` | npm packages + Python module names → `[vector|cache, vendor]` for qdrant, pinecone, chroma, weaviate, milvus, pgvector, upstash (vector + redis), `@vercel/kv`, ioredis, node-redis, redis-py, plus LangChain store packages. |
+| `context/patterns.ts` `PII_FIELD_NAMES`, `PII_RECORD` | Moved out of PRIV-05 (same regex, rebuilt from the shared parts) so VEC-03 reuses it. |
+| `rules/data/data-helpers.ts` | `isMultiUser()` (auth dep, Supabase, guarded route or middleware), `isAuthedAt()`, `callText()` (args + receiver chain + earlier assignments of bare identifier args), `firstArg()`, `isConstantKey()`. |
+| `rules/data/vec-01-tenant-filter.ts` … `cache-02-no-ttl.ts` | VEC-01 (CRITICAL), VEC-02 (HIGH; MEDIUM for localhost), VEC-03 (HIGH, PRIVACY), CACHE-01 (HIGH), CACHE-02 (MEDIUM, FINOPS_OPS). Rows added to RULES_SPEC (Pillar 1/2/4 tables + registry). All `scope: "file"`. |
+| `code-index.ts` (fix) | Python `from x import Y` no longer swallows the next line into the imported names. Parenthesized multi-line imports still work. |
+| `test/data-layer.test.ts` | Receiver tracking (Map look-alikes ignored), Python/pgvector/RPC collection, and positive + negative cases for each of the five rules. |
+| Fixtures | vuln: `lib/vector.ts` (no key, remote http), `lib/cache.ts`, `app/api/rag/route.ts` (unfiltered search, global key, no-TTL key), `app/api/ingest/route.ts` (email in payload), `docker-compose.yml` (qdrant on 0.0.0.0). clean: the same files done right (session-scoped filter built in a variable, apiKey, tenant-prefixed keys with `ex`, opaque payload, loopback port + API key env), `QDRANT_URL`/`QDRANT_API_KEY` in `src/env.ts` + `.env.example`, Qdrant row in the privacy policy (regenerated with `preflight legal --apply`). |
+| `CONTRIBUTING_RULES.md` §1–3, §6 | Rewritten for outcome B: leads with `defineRule` + `CodeIndex`. ast-grep is an optional accelerator with the spike's caveats. |
+
 ### Known quirks to address
 1. `RouteNode.hasAuthGuard` is true when an auth call **appears** in the body (e.g. `renamePost` calls `getSession()` but never checks it). SEC-07 must do the **ordering/enforcement** check itself: auth call before the first mutation, plus a throw/return/redirect on failure. Don't rely only on `hasAuthGuard`.
 2. Table keys in `ctx.dbTables` are lowercased (`post`), while `route.dbTablesAccessed` uses the Prisma table name as declared (`Post`). Compare case-insensitively.
@@ -268,6 +284,21 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 34. **MCP-02 "known" = seed DB ∪ `OFFICIAL_MCP_SERVERS`.** The seed has no MCP servers, so without the curated list every official server would fail. Pinned-but-unknown still fires (HIGH): "unpinned **or** not in seed". `@latest`/ranges count as unpinned; git/URL specs are always flagged; local paths are skipped. Our own `init` writes `command: "preflight"` (no runner), so it passes.
 35. **Safe-harbor choices.** The contact comes from `securityContact`, then `contactEmail`, then the `package.json` author email. Reserved/placeholder domains (`example.*`, `.example`, `.test`, `.invalid`, `localhost`, `you@yourcompany…`) are refused, so the clean fixture (`northwind.example`) gets no SECURITY.md/security.txt by design. `Expires` is reused while >30 days remain, which keeps re-runs idempotent. Files are only created, or updated while they still carry the "Generated by Preflight safe-harbor" marker. A Next/SvelteKit robots *route* means robots.txt is skipped with instructions instead of a conflicting static file. The `*` group never has a Disallow, so search is never blocked. App prefixes = API routes + pages whose first segment/route group looks like an app shell or whose page/layout calls an auth assertion. Only the four bots named in the roadmap are blocked.
 36. `writeChanges()` is now shared, but the MCP `compile_legal` tool and the UI legal studio still call only `compileLegalDocs` (no safe-harbor). That's out of this sprint's wiring scope.
+37. **Sprint 9 napi spike → outcome B (stay hybrid).** Spiked in a scratch dir (no repo deps changed): `@ast-grep/napi` + `@ast-grep/lang-python@0.0.6` + `@ast-grep/lang-go@0.0.6`.
+    - **Version:** the repo's optional `@ast-grep/napi@^0.36` panics (`IncompatibleVersion(15)`) on today's grammars. Dynamic languages need napi **≥ 0.51**. Bump the optional dep when the first Go/Rust rule lands.
+    - **Compile:** the core `.node` addon embeds in `bun build --compile` (host target; a TS-only probe ran with `node_modules` hidden). The dynamic grammars **don't**: `libraryPath` resolves an absolute `node_modules/.../prebuilds/<platform>/parser.so`, and the binary crashes without it. Cross-target builds (`--target=bun-linux-x64`) compile, but only embed the host's `.node`, so napi is missing at runtime on the other platform. The lang packages' postinstall is blocked by default (`bun pm untrusted`), but their prebuilds still load.
+    - **Perf:** parsing + one `findAll` over all 495 JS/TS files of the 500-file SLA repo takes **55 ms** (context build 50 ms), so speed isn't the blocker. `registerDynamicLanguage` took 144 ms cold.
+    - **SEC-10 port:** the ast-grep version of the ORM-write half (still using CodeIndex taint) matched the CodeIndex rule exactly: vuln `app/actions.ts:12` and `app/api/posts/route.ts:17`, clean none. No FP gain to justify the dependency.
+    - Go patterns returned 0 matches with both `$X` and `µX` in a one-line probe. Investigate the Go expando/pattern context before writing Go rules.
+    - **Decision:** napi stays optional behind `getAst()`, CLAUDE.md's zero-runtime-deps line stands, and Go/Rust coverage will require the npm install, not the standalone binary (Sprint 14 prerequisite answered; it also needs the napi ≥ 0.51 bump and a Rust grammar package).
+38. **VEC/CACHE interpretations (stricter side).**
+    - VEC-01 is CRITICAL (same class as SEC-03). "Multi-user" = auth dep, Supabase, a guarded route or middleware. The tenant check is lexical: a tenant-ish key (`org_id`, `userId`, `p_org_id`, `tenant`) or a non-literal `namespace` anywhere in the args, receiver chain, or the text between an argument variable's last assignment and the call. That last part can mask a miss if an unrelated `userId` is assigned in between.
+    - VEC-02 flags missing keys even for env-sourced URLs. Hardcoded localhost is MEDIUM, not skipped. Pinecone/Upstash/pgvector clients are never flagged (SaaS-only or no client). Compose services are split on 2-space-indented keys, and YAML comments are ignored for the auth check.
+    - VEC-03 is HIGH/PRIVACY. Any `hash`/`encrypt`/`redact`/`anonymize` in the metadata object clears it.
+    - CACHE-01 flags only *writes* with a constant key in authed code. `global`/`public` in the key opts out.
+    - CACHE-02 flags only dynamic keys (a constant key is one bounded entry), so it isn't noise on singleton config keys.
+    - All five are `scope: "file"`. In partial scans, a client defined in an unchanged `lib/` file isn't in `files.all`, so calls through it aren't collected.
+    - Receivers on `self.x`/`this.x` (Python/JS class fields) aren't tracked.
 13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed. Sprint 6: same (by hand). Dropped a redundant `Set` in `changedScope`, de-exported `isContextAnchor`/`compactFix`/`readBaseline`/`newBlockers`, and folded the `.mcp.json` merge into the shared `mergeJson()`. Sprint 7: same (by hand). De-exported `SAFE_HARBOR_MARK`, `appPrefixes`, `SafeHarborResult` and `ServerPackage`, dropped a redundant `apikey` alternative, and factored the duplicated write loop into `writeChanges()`.
 
 ---
@@ -306,22 +337,7 @@ Constraints that override the roadmaps:
   - Output a "survival card" (terminal + SVG) plus `--json` for preflight-web.
   - Restrict the URL to `github.com/<owner>/<repo>` (no arbitrary hosts, which prevents SSRF).
 
-#### Sprint 9: RepoContext v2 adapters + vector/cache rules
-- **napi spike first (half a day, decision gate). Record the results as a quirk.**
-  - Install `@ast-grep/napi` + `@ast-grep/lang-python` + `@ast-grep/lang-go`, registered in **one** `registerDynamicLanguage` call (repeated calls are ignored).
-  - Check whether `bun build --compile` embeds the `.node` addon and the dynamic grammar libraries (compare quirk 11's SQLite embedding bug), and whether cross-target builds work.
-  - Measure `bun run bench` with ASTs on.
-  - Port one existing rule (e.g. SEC-10) to ast-grep and compare false positives on both fixtures.
-  - Outcome A (it embeds cleanly, SLA holds): napi becomes a real dependency of `packages/core`. Update the "zero runtime deps" line in CLAUDE.md and keep CONTRIBUTING_RULES' ast-grep-first guidance.
-  - Outcome B: stay hybrid, and rewrite CONTRIBUTING_RULES §2–3 to lead with `CodeIndex` (`calls/args/objectEntries/enclosingFunction`), with ast-grep as the optional path.
-- Refactor `schema-parser.ts`/`sql-parser.ts` behind a minimal `SchemaAdapter` registry (`context/adapters.ts`), adding only what's needed (no `LanguageAdapter` yet). This is a pure refactor gate: all existing tests pass and the bench is unchanged.
-- Add `ctx.dataQueries` (vector/cache client calls) from `CodeIndex.calls()`. Use the knowledge lookups for qdrant/pinecone/chroma/weaviate/milvus/pgvector/upstash/ioredis.
-- Rules:
-  - `VEC-01` search without a tenant filter: only on multi-user apps (auth present); false-positive risk is high, so seed the clean fixture with a correct filter.
-  - `VEC-02` vector client without apiKey/TLS, or ports 6333/8000/19530 in config.
-  - `VEC-03` PII keys in vector metadata (reuse PRIV-05 PII patterns).
-  - `CACHE-01` global cache keys in authed routes.
-  - `CACHE-02` `set` without TTL.
+#### Sprint 9 ✅ done: napi spike → outcome B (hybrid stays), `SchemaAdapter` registry (`context/adapters.ts`), lazy `ctx.dataQueries`, VEC-01/02/03 + CACHE-01/02 (see §3 "Sprint 9 files" and quirks 37–38).
 
 #### Sprint 10: BaaS + edge databases
 - Convex: `convex/schema.ts` adapter. `BAAS-01` covers a public `mutation`/`query` without `ctx.auth.getUserIdentity()`, or an admin/webhook export that isn't `internal*`.
@@ -362,7 +378,7 @@ Constraints that override the roadmaps:
   - `SYS-02` `.unwrap()`/`.expect()` on request-derived values in Axum/Actix handlers.
   - `SYS-03` `context.Background()` for DB/HTTP calls inside handlers that have `r.Context()`/`c.Request.Context()`.
 - Fixtures: `fixtures/vulnerable-go` and `fixtures/vulnerable-rust` with clean twins. Tests skip (not fail) when napi is absent, and one CI job runs with it installed.
-- Prerequisite: spike outcome from Sprint 9. If the grammars can't embed in the compiled binary, document that Go/Rust coverage needs the npm install, not the standalone binary.
+- Prerequisite **answered (quirk 37): outcome B, so grammars do NOT embed; Go/Rust needs the npm install and napi ≥ 0.51.** Original note: spike outcome from Sprint 9. If the grammars can't embed in the compiled binary, document that Go/Rust coverage needs the npm install, not the standalone binary.
 
 #### Parked (not scheduled)
 - `preflight canary <url>`: a daily header/HSTS/CSP/TLS-expiry probe that reuses pentest safety, plus a scheduled Action template. This is a reasonable Sprint 14 if retention matters. The hosted version and the vendor DPA-change watcher need a server.

@@ -117,3 +117,40 @@ export function vendorForEnvKey(key: string): VendorRecord | undefined {
 export function vendorById(id: string): VendorRecord | undefined {
   return VENDORS.find((v) => v.id === id);
 }
+
+export type DataClientKind = "vector" | "cache";
+/** Vector-DB / cache client modules (npm packages and Python import names) → kind + vendor, for `ctx.dataQueries`. */
+const DATA_CLIENTS: Record<string, [DataClientKind, string]> = {
+  "@qdrant/js-client-rest": ["vector", "qdrant"],
+  "@qdrant/js-client-grpc": ["vector", "qdrant"],
+  "@qdrant/qdrant-js": ["vector", "qdrant"],
+  "@langchain/qdrant": ["vector", "qdrant"],
+  qdrant_client: ["vector", "qdrant"],
+  "@pinecone-database/pinecone": ["vector", "pinecone"],
+  "@langchain/pinecone": ["vector", "pinecone"],
+  pinecone: ["vector", "pinecone"],
+  chromadb: ["vector", "chroma"],
+  "@langchain/community/vectorstores/chroma": ["vector", "chroma"],
+  "weaviate-client": ["vector", "weaviate"],
+  "weaviate-ts-client": ["vector", "weaviate"],
+  "@langchain/weaviate": ["vector", "weaviate"],
+  weaviate: ["vector", "weaviate"],
+  "@zilliz/milvus2-sdk-node": ["vector", "milvus"],
+  "@langchain/community/vectorstores/milvus": ["vector", "milvus"],
+  pymilvus: ["vector", "milvus"],
+  pgvector: ["vector", "pgvector"],
+  "@langchain/community/vectorstores/pgvector": ["vector", "pgvector"],
+  "@upstash/vector": ["vector", "upstash"],
+  upstash_vector: ["vector", "upstash"],
+  "@upstash/redis": ["cache", "upstash"],
+  upstash_redis: ["cache", "upstash"],
+  "@vercel/kv": ["cache", "upstash"],
+  "@redis/client": ["cache", "redis"],
+  ioredis: ["cache", "ioredis"],
+  redis: ["cache", "redis"],
+  "redis.asyncio": ["cache", "redis"],
+};
+
+export function dataClientFor(module: string): [DataClientKind, string] | undefined {
+  return DATA_CLIENTS[module] ?? DATA_CLIENTS[module.replace(/^(pgvector)\..*$/, "$1")];
+}

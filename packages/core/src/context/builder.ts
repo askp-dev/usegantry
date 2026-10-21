@@ -7,9 +7,11 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join, relative, sep } from "node:path";
+import { collectSchema } from "./adapters";
 import { CodeIndex, detectLang } from "./code-index";
 import { loadConfig } from "./config";
-import { lookupKnownPackage, vendorForEnvKey, vendorForPackage, type VendorRecord } from "./knowledge";
+import { collectDataQueries } from "./data-queries";
+import { lookupKnownPackage, type VendorRecord, vendorForEnvKey, vendorForPackage } from "./knowledge";
 import {
   enrichLicensesFromNodeModules,
   parseBunLock,
@@ -23,16 +25,46 @@ import {
 } from "./lockfile-parser";
 import { GENAI_PACKAGES } from "./patterns";
 import { extractRoutes, type MiddlewareGuard } from "./routes";
-import { parseDrizzleSchema, parsePrismaSchema, parseSqlAlchemyModels, prismaModelMap } from "./schema-parser";
-import { parseSqlFiles, parseSupabaseConfigBuckets } from "./sql-parser";
-import type { DetectedSubprocessor, Dependency, EnvEntry, PreflightConfig, RepoContext, SgRoot, TableSchema } from "./types";
+import type { Dependency, DetectedSubprocessor, EnvEntry, PreflightConfig, RepoContext, SgRoot } from "./types";
 
 const SKIP_DIRS = new Set([
-  "node_modules", ".git", ".next", ".nuxt", ".svelte-kit", ".turbo", ".vercel", ".netlify", ".output", ".cache", ".parcel-cache",
-  "dist", "build", "out", "coverage", ".nyc_output", "venv", ".venv", "env", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-  "target", "vendor", ".idea", ".vscode-test", ".expo", ".wrangler", "storybook-static", ".preflight", "Pods", ".gradle", ".terraform",
+  "node_modules",
+  ".git",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".turbo",
+  ".vercel",
+  ".netlify",
+  ".output",
+  ".cache",
+  ".parcel-cache",
+  "dist",
+  "build",
+  "out",
+  "coverage",
+  ".nyc_output",
+  "venv",
+  ".venv",
+  "env",
+  "__pycache__",
+  ".pytest_cache",
+  ".mypy_cache",
+  ".ruff_cache",
+  "target",
+  "vendor",
+  ".idea",
+  ".vscode-test",
+  ".expo",
+  ".wrangler",
+  "storybook-static",
+  ".preflight",
+  "Pods",
+  ".gradle",
+  ".terraform",
 ]);
-const BINARY_EXT = /\.(png|jpe?g|gif|webp|avif|ico|icns|svgz|bmp|tiff?|psd|mp3|mp4|mov|webm|wav|ogg|flac|m4a|pdf|zip|gz|tgz|bz2|xz|7z|rar|jar|war|woff2?|ttf|otf|eot|exe|dll|so|dylib|bin|wasm|node|sqlite3?|db|lockb|pyc|class|o|a|DS_Store)$/i;
+const BINARY_EXT =
+  /\.(png|jpe?g|gif|webp|avif|ico|icns|svgz|bmp|tiff?|psd|mp3|mp4|mov|webm|wav|ogg|flac|m4a|pdf|zip|gz|tgz|bz2|xz|7z|rar|jar|war|woff2?|ttf|otf|eot|exe|dll|so|dylib|bin|wasm|node|sqlite3?|db|lockb|pyc|class|o|a|DS_Store)$/i;
 const MAX_FILE_BYTES = 1_500_000;
 
 export interface BuildOptions {
@@ -84,7 +116,9 @@ function readGitSha(root: string): string {
     if (existsSync(refPath)) return readFileSync(refPath, "utf8").trim();
     const packed = join(gitDir, "packed-refs");
     if (existsSync(packed)) {
-      const line = readFileSync(packed, "utf8").split("\n").find((l) => l.endsWith(" " + ref));
+      const line = readFileSync(packed, "utf8")
+        .split("\n")
+        .find((l) => l.endsWith(" " + ref));
       if (line) return line.split(" ")[0];
     }
   } catch {}
@@ -109,7 +143,11 @@ const SERVER_PATH_RE =
 
 /** Every scannable file, with the same skip dirs and `ignorePaths` as a full build. */
 export function listRepoFiles(rootDir: string, config = loadConfig(rootDir), maxFiles = 20000): string[] {
-  return walk(rootDir, config.ignorePaths.map((p) => new Bun.Glob(p)), maxFiles);
+  return walk(
+    rootDir,
+    config.ignorePaths.map((p) => new Bun.Glob(p)),
+    maxFiles,
+  );
 }
 
 export async function buildRepoContext(rootDir: string, opts: BuildOptions = {}): Promise<RepoContext> {
@@ -162,7 +200,13 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
       }
     }
     if (!astGrep) throw new Error("@ast-grep/napi is not installed — use ctx.getCode() (built-in structural index) instead.");
-    const lang = /\.tsx$/.test(rel) ? astGrep.Lang.Tsx : /\.(m|c)?tsx?$/.test(rel) ? astGrep.Lang.TypeScript : /\.jsx?$/.test(rel) ? astGrep.Lang.JavaScript : astGrep.Lang.TypeScript;
+    const lang = /\.tsx$/.test(rel)
+      ? astGrep.Lang.Tsx
+      : /\.(m|c)?tsx?$/.test(rel)
+        ? astGrep.Lang.TypeScript
+        : /\.jsx?$/.test(rel)
+          ? astGrep.Lang.JavaScript
+          : astGrep.Lang.TypeScript;
     const root = astGrep.parse(lang, getText(rel)) as SgRoot;
     astCache.set(rel, root);
     return root;
@@ -184,7 +228,11 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
   const codeExt = /\.(m|c)?(t|j)sx?$|\.svelte$|\.vue$|\.py$/;
   const envFiles = all.filter((f) => /^\.env(\..+)?$/.test(basename(f)) || /(^|\/)\.env(\.[\w-]+)?$/.test(f));
   const sqlMigrations = all.filter((f) => f.endsWith(".sql"));
-  const legalDocs = all.filter((f) => (f.startsWith(config.legalDir + "/") && /\.(md|mdx|txt|html)$/.test(f)) || /(^|\/)(privacy[-_ ]?policy|privacy|terms(-of-(service|use))?|tos|eula|dpa|cookie[-_]policy)\.(md|mdx)$/i.test(f));
+  const legalDocs = all.filter(
+    (f) =>
+      (f.startsWith(config.legalDir + "/") && /\.(md|mdx|txt|html)$/.test(f)) ||
+      /(^|\/)(privacy[-_ ]?policy|privacy|terms(-of-(service|use))?|tos|eula|dpa|cookie[-_]policy)\.(md|mdx)$/i.test(f),
+  );
   const serverRoutesAndActions: string[] = [];
   const frontendComponents: string[] = [];
   for (const f of all) {
@@ -193,11 +241,18 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     let isServer = SERVER_PATH_RE.test(f) && lang !== "svelte" && lang !== "vue";
     if (!isServer && (lang === "js" || lang === "py")) {
       const t = getText(f);
-      if (lang === "js" && (t.includes("use server") || /\b(app|router|server)\.(get|post|put|patch|delete)\s*\(\s*['"`]/.test(t) || /\b(publicProcedure|protectedProcedure)\b/.test(t))) isServer = true;
+      if (
+        lang === "js" &&
+        (t.includes("use server") ||
+          /\b(app|router|server)\.(get|post|put|patch|delete)\s*\(\s*['"`]/.test(t) ||
+          /\b(publicProcedure|protectedProcedure)\b/.test(t))
+      )
+        isServer = true;
       if (lang === "py" && /@\w+\.(get|post|put|patch|delete|route)\s*\(|FastAPI\(|Flask\(|APIRouter\(/.test(t)) isServer = true;
     }
     if (isServer) serverRoutesAndActions.push(f);
-    if (/\.(tsx|jsx|svelte|vue)$/.test(f) && !/\+(server|page\.server|layout\.server)\./.test(f) && !/(^|\/)route\.(m?[tj]sx?)$/.test(f)) frontendComponents.push(f);
+    if (/\.(tsx|jsx|svelte|vue)$/.test(f) && !/\+(server|page\.server|layout\.server)\./.test(f) && !/(^|\/)route\.(m?[tj]sx?)$/.test(f))
+      frontendComponents.push(f);
   }
   mark("categorize", tCat);
 
@@ -228,7 +283,11 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     if (d.spdxLicense) continue;
     const k = lookupKnownPackage(d.ecosystem ?? "npm", d.name);
     if (!k?.license) continue;
-    const major = Number(String((d as any).installedVersion ?? d.version).replace(/^[^\d]*/, "").split(".")[0]);
+    const major = Number(
+      String((d as any).installedVersion ?? d.version)
+        .replace(/^[^\d]*/, "")
+        .split(".")[0],
+    );
     if (k.license_from_major && Number.isFinite(major) && major < k.license_from_major) continue;
     d.spdxLicense = k.license;
     (d as any).licenseSource = "seed";
@@ -241,33 +300,7 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
 
   // ── schema: SQL + ORMs ────────────────────────────────────────────────────
   const tDb = performance.now();
-  const sqlRes = parseSqlFiles(sqlMigrations.map((f) => ({ file: f, text: getText(f) })));
-  if (hasFile("supabase/config.toml")) sqlRes.buckets.push(...parseSupabaseConfigBuckets("supabase/config.toml", getText("supabase/config.toml")));
-  const dbTables = sqlRes.tables;
-  const ormTables: TableSchema[] = [];
-  for (const f of all.filter((f) => f.endsWith(".prisma"))) ormTables.push(...parsePrismaSchema(f, getText(f)));
-  const prismaModels = prismaModelMap(ormTables);
-  const drizzleVars = new Map<string, string>();
-  for (const f of all) {
-    if (!/\.(m|c)?[tj]s$/.test(f)) continue;
-    const t = getText(f);
-    if (/\b(pgTable|sqliteTable|mysqlTable)\s*\(/.test(t)) {
-      const tables = parseDrizzleSchema(f, t);
-      ormTables.push(...tables);
-      for (const [k, v] of ((tables as any).varToTable as Map<string, string>) ?? []) drizzleVars.set(k, v);
-    }
-  }
-  for (const f of all) if (f.endsWith(".py") && getText(f).includes("__tablename__")) ormTables.push(...parseSqlAlchemyModels(f, getText(f)));
-  for (const t of ormTables) {
-    const key = t.name.toLowerCase();
-    const existing = dbTables.get(key);
-    if (!existing) dbTables.set(key, t);
-    else {
-      // SQL is authoritative for RLS/policies; merge ORM columns that SQL lacks
-      for (const c of t.columns) if (!existing.columns.some((x) => x.name.toLowerCase() === c.name.toLowerCase())) existing.columns.push(c);
-      if (!(existing as any).modelName && (t as any).modelName) (existing as any).modelName = (t as any).modelName;
-    }
-  }
+  const { sql: sqlRes, dbTables, prismaModels, drizzleVars } = collectSchema(all, sqlMigrations, getText, hasFile);
   mark("schema", tDb);
 
   // ── stack detection ───────────────────────────────────────────────────────
@@ -287,14 +320,21 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
   let deployTarget: PreflightConfig["deployTarget"] = config.deployTarget;
   if (!deployTarget) {
     if (hasFile("vercel.json") || all.some((f) => f.startsWith(".vercel/")) || hasDep(/^@vercel\//)) deployTarget = "vercel";
-    else if (hasFile("wrangler.toml") || hasFile("wrangler.jsonc") || hasFile("wrangler.json") || hasDep(/^@opennextjs\/cloudflare$|^@cloudflare\/next-on-pages$/)) deployTarget = "cloudflare";
+    else if (
+      hasFile("wrangler.toml") ||
+      hasFile("wrangler.jsonc") ||
+      hasFile("wrangler.json") ||
+      hasDep(/^@opennextjs\/cloudflare$|^@cloudflare\/next-on-pages$/)
+    )
+      deployTarget = "cloudflare";
     else if (hasFile("netlify.toml")) deployTarget = "netlify";
     else if (hasFile("serverless.yml") || hasFile("serverless.ts") || hasFile("template.yaml") || hasFile("sst.config.ts")) deployTarget = "aws-lambda";
     else if (hasFile("Dockerfile") || hasFile("fly.toml") || hasFile("railway.json") || hasFile("render.yaml")) deployTarget = "node";
     else deployTarget = framework === "nextjs" ? "vercel" : "unknown";
   }
   const stack: RepoContext["stack"] = {
-    supabase: hasDep(/^@supabase\//) || all.some((f) => f.startsWith("supabase/")) || [...envKeys].some((k) => /SUPABASE/.test(k)) || dependencies.has("pypi:supabase"),
+    supabase:
+      hasDep(/^@supabase\//) || all.some((f) => f.startsWith("supabase/")) || [...envKeys].some((k) => /SUPABASE/.test(k)) || dependencies.has("pypi:supabase"),
     prisma: hasDep(/^(@prisma\/client|prisma)$/) || all.some((f) => f.endsWith(".prisma")),
     drizzle: hasDep(/^drizzle-orm$/),
     sqlalchemy: dependencies.has("pypi:sqlalchemy") || dependencies.has("pypi:sqlmodel"),
@@ -332,7 +372,13 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     if (v) addVendor(v, d.name, `package:${d.name}`);
   }
   for (const e of env) {
-    if (!e.file.endsWith(".example") && !e.file.endsWith(".sample") && !e.file.endsWith(".template") && !/\.env(\.local|\.production|\.development)?$/.test(e.file)) continue;
+    if (
+      !e.file.endsWith(".example") &&
+      !e.file.endsWith(".sample") &&
+      !e.file.endsWith(".template") &&
+      !/\.env(\.local|\.production|\.development)?$/.test(e.file)
+    )
+      continue;
     const v = vendorForEnvKey(e.key);
     if (v) addVendor(v, v.packages.npm[0] ?? v.packages.pypi[0] ?? v.id, `env:${e.key}`);
   }
@@ -358,6 +404,12 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     config,
     timings,
     partial: !!opts.only,
+    get dataQueries() {
+      // lazy: only built when a VEC/CACHE rule asks, then cached on the context
+      const v = collectDataQueries(all, getCode, hasFile);
+      Object.defineProperty(this, "dataQueries", { value: v });
+      return v;
+    },
   };
   (ctx as any).middleware = middleware as MiddlewareGuard | null;
   (ctx as any).prismaModels = prismaModels;

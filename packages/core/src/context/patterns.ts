@@ -12,7 +12,8 @@ export const DB_MUTATION_RE =
 export const PAID_SDK_CALL_RE =
   /\b(?:openai|anthropic|client|ai|llm|model|groq|mistral|cohere|replicate|elevenlabs|resend|stripe|twilio|sendgrid)\w*\s*\.\s*(?:chat\.completions\.create|completions\.create|responses\.create|messages\.create|messages\.stream|embeddings\.create|images\.generate|audio\.\w+\.create|run|predictions\.create|textToSpeech\.\w+|emails\.send|send|charges\.create|paymentIntents\.create|checkout\.sessions\.create|messages\.create)\s*\(|\b(?:generateText|streamText|generateObject|streamObject|embed|embedMany|generateImage|experimental_generateImage)\s*\(/;
 
-export const GENAI_PACKAGES = /^(openai|@anthropic-ai\/sdk|ai|@ai-sdk\/[\w-]+|replicate|elevenlabs|@elevenlabs\/elevenlabs-js|@google\/generative-ai|@google\/genai|@mistralai\/mistralai|cohere-ai|groq-sdk|langchain|@langchain\/[\w-]+|llamaindex|together-ai|@fal-ai\/client|@huggingface\/inference|anthropic|google-generativeai|google-genai|mistralai|cohere|groq|together)$/;
+export const GENAI_PACKAGES =
+  /^(openai|@anthropic-ai\/sdk|ai|@ai-sdk\/[\w-]+|replicate|elevenlabs|@elevenlabs\/elevenlabs-js|@google\/generative-ai|@google\/genai|@mistralai\/mistralai|cohere-ai|groq-sdk|langchain|@langchain\/[\w-]+|llamaindex|together-ai|@fal-ai\/client|@huggingface\/inference|anthropic|google-generativeai|google-genai|mistralai|cohere|groq|together)$/;
 
 export const LLM_CALL_RE =
   /\b(?:chat\.completions\.create|completions\.create|responses\.create|messages\.create|messages\.stream|generateText|streamText|generateObject|streamObject|invoke|\.call|predictions\.create|textToSpeech\.convert|replicate\.run)\s*\(/;
@@ -23,15 +24,18 @@ export const RATE_LIMIT_RE =
 export const WEBHOOK_VERIFY_RE =
   /\b(?:webhooks\.constructEvent(?:Async)?|constructEvent(?:Async)?|webhooks\.unwrap|unwrapWebhook|verifyWebhook\w*|verifyWebhookSignature|verifySignature|validateWebhook\w*|validateEvent|verifyHeader|wh\.verify|webhook\.verify|Webhook\s*\([^)]*\)\s*\.verify|svix|timingSafeEqual|compare_digest|construct_event|verify_webhook|signature\.verify|isValidSignature|verifyPaddleWebhook|verifyRequestSignature)\b/;
 
-export const SESSION_SCOPE_KEYS = /^(userId|user_id|ownerId|owner_id|orgId|org_id|organizationId|organization_id|tenantId|tenant_id|authorId|author_id|accountId|account_id|teamId|team_id|workspaceId|workspace_id|createdBy|created_by|memberId|profileId|profile_id|customerId|customer_id|user|owner|organization|tenant|author|team|workspace|members|AND|OR)$/;
+export const SESSION_SCOPE_KEYS =
+  /^(userId|user_id|ownerId|owner_id|orgId|org_id|organizationId|organization_id|tenantId|tenant_id|authorId|author_id|accountId|account_id|teamId|team_id|workspaceId|workspace_id|createdBy|created_by|memberId|profileId|profile_id|customerId|customer_id|user|owner|organization|tenant|author|team|workspace|members|AND|OR)$/;
 
-export const SECRET_NAME_RE = /(SECRET|PRIVATE|SERVICE_ROLE|SERVICE_KEY|ADMIN|DATABASE_URL|DB_URL|POSTGRES_URL|DIRECT_URL|OPENAI|ANTHROPIC|STRIPE_SK|STRIPE_SECRET|RESEND|SENDGRID|TWILIO_AUTH|WEBHOOK_SECRET|SIGNING|PASSWORD|PASSWD|_PAT\b|ACCESS_TOKEN|REFRESH_TOKEN|AUTH_TOKEN|API_SECRET|CLIENT_SECRET|MASTER_KEY|ENCRYPTION_KEY|JWT_SECRET)/i;
+export const SECRET_NAME_RE =
+  /(SECRET|PRIVATE|SERVICE_ROLE|SERVICE_KEY|ADMIN|DATABASE_URL|DB_URL|POSTGRES_URL|DIRECT_URL|OPENAI|ANTHROPIC|STRIPE_SK|STRIPE_SECRET|RESEND|SENDGRID|TWILIO_AUTH|WEBHOOK_SECRET|SIGNING|PASSWORD|PASSWD|_PAT\b|ACCESS_TOKEN|REFRESH_TOKEN|AUTH_TOKEN|API_SECRET|CLIENT_SECRET|MASTER_KEY|ENCRYPTION_KEY|JWT_SECRET)/i;
 
 /** Env prefixes that inline values into the client bundle. */
 export const PUBLIC_ENV_PREFIX_RE = /^(NEXT_PUBLIC_|VITE_|PUBLIC_|EXPO_PUBLIC_|REACT_APP_|NUXT_PUBLIC_|GATSBY_|VUE_APP_)/;
 
 /** Values that are unambiguously private keys. */
-export const PRIVATE_VALUE_RE = /^(sk_live_|rk_live_|sk-proj-|sk-ant-|sb_secret_|sk-[A-Za-z0-9]{20,}|whsec_|xox[bap]-|ghp_|github_pat_|AKIA[0-9A-Z]{16}|-----BEGIN)/;
+export const PRIVATE_VALUE_RE =
+  /^(sk_live_|rk_live_|sk-proj-|sk-ant-|sb_secret_|sk-[A-Za-z0-9]{20,}|whsec_|xox[bap]-|ghp_|github_pat_|AKIA[0-9A-Z]{16}|-----BEGIN)/;
 
 /** Vendor secret signatures (SEC-06; 35 patterns). */
 export const SECRET_PATTERNS: Array<{ id: string; name: string; re: RegExp; severity?: "CRITICAL" | "HIGH" }> = [
@@ -40,10 +44,18 @@ export const SECRET_PATTERNS: Array<{ id: string; name: string; re: RegExp; seve
   { id: "stripe-live-secret", name: "Stripe Live Secret Key", re: /\b(sk|rk)_live_[0-9a-zA-Z]{20,}\b/ },
   { id: "stripe-test-secret", name: "Stripe Test Secret Key", re: /\bsk_test_[0-9a-zA-Z]{20,}\b/, severity: "HIGH" },
   { id: "stripe-webhook", name: "Stripe Webhook Signing Secret", re: /\bwhsec_[0-9a-zA-Z]{24,}\b/ },
-  { id: "openai-key", name: "OpenAI API Key", re: /\bsk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}T3BlbkFJ[A-Za-z0-9_-]{20,}\b|\bsk-proj-[A-Za-z0-9_-]{40,}\b/ },
+  {
+    id: "openai-key",
+    name: "OpenAI API Key",
+    re: /\bsk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}T3BlbkFJ[A-Za-z0-9_-]{20,}\b|\bsk-proj-[A-Za-z0-9_-]{40,}\b/,
+  },
   { id: "anthropic-key", name: "Anthropic API Key", re: /\bsk-ant-(?:api|admin)\d{2}-[A-Za-z0-9_-]{80,}\b/ },
   { id: "supabase-secret", name: "Supabase Secret Key", re: /\bsb_secret_[A-Za-z0-9_-]{20,}\b/ },
-  { id: "supabase-service-role", name: "Supabase service_role JWT", re: /\beyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJ[A-Za-z0-9_-]*cm9sZSI6InNlcnZpY2Vfcm9sZS[A-Za-z0-9_-]*\.[A-Za-z0-9_-]{20,}/ },
+  {
+    id: "supabase-service-role",
+    name: "Supabase service_role JWT",
+    re: /\beyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJ[A-Za-z0-9_-]*cm9sZSI6InNlcnZpY2Vfcm9sZS[A-Za-z0-9_-]*\.[A-Za-z0-9_-]{20,}/,
+  },
   { id: "github-pat", name: "GitHub Personal Access Token", re: /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36}\b|\bgithub_pat_[A-Za-z0-9_]{60,}\b/ },
   { id: "gitlab-pat", name: "GitLab Personal Access Token", re: /\bglpat-[A-Za-z0-9_-]{20}\b/ },
   { id: "slack-token", name: "Slack Token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
@@ -67,7 +79,11 @@ export const SECRET_PATTERNS: Array<{ id: string; name: string; re: RegExp; seve
   { id: "pypi-token", name: "PyPI Upload Token", re: /\bpypi-AgEIcHlwaS5vcmc[A-Za-z0-9_-]{50,}\b/ },
   { id: "shopify-token", name: "Shopify Access Token", re: /\bshp(?:at|ca|pa|ss)_[a-fA-F0-9]{32}\b/ },
   { id: "square-token", name: "Square Access Token", re: /\bEAAA[A-Za-z0-9_-]{60}\b/ },
-  { id: "db-url-password", name: "Database URL with Password", re: /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|rediss?):\/\/[^:\s/'"@]+:[^@\s'"]{6,}@[^\s'"]+/ },
+  {
+    id: "db-url-password",
+    name: "Database URL with Password",
+    re: /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|rediss?):\/\/[^:\s/'"@]+:[^@\s'"]{6,}@[^\s'"]+/,
+  },
   { id: "jwt-generic", name: "Hardcoded JWT Secret", re: /\b(?:JWT_SECRET|jwtSecret|jwt_secret)\s*[:=]\s*['"][^'"\s]{12,}['"]/ },
   { id: "linear-key", name: "Linear API Key", re: /\blin_api_[A-Za-z0-9]{40}\b/ },
 ];
@@ -76,4 +92,11 @@ export const SECRET_PATTERNS: Array<{ id: string; name: string; re: RegExp; seve
 export const SECRET_PLACEHOLDER_RE = /your|xxx|example|changeme|placeholder|dummy|sample|test_?key|<|\.\.\./i;
 
 /** Placeholders that should never ship in legal copy. */
-export const PLACEHOLDER_RE = /\[(?:COMPANY(?: NAME)?|YOUR (?:COMPANY|NAME|EMAIL)|DATE|ADDRESS|EMAIL|JURISDICTION|PRODUCT(?: NAME)?)\]|\bTODO\b|\bTBD\b|lorem ipsum|\{\{\s*company\s*\}\}|\bACME (?:Inc|Corp)\b/i;
+export const PLACEHOLDER_RE =
+  /\[(?:COMPANY(?: NAME)?|YOUR (?:COMPANY|NAME|EMAIL)|DATE|ADDRESS|EMAIL|JURISDICTION|PRODUCT(?: NAME)?)\]|\bTODO\b|\bTBD\b|lorem ipsum|\{\{\s*company\s*\}\}|\bACME (?:Inc|Corp)\b/i;
+
+/** Direct personal identifiers as object keys / member names (PRIV-05 prompts, VEC-03 vector metadata). */
+export const PII_FIELD_NAMES =
+  "email|phone|phoneNumber|phone_number|ip|ipAddress|ip_address|address|street|ssn|dob|dateOfBirth|date_of_birth|fullName|full_name|lastName|last_name";
+/** A whole user-like record serialized or spread. */
+export const PII_RECORD = "(?:user|profile|customer|account|member|currentUser)";

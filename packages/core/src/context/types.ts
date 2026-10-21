@@ -236,6 +236,24 @@ export interface RepoContext {
   timings: Record<string, number>;
   /** Built from a file subset (`BuildOptions.only`): IDE saves, `scan --changed-only`, agent hooks. */
   partial?: boolean;
+  /** Vector-DB and cache client calls (lazy, see `context/data-queries.ts`). */
+  dataQueries: DataQuery[];
+}
+
+export interface DataQuery {
+  file: string;
+  line: number;
+  /** Offset of the call (or tagged SQL template) in the file's CodeIndex. */
+  start: number;
+  /** Argument span: the call's `(`…`)`, or a SQL template's backticks. */
+  openParen: number;
+  closeParen: number;
+  kind: "vector" | "cache";
+  vendor: string;
+  /** client = constructor/factory; search/upsert (vector); write/read (cache). */
+  op: "client" | "search" | "upsert" | "write" | "read";
+  /** Final method or factory name, e.g. `search`, `set`, `QdrantClient`. */
+  method: string;
 }
 
 export interface RuleDefinition {
