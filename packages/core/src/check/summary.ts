@@ -58,6 +58,8 @@ export const categoryOf = (f: Finding): CategoryId =>
   f.blocking || f.severity === "CRITICAL" ? "before-launch" : f.severity === "HIGH" ? "soon" : "nice-to-have";
 const ORDER: Record<CategoryId, number> = { "before-launch": 0, soon: 1, "nice-to-have": 2 };
 const SEV: Record<Severity, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2 };
+/** Tie-break: security first, then privacy, legal, cost (an open database outranks a render loop). */
+const PILLAR_RANK: Record<Pillar, number> = { SECURITY: 0, PRIVACY: 1, LEGAL: 2, FINOPS_OPS: 3 };
 
 /** Defence in depth: rules already redact, but nothing shaped like a live key leaves via `check --json`. */
 export function scrubSecrets(s: string): string {
@@ -82,7 +84,9 @@ export function headlineOf(r: AuditReport, cats: Record<CategoryId, number>): st
 export function toCheck(r: AuditReport, repo: RepoRef, opts: { maxFixes?: number } = {}): CheckJson {
   const cats: Record<CategoryId, number> = { "before-launch": 0, soon: 0, "nice-to-have": 0 };
   for (const f of r.findings) cats[categoryOf(f)]++;
-  const sorted = [...r.findings].sort((a, b) => ORDER[categoryOf(a)] - ORDER[categoryOf(b)] || SEV[a.severity] - SEV[b.severity]);
+  const sorted = [...r.findings].sort(
+    (a, b) => ORDER[categoryOf(a)] - ORDER[categoryOf(b)] || SEV[a.severity] - SEV[b.severity] || PILLAR_RANK[a.pillar] - PILLAR_RANK[b.pillar],
+  );
   const seen = new Set<string>();
   const topFixes: TopFix[] = [];
   for (const f of sorted) {

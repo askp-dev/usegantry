@@ -7,6 +7,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "files.associations": { "*.css": "tailwindcss" },
   "files.exclude": { "**/node_modules": true, "_to_delete": true },
-  "search.exclude": { "**/node_modules": true, "**/dist": true, "data/**": true, "preflight-web/**": true, "**/bun.lock": true },
+  "search.exclude": { "**/node_modules": true, "**/dist": true, "data/**": true, "**/bun.lock": true },
   "errorLens.enabledDiagnosticLevels": ["error", "warning"]
 }

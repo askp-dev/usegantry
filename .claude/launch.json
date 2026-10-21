@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site-claude",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["vite", "preview", "--port", "4173", "--strictPort"],
+      "cwd": "site-claude",
+      "port": 4173
+    }
+  ]
+}

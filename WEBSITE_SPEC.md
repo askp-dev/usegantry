@@ -1,3 +1,5 @@
+> **Superseded (2026-10-21).** The site is `site-claude/`, built to the new `DESIGN.md`. This spec's tokens, rule counts, pricing and commands are out of date; see `site-claude/README.md` for what changed and why.
+
 This static site specification (`WEBSITE_SPEC.md`) is engineered to be compiled into pure HTML/CSS/JS via **SvelteKit (`@sveltejs/adapter-static`)** or **Astro** and deployed directly to **GitHub Pages** with zero backend dependencies.
 
 Because GitHub Pages cannot execute server-side databases or verification logic, this architecture uses **Client-Side WebCrypto Verification** (embedding the verification data directly in URL fragment hashes for the `/verify` page) and **GitHub Releases API fetching** so binary downloads and release versions update automatically whenever you push a new tag.

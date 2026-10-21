@@ -210,6 +210,8 @@ describe("check summary", () => {
     expect(j.topFixes.length).toBe(5);
     expect(new Set(j.topFixes.map((f) => f.ruleId)).size).toBe(5);
     expect(j.topFixes[0].category).toBe("before-launch");
+    // Security blockers outrank other blockers of the same severity.
+    expect(vuln.findings.find((f) => f.ruleId === j.topFixes[0].ruleId)?.pillar).toBe("SECURITY");
     expect(j.categories.reduce((a, c) => a + c.count, 0)).toBe(vuln.findings.length);
     expect(j.headline).toMatch(/^Not ready to launch yet/);
     expect(j.notices[0]).toMatch(/Static analysis only/);

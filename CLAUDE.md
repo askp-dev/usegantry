@@ -5,7 +5,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 ## Token budget rules (follow strictly)
 - **Never read whole spec files.** Read only the line range you need, using the map below (`Read` with offset/limit). Use `Grep` for a single rule ID (e.g. `SEC-08`) instead of opening RULES_SPEC.md.
 - **Don't read** `data/subprocessor-map.json` (76 KB), `data/known-packages.sqlite`, `data/seed/*.txt`, lockfiles or `node_modules/`. Query them with `bun -e` or `grep` and print only what you need.
-- **Never touch `preflight-web/`.** Gemini is building that site separately.
+- **The site is `site-claude/`** (SvelteKit 3 static + Tailwind v4, built to DESIGN.md). Its data comes from real scans (`bun run data`); see `site-claude/README.md`. SvelteKit 3: config lives in `vite.config.ts`, use `#lib/…` (with `.ts` extensions) and `resolve()` from `$app/paths`.
 - Once you've read a file this session, don't re-read it; rely on your edits.
 - Truncate command output: `bun test <file> --bail 2>&1 | tail -40`, `bun run typecheck 2>&1 | head -40`.
 - Use the Explore subagent only for broad multi-file searches. Use Grep/Glob for anything targeted.
@@ -30,8 +30,10 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Compliance profile packs HIPAA-01..03 + PCI-01..03 + LGL-01..03 + AIA-01 | RULES_SPEC.md 108–122 |
 | Pentest probes PT-01..06 | RULES_SPEC.md 125–149 |
 | Rule registry (`rules/index.ts`) | RULES_SPEC.md 152–329 |
-| Design tokens / typography | DESIGN.md 9–50 |
-| UI components (header, data-flow graph, pentest console, legal studio) | DESIGN.md 51–101 |
+| Design principles + banned AI-look tropes | DESIGN.md 1–34 |
+| Design tokens / contrast / typography / motion | DESIGN.md 35–124 |
+| UI components (header, go/no-go board, tag, findings, schematic, Range, legal, budget, title block) | DESIGN.md 125–210 |
+| Certificate, roast card, badge, CLI, site, voice, implementation plan | DESIGN.md 211–262 |
 | Handoff: status / quirks / remaining work | handoff.md 25–44 / 307–420 / 423–530 |
 
 ## Architecture essentials (no need to rediscover)
