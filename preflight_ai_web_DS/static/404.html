@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>404 — Preflight</title>
+		<style>
+			:root {
+				color-scheme: dark;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				min-height: 100vh;
+				display: grid;
+				place-items: center;
+				padding: 24px;
+				background:
+					radial-gradient(60% 50% at 50% 0%, rgba(16, 185, 129, 0.08), transparent 70%), #090a0f;
+				color: #f8fafc;
+				font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+			}
+			.card {
+				width: 100%;
+				max-width: 560px;
+				border: 1px solid #222634;
+				border-radius: 14px;
+				background: #11131c;
+				padding: 32px;
+				box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
+			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				font-family: 'JetBrains Mono', ui-monospace, monospace;
+				font-size: 13px;
+				font-weight: 800;
+				letter-spacing: -0.02em;
+			}
+			.mark {
+				display: grid;
+				place-items: center;
+				width: 28px;
+				height: 28px;
+				border: 1px solid rgba(16, 185, 129, 0.3);
+				border-radius: 6px;
+				background: rgba(16, 185, 129, 0.1);
+			}
+			.code {
+				margin-top: 28px;
+				font-family: 'JetBrains Mono', ui-monospace, monospace;
+				font-size: 11px;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: #ef4444;
+			}
+			h1 {
+				margin: 8px 0 0;
+				font-size: 34px;
+				line-height: 1.1;
+				letter-spacing: -0.04em;
+			}
+			p {
+				margin: 12px 0 0;
+				font-size: 13px;
+				line-height: 1.7;
+				color: #94a3b8;
+			}
+			.row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-top: 24px;
+			}
+			a {
+				display: inline-flex;
+				align-items: center;
+				padding: 9px 14px;
+				border: 1px solid #222634;
+				border-radius: 7px;
+				background: #0f111a;
+				color: #e2e8f0;
+				font-family: 'JetBrains Mono', ui-monospace, monospace;
+				font-size: 11px;
+				text-decoration: none;
+			}
+			a.primary {
+				border-color: rgba(16, 185, 129, 0.8);
+				background: #10b981;
+				color: #04110c;
+				font-weight: 700;
+			}
+			a:hover {
+				border-color: #3b4354;
+			}
+			a.primary:hover {
+				background: #34d399;
+			}
+			.foot {
+				margin-top: 26px;
+				padding-top: 16px;
+				border-top: 1px solid #222634;
+				font-family: 'JetBrains Mono', ui-monospace, monospace;
+				font-size: 9px;
+				color: #64748b;
+			}
+		</style>
+	</head>
+	<body>
+		<main class="card">
+			<div class="brand">
+				<span class="mark">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+						<path
+							d="M12 2.6 20 6v6.1c0 4.5-3.1 7.9-8 9.3-4.9-1.4-8-4.8-8-9.3V6l8-3.4Z"
+							stroke="#10b981"
+							stroke-width="1.4"
+							stroke-linejoin="round"
+						></path>
+						<path d="m12.9 7-4.2 6.1h3.1l-.7 4 4.2-6.1h-3.1l.7-4Z" fill="#10b981"></path>
+					</svg>
+				</span>
+				PREFLIGHT
+			</div>
+			<div class="code">404 · Off the flight path</div>
+			<h1>This route never made it to the runway.</h1>
+			<p>
+				The page you requested does not exist. Head back to mission control, browse the 43-check
+				registry, or verify a launch certificate.
+			</p>
+			<div class="row">
+				<a class="primary" href="/">← Back to Preflight</a>
+				<a href="/rules/">Rule registry</a>
+				<a href="/verify/">Verify certificate</a>
+			</div>
+			<div class="foot">preflight.dev · 43 checks · zero cloud upload</div>
+		</main>
+	</body>
+</html>

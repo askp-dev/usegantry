@@ -1,0 +1,6 @@
+PLACEHOLDER — replace this file with the compiled Preflight Cursor / VS Code extension.
+
+The live site links to the latest .vsix published on GitHub Releases:
+https://github.com/preflight-ai/preflight/releases/latest/download/preflight-latest.vsix
+
+This fallback exists so the static download path never 404s on GitHub Pages.
