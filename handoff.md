@@ -295,7 +295,8 @@ Constraints that override the roadmaps:
 
 #### Sprint 7 ✅ done: MCP-01 (hardcoded creds in agent/MCP configs) + MCP-02 (unpinned/unverified `npx`/`uvx` servers), and the safe-harbor compiler (SECURITY.md, security.txt, robots.txt, ai.txt) wired into `legal --apply` and `init` (see §3 "Sprint 7 files" and quirks 33–36).
 
-#### Sprint 8: Distribution (badge, GitHub Action, roast)
+#### Sprint 8: Distribution (badge, GitHub Action, roast) ⏸ deferred (2026-10-21)
+- **Skipped for now at the user's request; blockers not yet written down.** Nothing in Sprints 9–14 depends on it. `preflight-web`'s roast box is waiting on `roast --json`. Ask the user for the blockers before resuming.
 - **Prerequisite:** decide the real verify domain (quirk 8, still open). The badge links to `/verify#<cert>`.
 - `preflight badge` writes `.preflight/badge.svg` (score + Verified only when there's a valid Ed25519 cert) and prints a README snippet.
 - Composite `action.yml`: scan, SARIF upload, badge commit or artifact, and fail on LAUNCH_BLOCKED.
