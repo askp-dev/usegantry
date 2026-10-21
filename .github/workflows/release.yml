@@ -1,0 +1,27 @@
+# On a v* tag: build the standalone binaries + SHA256SUMS and attach them to the GitHub Release
+# that install.sh (https://usegantry.app/install.sh) downloads from.
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  binaries:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the release; only this job has it
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.10 }
+      - run: bun install --frozen-lockfile
+      - run: bun test packages/core/test
+      - run: bun run --cwd packages/core build:all
+      - name: Publish release
+        env: { GH_TOKEN: "${{ github.token }}", TAG: "${{ github.ref_name }}" }
+        run: |
+          cd packages/core/dist
+          gh release create "$TAG" gantry-darwin-arm64 gantry-darwin-x64 gantry-linux-x64 gantry-linux-arm64 SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes --verify-tag

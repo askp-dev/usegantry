@@ -1,0 +1,83 @@
+# Official Gantry scan (reusable workflow). The only path to a centrally signed, "Verified" certificate:
+# the signer accepts OIDC tokens whose job_workflow_ref is this file at a v* tag, and a caller can't edit these steps.
+#
+#   jobs:
+#     gantry:
+#       permissions: { contents: read, id-token: write, security-events: write }
+#       uses: askp-dev/usegantry/.github/workflows/scan.yml@v1
+#       with: { strict: false, profile: "" }
+name: gantry-scan
+on:
+  workflow_call:
+    inputs:
+      path: { type: string, default: ".", description: "Directory to scan, relative to the repo root." }
+      profile: { type: string, default: "", description: "Comma-separated compliance profiles (hipaa,fintech-pci,legal-privilege,eu-ai-act,airgap)." }
+      strict: { type: boolean, default: false, description: "Fail the job when the repo is LAUNCH_BLOCKED." }
+    outputs:
+      score: { value: "${{ jobs.scan.outputs.score }}" }
+      status: { value: "${{ jobs.scan.outputs.status }}" }
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write          # OIDC token for the central signer (aud usegantry.app)
+      security-events: write   # SARIF upload to code scanning
+    outputs:
+      score: ${{ steps.gate.outputs.score }}
+      status: ${{ steps.gate.outputs.status }}
+    env:
+      GANTRY_VERSION: "0.1.0"  # pinned here so a caller can't pick the scanner
+      TARGET: ${{ inputs.path }}
+      PROFILE: ${{ inputs.profile }}
+      STRICT: ${{ inputs.strict }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false, fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.10 }
+      - name: Validate inputs
+        run: |
+          case "$TARGET" in /*|*..*) echo "::error::path must be relative and inside the repo"; exit 2 ;; esac
+          printf '%s' "$PROFILE" | grep -Eq '^[a-z,-]*$' || { echo "::error::invalid profile"; exit 2; }
+      - name: Install Gantry
+        run: bun add -g "@usegantry/cli@${GANTRY_VERSION}"
+      - name: Scan
+        run: |
+          set -- ; [ -n "$PROFILE" ] && set -- --profile "$PROFILE"
+          gantry scan "$TARGET" --json "$@" > gantry-report.json || true
+          gantry scan "$TARGET" --sarif "$@" > gantry.sarif || true
+          gantry check "$TARGET" --md > gantry-check.md || true
+          cat gantry-check.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Central certificate + badge
+        run: |
+          gantry clear "$TARGET" --allow-blocked --central || echo "::warning::central signing failed; the badge won't say Verified"
+          gantry badge "$TARGET"
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('gantry.sarif') != ''
+        with: { sarif_file: gantry.sarif, category: gantry }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gantry
+          path: |
+            gantry-report.json
+            gantry.sarif
+            gantry-check.md
+            ${{ inputs.path }}/.gantry/badge.svg
+            ${{ inputs.path }}/.gantry/cert.url
+            ${{ inputs.path }}/LAUNCH_CERTIFICATE.html
+            ${{ inputs.path }}/LAUNCH_CERTIFICATE.pdf
+          if-no-files-found: warn
+      - name: Gate
+        id: gate
+        run: |
+          status=$(bun -e 'const r=JSON.parse(require("fs").readFileSync("gantry-report.json","utf8"));console.log(r.status)')
+          score=$(bun -e 'const r=JSON.parse(require("fs").readFileSync("gantry-report.json","utf8"));console.log(r.score)')
+          echo "status=$status" >> "$GITHUB_OUTPUT"; echo "score=$score" >> "$GITHUB_OUTPUT"
+          echo "Gantry: $score/100 ($status)"
+          if [ "$STRICT" = "true" ] && [ "$status" = "LAUNCH_BLOCKED" ]; then echo "::error::LAUNCH_BLOCKED (strict)"; exit 1; fi

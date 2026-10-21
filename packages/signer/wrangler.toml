@@ -1,0 +1,6 @@
+name = "gantry-signer"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+workers_dev = false
+routes = [{ pattern = "api.usegantry.app/sign", zone_name = "usegantry.app" }]
+# Secret (never in this file): bunx wrangler@3 secret put SIGNING_KEY  ← paste the base64 PKCS8 from `bun run keygen`

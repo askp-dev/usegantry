@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://usegantry.app/schema/check.schema.json",
+  "title": "gantry check --json",
+  "description": "Owner-facing plain-language report. Contains file paths and agent prompts, never evidence snippets or unredacted secrets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "repo", "score", "status", "headline", "summary", "topFixes", "categories", "notices", "generatedAt"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "mode": { "type": "string", "const": "check" },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name", "ref", "sha"],
+      "properties": {
+        "owner": { "type": "string", "description": "Empty for a local path." },
+        "name": { "type": "string" },
+        "ref": { "type": ["string", "null"] },
+        "sha": { "type": ["string", "null"] }
+      }
+    },
+    "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "status": { "type": "string", "enum": ["LAUNCH_READY", "NEEDS_REVIEW", "LAUNCH_BLOCKED"] },
+    "headline": { "type": "string", "description": "One plain-language sentence." },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["critical", "high", "medium"],
+      "properties": { "critical": { "type": "integer" }, "high": { "type": "integer" }, "medium": { "type": "integer" } }
+    },
+    "topFixes": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "severity", "category", "title", "plainWhy", "file", "line", "agentPrompt"],
+        "properties": {
+          "ruleId": { "type": "string" },
+          "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM"] },
+          "category": { "type": "string", "enum": ["before-launch", "soon", "nice-to-have"] },
+          "title": { "type": "string" },
+          "plainWhy": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "agentPrompt": { "type": "string" }
+        }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "count"],
+        "properties": {
+          "id": { "type": "string", "enum": ["before-launch", "soon", "nice-to-have"] },
+          "label": { "type": "string", "enum": ["Fix before launch", "Fix soon", "Nice to have"] },
+          "count": { "type": "integer" }
+        }
+      }
+    },
+    "notices": { "type": "array", "items": { "type": "string" } },
+    "generatedAt": { "type": "string", "format": "date-time" }
+  }
+}

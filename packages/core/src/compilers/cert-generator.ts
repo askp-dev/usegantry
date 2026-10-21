@@ -10,7 +10,16 @@ import { dirname, join } from "node:path";
 import type { AuditReport } from "../context/types";
 import { requireFeature } from "../entitlements";
 import { ALL_STATIC_RULES } from "../rules/index";
+import { canonicalJson } from "../util/canonical";
 import { hex, type PdfOp, renderPdf } from "./pdf";
+
+export { canonicalJson };
+
+/**
+ * Raw Ed25519 public key (base64url) of the central signer (`packages/signer`, a Worker secret).
+ * Empty until the production key is generated: then nothing is ever "Verified" (fail closed).
+ */
+export const CENTRAL_PUBLIC_KEY = "";
 
 export const DEFAULT_VERIFY_BASE = process.env.GANTRY_VERIFY_BASE ?? "https://usegantry.app";
 const PKCS8_ED25519_PREFIX = Buffer.from("302e020100300506032b657004220420", "hex");
@@ -27,18 +36,15 @@ export interface CertPayload {
   failedRules: string[];
   subprocessors: string[];
   rulesetVersion: string;
-}
-
-/** Deterministic JSON: object keys sorted recursively. */
-export function canonicalJson(v: unknown): string {
-  if (Array.isArray(v)) return `[${v.map(canonicalJson).join(",")}]`;
-  if (v && typeof v === "object")
-    return `{${Object.keys(v)
-      .sort()
-      .filter((k) => (v as any)[k] !== undefined)
-      .map((k) => `${JSON.stringify(k)}:${canonicalJson((v as any)[k])}`)
-      .join(",")}}`;
-  return JSON.stringify(v);
+  /** Findings hidden by `gantry-ignore` comments or `ignoreRules`; shown on the cert so suppressions are never silent. */
+  suppressed: number;
+  /** "self-signed" = a local per-machine key (never Verified); "gantry-ci" = the central signer after an OIDC check. */
+  issuer: "self-signed" | "gantry-ci";
+  /** Set by the central signer from the OIDC claims, never from the client. */
+  repository?: string;
+  runId?: string;
+  workflowRef?: string;
+  signedAt?: string;
 }
 
 export function loadSigningKey(opts: { secret?: string; keyPath?: string } = {}): KeyObject {
@@ -76,13 +82,18 @@ export function buildPayload(report: AuditReport): CertPayload {
     failedRules: failed,
     subprocessors: [...new Set(report.graph.nodes.filter((n) => n.column === "vendor").map((n) => n.label))].sort(),
     rulesetVersion: report.tool.rulesetVersion,
+    suppressed: report.suppressed,
+    issuer: "self-signed",
   };
 }
+
+export const CERT_URL_FILE = ".gantry/cert.url";
+export const certUrl = (body: string, signature: string) => `${DEFAULT_VERIFY_BASE}/verify#${Buffer.from(body).toString("base64url")}.${signature}`;
 
 export function signPayload(payload: CertPayload, key: KeyObject): { body: string; signature: string; url: string } {
   const body = canonicalJson(payload);
   const signature = sign(null, Buffer.from(body), key).toString("base64url");
-  return { body, signature, url: `${DEFAULT_VERIFY_BASE}/verify#${Buffer.from(body).toString("base64url")}.${signature}` };
+  return { body, signature, url: certUrl(body, signature) };
 }
 
 export function verifyCertificate(fragment: string, publicKeyB64url: string): CertPayload | null {
@@ -128,9 +139,10 @@ footer{margin-top:28px;border-top:1px solid var(--border-subtle);padding-top:16p
 </style></head><body><main class="cert">
 <div class="eyebrow">Gantry · Launch Certificate</div>
 <h1>${escHtml(p.projectName)}</h1>
+<div class="eyebrow">${p.issuer === "gantry-ci" ? `Signed by Gantry CI · ${escHtml(p.repository ?? "")} · run ${escHtml(p.runId ?? "")}` : "Self-signed (local key): not Verified"}</div>
 <span class="stamp">${blocked ? "BLOCKED — NOT LAUNCH READY" : p.status.replace("_", " ")}</span>
 <div class="row"><div><div class="eyebrow">Readiness score</div><div class="score">${p.overallScore}/100</div></div>
-<div class="kv">commit ${escHtml(p.commitSha.slice(0, 12) || "n/a")}<br>issued ${escHtml(p.timestamp)}<br>ruleset ${escHtml(p.rulesetVersion)}<br>blockers ${p.blockers}</div></div>
+<div class="kv">commit ${escHtml(p.commitSha.slice(0, 12) || "n/a")}<br>issued ${escHtml(p.timestamp)}<br>ruleset ${escHtml(p.rulesetVersion)}<br>blockers ${p.blockers}${p.suppressed ? `<br>suppressed ${p.suppressed}` : ""}</div></div>
 <div class="eyebrow">Static checks (${p.passedRules.length}/${p.passedRules.length + p.failedRules.length} passed)</div>
 <div class="rules">${[...p.passedRules.map((r) => pill(r, true)), ...p.failedRules.map((r) => pill(r, false))].join("")}</div>
 ${p.subprocessors.length ? `<p class="kv">Sub-processors: ${p.subprocessors.map(escHtml).join(", ")}</p>` : ""}
@@ -186,7 +198,14 @@ export function renderCertPdf(p: CertPayload, sig: { url: string }, publicKey: s
       (i): PdfOp => ({ kind: "text", x: 72, y: 184 - i * 10, size: 7, text: sig.url.slice(i * 96, (i + 1) * 96), font: "mono", color: hex(T.agent) }),
     ),
     { kind: "text", x: 72, y: 146, size: 7, text: `Ed25519 key ${publicKey}  hash ${p.verificationHash.slice(0, 32)}`, font: "mono", color: hex(T.muted) },
-    { kind: "text", x: 72, y: 132, size: 7, text: "Automated static scan attestation. Not a security audit or legal advice.", color: hex(T.muted) },
+    {
+      kind: "text",
+      x: 72,
+      y: 132,
+      size: 7,
+      text: `${p.issuer === "gantry-ci" ? `Signed by Gantry CI (${p.repository ?? ""}).` : "Self-signed (local key), not Verified."} Automated static scan attestation. Not a security audit or legal advice.`,
+      color: hex(T.muted),
+    },
   );
   return renderPdf(ops, { title: `Launch Certificate - ${p.projectName}`, subject: p.verificationHash });
 }
@@ -195,7 +214,7 @@ export class CertificateBlockedError extends Error {}
 
 export function generateCertificate(
   report: AuditReport,
-  opts: { outDir: string; allowBlocked?: boolean; secret?: string; keyPath?: string },
+  opts: { outDir: string; allowBlocked?: boolean; secret?: string; keyPath?: string; central?: { body: string; signature: string; publicKey: string } },
 ): { html: string; pdf: string; url: string; payload: CertPayload; publicKey: string } {
   requireFeature("cert");
   const blocked = report.blockers > 0;
@@ -203,13 +222,25 @@ export function generateCertificate(
     throw new CertificateBlockedError(
       `Refusing to issue a Launch Certificate: ${report.blockers} blocker(s). Fix them or pass --allow-blocked to issue one stamped BLOCKED.`,
     );
-  const key = loadSigningKey(opts);
-  const payload = buildPayload(report);
-  const sig = signPayload(payload, key);
-  const publicKey = publicKeyRaw(key);
+  let payload: CertPayload;
+  let sig: { signature: string; url: string };
+  let publicKey: string;
+  if (opts.central) {
+    payload = JSON.parse(opts.central.body);
+    sig = { signature: opts.central.signature, url: certUrl(opts.central.body, opts.central.signature) };
+    publicKey = opts.central.publicKey;
+  } else {
+    const key = loadSigningKey(opts);
+    payload = buildPayload(report);
+    sig = signPayload(payload, key);
+    publicKey = publicKeyRaw(key);
+  }
   const html = join(opts.outDir, "LAUNCH_CERTIFICATE.html");
   const pdf = join(opts.outDir, "LAUNCH_CERTIFICATE.pdf");
   writeFileSync(html, renderCertHtml(payload, sig, publicKey, blocked));
   writeFileSync(pdf, renderCertPdf(payload, sig, publicKey, blocked));
+  // `gantry badge` links to this.
+  mkdirSync(join(opts.outDir, ".gantry"), { recursive: true });
+  writeFileSync(join(opts.outDir, CERT_URL_FILE), `${sig.url}\n`);
   return { html, pdf, url: sig.url, payload, publicKey };
 }

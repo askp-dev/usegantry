@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://usegantry.app/schema/roast.schema.json",
+  "title": "gantry roast --json",
+  "description": "Public, shareable result. Never contains file paths, routes, line numbers, table names, secrets, vendor keys or exploit steps: every string is canned copy, a number, or the repo's owner/name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "repo", "score", "verdict", "pillars", "counts", "lines", "cardSvg", "generatedAt"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "mode": { "type": "string", "const": "roast" },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name"],
+      "properties": { "owner": { "type": "string" }, "name": { "type": "string" } }
+    },
+    "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "verdict": { "type": "string", "enum": ["Survives launch", "Shaky", "Won't survive launch"] },
+    "pillars": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pillar", "score", "line"],
+        "properties": {
+          "pillar": { "type": "string", "enum": ["Security", "Privacy", "Legal", "Cost"] },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "line": { "type": "string" }
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["critical", "high", "medium"],
+      "properties": { "critical": { "type": "integer" }, "high": { "type": "integer" }, "medium": { "type": "integer" } }
+    },
+    "lines": { "type": "array", "items": { "type": "string" } },
+    "cardSvg": { "type": "string", "description": "1200×630 SVG card, safe to post publicly." },
+    "generatedAt": { "type": "string", "format": "date-time" }
+  }
+}

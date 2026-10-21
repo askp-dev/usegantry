@@ -31,6 +31,10 @@
         "@usegantry/cli": "workspace:*",
       },
     },
+    "packages/signer": {
+      "name": "@usegantry/signer",
+      "version": "0.1.0",
+    },
     "packages/ui": {
       "name": "@usegantry/ui",
       "version": "0.1.0",
@@ -189,6 +193,8 @@
     "@usegantry/cli": ["@usegantry/cli@workspace:packages/core"],
 
     "@usegantry/mcp": ["@usegantry/mcp@workspace:packages/mcp"],
+
+    "@usegantry/signer": ["@usegantry/signer@workspace:packages/signer"],
 
     "@usegantry/ui": ["@usegantry/ui@workspace:packages/ui"],
 

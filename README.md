@@ -23,6 +23,26 @@ bun install
 bun run scan fixtures/vulnerable-saas
 ```
 
+Or install the standalone binary (checksum-verified; no Go/Rust rules, use `bunx @usegantry/cli` for those):
+
+```bash
+curl -fsSL https://usegantry.app/install.sh | sh
+```
+
+## GitHub
+
+Verified certificate + badge (the signer only trusts this reusable workflow, via GitHub OIDC):
+
+```yaml
+jobs:
+  gantry:
+    permissions: { contents: read, id-token: write, security-events: write }
+    uses: askp-dev/usegantry/.github/workflows/scan.yml@v1
+    with: { strict: false }   # strict: true fails the job on LAUNCH_BLOCKED
+```
+
+Or the plain action (self-signed, no OIDC): `uses: askp-dev/usegantry@v1` with `strict`, `profile` and `path` inputs. Both upload SARIF to code scanning and the badge + report as a build artifact; neither commits to your repo.
+
 To build a standalone binary at `packages/core/dist/gantry`:
 
 ```bash
@@ -34,8 +54,11 @@ bun run build:bin
 | Command | What it does |
 |---|---|
 | `gantry scan [path] [--json\|--sarif\|--compact] [--changed-only] [--strict] [--offline] [--write-checklist]` | Static audit. Exits 1 when there are launch blockers. `--compact` prints one token-lean line per finding; `--changed-only` scans uncommitted files only and skips repo-wide absence rules. |
-| `gantry legal [path] [--sync]` | Compiles `legal/*.md` from the vendors, PII and clauses it detects. Shows a diff unless you pass `--apply`. |
-| `gantry cert [path] [--allow-blocked]` | Signed readiness certificate (Ed25519) plus a vendor pack (SBOM, `DATA_FLOW.mermaid`). |
+| `gantry legal [path] [--sync]` | Compiles `legal/*.md` from the vendors, PII and clauses it detects. Shows a diff unless you pass `--sync`. |
+| `gantry clear [path] [--allow-blocked]` | Launch Clearance Certificate (Ed25519, HTML + PDF) plus a vendor pack (SBOM, `DATA_FLOW.mermaid`). Local certs are **self-signed**; only the official workflow's `--central` certs are Verified. |
+| `gantry check <github-url\|path> [--json\|--md]` | Plain-language report for the repo owner: score, one-sentence status, the top 5 fixes with copy-paste prompts for your AI agent. Downloads public (or, with `GITHUB_TOKEN`/`gh auth`, private) GitHub repos as a tarball: no clone, no installs, no scripts, static rules only. |
+| `gantry roast <github-url\|path> [--json] [--out card.svg]` | Shareable 1200×630 "Vibe-Code Survival Card". Never shows file paths, routes, line numbers, tables or secrets, so it's safe to post. |
+| `gantry badge [path] [--cert <verify-url>]` | Writes `.gantry/badge.svg` and prints a README snippet linking to your certificate. |
 | `gantry attack --target http://localhost:3000 [path]` | Live probes PT-01..06 against routes the static scan found. Non-loopback targets need `--allow-remote`. |
 | `gantry ui [path] [--port 4400] [--online]` | Mission Control at `http://127.0.0.1:4400`, with Readiness Matrix, Live Pentest, Legal Studio and Burn Simulator tabs. |
 | `gantry init [path] [--ci] [--pre-commit] [--no-hooks]` | Adds the MCP config, `CLAUDE.md`/Cursor rules, `gantry.config.json`, Claude Code/Cursor stop hooks (opt-in `git commit` gate) and a `.gantry/baseline.json`, so the hooks block only on blockers introduced after init. It's non-destructive and safe to re-run. |
@@ -63,6 +86,8 @@ To suppress a finding, put `// gantry-ignore SEC-03` on the line or the line abo
 |---|---|
 | `packages/core` | Context builder, rules, engine, compilers, pentester, MCP and UI servers, CLI. No runtime dependencies. |
 | `packages/ui` | Svelte 5 + Tailwind v4 Mission Control. Build it with `bun run build:ui`. Without it, the server falls back to the embedded lite UI. |
+| `packages/mcp` | `@usegantry/mcp`: `bunx @usegantry/mcp` runs the MCP server on its own. |
+| `packages/signer` | Cloudflare Worker at `api.usegantry.app/sign` that signs certificates for the official workflow (GitHub OIDC). |
 | `packages/vscode-ext` | Diagnostics, CodeLens "Fix with AI Agent" and a sidebar. Package it with `bun run --cwd packages/vscode-ext package`. |
 | `fixtures/vulnerable-saas`, `fixtures/clean-saas` | Every rule must fire on the first and stay silent on the second. |
 
@@ -83,6 +108,13 @@ bun run bench
 Environment variables:
 
 - `GANTRY_CERT_SECRET` makes certificate signing deterministic, which you want in CI.
-- `GANTRY_VERIFY_BASE` sets the verify-page origin. The default is a placeholder.
+- `GANTRY_VERIFY_BASE` sets the verify-page origin (default `https://usegantry.app`).
+- `GITHUB_TOKEN` / `GH_TOKEN` let `check`/`roast` read private repos. The token is sent only to `api.github.com`.
+
+JSON contracts for `check --json` and `roast --json`: `docs/check-json.md`.
+
+## Contributing and licence
+
+MIT (`LICENSE`). Contributions need a [DCO](https://developercertificate.org/) sign-off (`git commit -s`), so the project can keep its licensing options open.
 
 See `handoff.md` for build status and known quirks.

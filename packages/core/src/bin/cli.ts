@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
 import { compileAiInventory } from "../compilers/ai-inventory";
-import { CertificateBlockedError, generateCertificate } from "../compilers/cert-generator";
+import { CentralSignError, signCentrally } from "../compilers/central-sign";
+import { buildPayload, CertificateBlockedError, generateCertificate } from "../compilers/cert-generator";
 import { writeChecklist } from "../compilers/checklist-writer";
 import { compileLegalDocs, writeChanges } from "../compilers/legal-compiler";
 import { LEGAL_DISCLAIMER } from "../compilers/legal-templates";
@@ -21,7 +22,10 @@ const HELP = `gantry ${VERSION}: launch readiness for AI-generated repos
 Usage:
   gantry scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--profile hipaa,fintech-pci,legal-privilege,eu-ai-act,airgap] [--write-checklist] [--verbose]
   gantry legal [path] [--sync] [--profile eu-ai-act]
-  gantry clear [path] [--allow-blocked] [--strict] [--offline]
+  gantry clear [path] [--allow-blocked] [--strict] [--offline] [--central]   (--central: official GitHub workflow only)
+  gantry check <https://github.com/owner/repo[/tree/ref] | path> [--json] [--md]
+  gantry roast <https://github.com/owner/repo[/tree/ref] | path> [--json] [--out card.svg]
+  gantry badge [path] [--cert <verify-url>]
   gantry attack --target <url> [path]
   gantry ui [path] [--port 4400]
   gantry init [path] [--ci] [--no-hooks] [--pre-commit]
@@ -30,7 +34,7 @@ Usage:
 
 Exit codes: 0 ok · 1 launch blockers found · 2 usage/runtime error`;
 
-export function parseArgs(argv: string[]): { cmd: string; path: string; flags: Record<string, string | boolean> } {
+export function parseArgs(argv: string[]): { cmd: string; path: string; positional: string[]; flags: Record<string, string | boolean> } {
   const [cmd = "help", ...rest] = argv;
   const flags: Record<string, string | boolean> = {};
   const positional: string[] = [];
@@ -38,10 +42,11 @@ export function parseArgs(argv: string[]): { cmd: string; path: string; flags: R
     const a = rest[i];
     if (!a.startsWith("--")) positional.push(a);
     else if (a.includes("=")) flags[a.slice(2, a.indexOf("="))] = a.slice(a.indexOf("=") + 1);
-    else if (["--target", "--port", "--out", "--agent", "--profile"].includes(a) && rest[i + 1] && !rest[i + 1].startsWith("--")) flags[a.slice(2)] = rest[++i];
+    else if (["--target", "--port", "--out", "--agent", "--profile", "--cert"].includes(a) && rest[i + 1] && !rest[i + 1].startsWith("--"))
+      flags[a.slice(2)] = rest[++i];
     else flags[a.slice(2)] = true;
   }
-  return { cmd, path: resolve(positional[0] ?? "."), flags };
+  return { cmd, path: resolve(positional[0] ?? "."), positional, flags };
 }
 
 /** Commands whose modules land in later sprints are loaded lazily so `scan` stays fast. */
@@ -52,14 +57,18 @@ const MODULES = {
   init: () => import("../init"),
   hooks: () => import("../hooks"),
   "bin/mcp": () => import("./mcp"),
+  "check/cli": () => import("../check/cli"),
 } as const;
 
-async function delegate(mod: keyof typeof MODULES, args: { path: string; flags: Record<string, string | boolean>; event?: string }): Promise<number> {
-  return (await MODULES[mod]()).main(args);
+async function delegate(
+  mod: keyof typeof MODULES,
+  args: { path: string; flags: Record<string, string | boolean>; event?: string; cmd?: string; target?: string },
+): Promise<number> {
+  return (await MODULES[mod]()).main(args as any);
 }
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
-  const { cmd, path, flags } = parseArgs(argv);
+  const { cmd, path, positional, flags } = parseArgs(argv);
   const config = {
     strict: flags.strict === true || undefined,
     offline: flags.offline === true || undefined,
@@ -107,14 +116,17 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       const ctx = await buildRepoContext(path, { config });
       const report = await runAudit(ctx);
       try {
-        const res = generateCertificate(report, { outDir: path, allowBlocked: flags["allow-blocked"] === true });
+        const blockedNoAllow = report.blockers > 0 && flags["allow-blocked"] !== true;
+        // Central signing only after the local refusal check, so a blocked repo never gets a signed cert by accident.
+        const central = flags.central && !blockedNoAllow ? await signCentrally(buildPayload(report)) : undefined;
+        const res = generateCertificate(report, { outDir: path, allowBlocked: flags["allow-blocked"] === true, central });
         const pack = writeVendorPack(ctx, report, path);
         console.log(
           `${color.green("✔")} ${res.html}\n${color.green("✔")} ${res.pdf}\n${pack.map((p) => `${color.green("✔")} ${p}`).join("\n")}\n${color.dim("verify:")} ${res.url.slice(0, 100)}…`,
         );
         return report.blockers > 0 ? 1 : 0;
       } catch (e) {
-        if (e instanceof CertificateBlockedError) {
+        if (e instanceof CertificateBlockedError || e instanceof CentralSignError) {
           console.error(color.red(e.message));
           return 1;
         }
@@ -140,6 +152,10 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     }
     case "mcp":
       return delegate("bin/mcp", { path, flags });
+    case "check":
+    case "roast":
+    case "badge":
+      return delegate("check/cli", { path, flags, cmd, target: positional[0] ?? "" });
     case "--version":
     case "version":
       console.log(VERSION);

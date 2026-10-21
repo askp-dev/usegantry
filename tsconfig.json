@@ -14,5 +14,5 @@
     "noEmit": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["packages/core/src/**/*.ts", "packages/mcp/src/**/*.ts", "packages/core/test/**/*.ts", "scripts/**/*.ts"]
+  "include": ["packages/core/src/**/*.ts", "packages/mcp/src/**/*.ts", "packages/signer/src/**/*.ts", "packages/signer/scripts/**/*.ts", "packages/core/test/**/*.ts", "scripts/**/*.ts"]
 }
