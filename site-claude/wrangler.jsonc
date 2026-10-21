@@ -1,0 +1,12 @@
+// Static site on Cloudflare Workers (static assets only, no Worker script).
+// Deploy: `cd site-claude && npx wrangler deploy` after `bun run build`.
+// The signer is a separate Worker (packages/signer, api.usegantry.app/sign).
+{
+  "name": "gantry-site",
+  "compatibility_date": "2026-10-21",
+  "assets": {
+    "directory": "./build",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}
