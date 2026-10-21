@@ -3,7 +3,7 @@
  * SQL migrations are authoritative (RLS, policies, buckets); ORM adapters only add tables/columns SQL lacks.
  * To support a new ORM, add one adapter to SCHEMA_ADAPTERS — the builder and rules don't change.
  */
-import { parseDrizzleSchema, parsePrismaSchema, parseSqlAlchemyModels, prismaModelMap } from "./schema-parser";
+import { parseConvexSchema, parseDrizzleSchema, parsePrismaSchema, parseSqlAlchemyModels, prismaModelMap } from "./schema-parser";
 import { parseSqlFiles, parseSupabaseConfigBuckets, type SqlParseResult } from "./sql-parser";
 import type { TableSchema } from "./types";
 
@@ -18,6 +18,7 @@ const SCHEMA_ADAPTERS: readonly SchemaAdapter[] = [
   { id: "prisma", claims: (f) => f.endsWith(".prisma"), parse: parsePrismaSchema },
   { id: "drizzle", claims: (f, t) => /\.(m|c)?[tj]s$/.test(f) && /\b(pgTable|sqliteTable|mysqlTable)\s*\(/.test(t()), parse: parseDrizzleSchema },
   { id: "sqlalchemy", claims: (f, t) => f.endsWith(".py") && t().includes("__tablename__"), parse: parseSqlAlchemyModels },
+  { id: "convex", claims: (f) => /(^|\/)convex\/schema\.[jt]s$/.test(f), parse: parseConvexSchema },
 ];
 
 interface SchemaResult {

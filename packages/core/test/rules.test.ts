@@ -5,6 +5,9 @@ import { ALL_STATIC_RULES } from "../src/rules/index";
 
 const VULN = "fixtures/vulnerable-saas";
 const CLEAN = "fixtures/clean-saas";
+const BAAS = "fixtures/vulnerable-baas";
+/** Rules whose positive cases live in the BaaS/edge sibling fixture (Convex, Firestore, Mongo, D1, Turso). */
+const ON_BAAS = new Set(["BAAS-01", "BAAS-02", "BAAS-03", "EDGE-01", "EDGE-02"]);
 
 /** What each rule must report on the vulnerable fixture: [file, evidence substring]. */
 const EXPECT: Record<string, Array<[string, string]>> = {
@@ -126,30 +129,47 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     ["app/page.tsx", "<input"],
   ],
   "SEO-01": [["app/layout.tsx", "robots.txt"]],
+  "BAAS-01": [
+    ["convex/notes.ts", "export const list = query"],
+    ["convex/notes.ts", "export const remove = mutation"],
+    ["convex/notes.ts", "stripeWebhook"],
+  ],
+  "BAAS-02": [
+    ["firestore.rules", "{document=**}"],
+    ["firestore.rules", "profiles/{uid}"],
+  ],
+  "BAAS-03": [
+    ["server/routes.js", "req.body.password"],
+    ["server/routes.js", "Note.find(filter)"],
+  ],
+  "EDGE-01": [["lib/replica.ts", "createClient"]],
+  "EDGE-02": [["worker/src/index.ts", 'WHERE id = ?")']],
 };
 
 let vuln: RepoContext;
 let clean: RepoContext;
+let baas: RepoContext;
 const vulnOut = new Map<string, Finding[]>();
 const cleanOut = new Map<string, Finding[]>();
 
 beforeAll(async () => {
   vuln = await buildRepoContext(VULN, { config: { offline: true } });
   clean = await buildRepoContext(CLEAN, { config: { offline: true } });
-  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(vuln))));
+  baas = await buildRepoContext(BAAS, { config: { offline: true } });
+  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(ON_BAAS.has(r.id) ? baas : vuln))));
   await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, await r.run(clean))));
 });
 
-test("registry has 44 unique rules covering every expectation", () => {
+test("registry has 49 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(44);
-  expect(new Set(ids).size).toBe(44);
+  expect(ids.length).toBe(49);
+  expect(new Set(ids).size).toBe(49);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 
 for (const rule of ALL_STATIC_RULES) {
   describe(rule.id, () => {
-    test(`fires on ${VULN}`, () => {
+    test(`fires on ${ON_BAAS.has(rule.id) ? BAAS : VULN}`, () => {
       const fs = vulnOut.get(rule.id)!;
       for (const [file, needle] of EXPECT[rule.id]) {
         const hit = fs.find((f) => f.file === file && (f.evidence.includes(needle) || f.impact.includes(needle)));

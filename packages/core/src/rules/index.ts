@@ -2,12 +2,18 @@ import type { RuleDefinition } from "../context/types";
 // Agent / MCP config (2)
 import { mcp01HardcodedCreds } from "./agent/mcp-01-hardcoded-creds";
 import { mcp02UnpinnedServers } from "./agent/mcp-02-unpinned-servers";
+// BaaS & edge databases (5)
+import { baas01ConvexAuth } from "./baas/baas-01-convex-auth";
+import { baas02FirestoreRules } from "./baas/baas-02-firestore-rules";
+import { baas03NosqlInjection } from "./baas/baas-03-nosql-injection";
 // Vector & cache data layer (5)
 import { cache01GlobalKeys } from "./data/cache-01-global-keys";
 import { cache02NoTtl } from "./data/cache-02-no-ttl";
 import { vec01TenantFilter } from "./data/vec-01-tenant-filter";
 import { vec02UnauthClient } from "./data/vec-02-unauth-client";
 import { vec03MetadataPii } from "./data/vec-03-metadata-pii";
+import { edge01UnencryptedReplica } from "./edge/edge-01-unencrypted-replica";
+import { edge02D1TenantPredicate } from "./edge/edge-02-d1-tenant-predicate";
 import { a11y01InteractiveDom } from "./finops-ops/a11y-01-interactive-dom";
 // Pillar 4: FinOps, Payments, Ops & Accessibility (12)
 import { fin01InfiniteLoop } from "./finops-ops/fin-01-infinite-loop";
@@ -73,6 +79,12 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   vec03MetadataPii,
   cache01GlobalKeys,
   cache02NoTtl,
+  // BaaS & edge databases (5)
+  baas01ConvexAuth,
+  baas02FirestoreRules,
+  baas03NosqlInjection,
+  edge01UnencryptedReplica,
+  edge02D1TenantPredicate,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

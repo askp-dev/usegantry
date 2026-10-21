@@ -1,5 +1,5 @@
 /**
- * ORM model normalizer: Prisma, Drizzle and SQLAlchemy → TableSchema.
+ * ORM model normalizer: Prisma, Drizzle, SQLAlchemy and Convex → TableSchema.
  * RLS is only representable in SQL (and Drizzle's pgPolicy / .enableRLS()), so ORM tables
  * default to rlsEnabled=false unless the same table is also defined in SQL migrations.
  */
@@ -169,6 +169,34 @@ export function parseSqlAlchemyModels(file: string, text: string): TableSchema[]
         onDelete: od,
         onDeleteCascade: od === "CASCADE",
         line: ci.lineOf(start + (cm.index ?? 0)),
+      });
+    }
+    out.push(table);
+  }
+  return out;
+}
+
+/** Convex `convex/schema.ts`: `users: defineTable({ email: v.string(), orgId: v.id("orgs") })`. Convex has no FK cascade. */
+export function parseConvexSchema(file: string, text: string): TableSchema[] {
+  const ci = new CodeIndex(text, file);
+  const out: TableSchema[] = [];
+  for (const call of ci.calls(/\bdefineTable/)) {
+    const name = ci.masked.slice(Math.max(0, call.start - 80), call.start).match(/["']?([\w$]+)["']?\s*:\s*$/)?.[1];
+    const obj = ci.args(call)[0];
+    if (!name || !obj || ci.masked[obj[0]] !== "{") continue;
+    const table: TableSchema = { name, file, line: call.line, rlsEnabled: false, policies: [], columns: [], source: "convex" };
+    for (const e of ci.objectEntries(obj[0])) {
+      if (e.spread) continue;
+      const v = ci.noComments.slice(e.valueStart, e.valueEnd);
+      const col = e.key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+      table.columns.push({
+        name: e.key,
+        type: v.match(/\bv\.(\w+)/)?.[1] ?? "unknown",
+        isPII: PII_COLUMN_RE.test(col),
+        isEncrypted: ENCRYPTED_COLUMN_RE.test(col),
+        foreignKeyTable: v.match(/\bv\.id\(\s*["'](\w+)["']/)?.[1],
+        onDeleteCascade: false,
+        line: ci.lineOf(e.start),
       });
     }
     out.push(table);

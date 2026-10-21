@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    // BAAS-02 (CRITICAL): every signed-in user can read and write every document
+    match /{document=**} {
+      allow read, write: if isSignedIn();
+    }
+    match /profiles/{uid} {
+      // BAAS-02 (HIGH): any signed-in user can overwrite anyone's profile
+      allow write: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

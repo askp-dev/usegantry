@@ -72,7 +72,7 @@ export interface TableSchema {
     line?: number;
   }>;
   /** Where the table definition came from. */
-  source?: "sql" | "prisma" | "drizzle" | "sqlalchemy";
+  source?: "sql" | "prisma" | "drizzle" | "sqlalchemy" | "convex";
 }
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "SERVER_ACTION";

@@ -36,6 +36,7 @@ The user's answers before the build started:
 | 7. Agent-config auditor (MCP-01/02) + safe-harbor bundle | ✅ Done: 185 tests pass, typecheck + biome clean (touched files), bench 277 ms median, vuln fixture 39/39 rules, clean fixture 100/100 with 0 findings |
 | 8. Distribution (badge, Action, roast) | ⏸ Deferred at the user's request (see §5) |
 | 9. napi spike, SchemaAdapter registry, `ctx.dataQueries`, VEC-01..03 + CACHE-01/02 | ✅ Done: 206 tests pass, typecheck + biome clean (touched files), bench 287 ms median, vuln fixture 44/44 rules, clean fixture 100/100 with 0 findings. Spike → **outcome B** (stay hybrid, quirk 37) |
+| 10. BaaS + edge DBs: Convex adapter, Firebase rules parser, BAAS-01..03, EDGE-01/02, `fixtures/vulnerable-baas` | ✅ Done: 230 tests pass, typecheck + biome clean (touched files), bench 283 ms median, vuln fixtures 49/49 rules (44 on vulnerable-saas, 5 on vulnerable-baas), clean fixture 100/100 with 0 findings |
 
 ---
 
@@ -230,6 +231,19 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 | Fixtures | vuln: `lib/vector.ts` (no key, remote http), `lib/cache.ts`, `app/api/rag/route.ts` (unfiltered search, global key, no-TTL key), `app/api/ingest/route.ts` (email in payload), `docker-compose.yml` (qdrant on 0.0.0.0). clean: the same files done right (session-scoped filter built in a variable, apiKey, tenant-prefixed keys with `ex`, opaque payload, loopback port + API key env), `QDRANT_URL`/`QDRANT_API_KEY` in `src/env.ts` + `.env.example`, Qdrant row in the privacy policy (regenerated with `preflight legal --apply`). |
 | `CONTRIBUTING_RULES.md` §1–3, §6 | Rewritten for outcome B: leads with `defineRule` + `CodeIndex`. ast-grep is an optional accelerator with the spike's caveats. |
 
+### Sprint 10 files
+| File | Purpose |
+|---|---|
+| `context/schema-parser.ts` `parseConvexSchema()` + `adapters.ts` `convex` entry | `convex/schema.ts` `defineTable({...})` → `TableSchema` (`source: "convex"`), PII via `PII_COLUMN_RE` on the snake-cased key, `v.id("t")` → `foreignKeyTable`. No cascade (Convex has none). |
+| `context/firestore-rules.ts` | `parseFirebaseRules()` mini-parser: nested `match` paths, `allow` statements (`condition: "true"` when no `if`), zero-arg helper functions inlined (depth 3), `recursive` for `{x=**}`. `normalizeCondition()` strips whitespace + outer parens. |
+| `rules/baas/baas-01-convex-auth.ts` | BAAS-01 (CRITICAL; HIGH for `query`). |
+| `rules/baas/baas-02-firestore-rules.ts` | BAAS-02 (CRITICAL; HIGH for a single-collection auth-only write). Reads `firestore*.rules` and `storage*.rules`. |
+| `rules/baas/baas-03-nosql-injection.ts` | BAAS-03 (HIGH). Reuses `taintedVars`/`USER_INPUT_RE`/`VALIDATION_RE`. |
+| `rules/edge/edge-01-unencrypted-replica.ts` | EDGE-01 (HIGH, PRIVACY). |
+| `rules/edge/edge-02-d1-tenant-predicate.ts` | EDGE-02 (CRITICAL). |
+| `test/baas-edge.test.ts` | Convex adapter, rules parser, positive + negative cases for all five rules. `rules.test.ts` runs the five rules against `fixtures/vulnerable-baas` (`ON_BAAS`) and every rule against `clean-saas`. |
+| `fixtures/vulnerable-baas/` | Convex (`convex/schema.ts`, `convex/notes.ts`), `firestore.rules`, Express + Mongoose (`server/routes.js`), Cloudflare Worker + D1 (`wrangler.toml`, `migrations/0001_init.sql`, `worker/src/index.ts`), Turso replica (`lib/replica.ts`). Each file also has an OK case. |
+
 ### Known quirks to address
 1. `RouteNode.hasAuthGuard` is true when an auth call **appears** in the body (e.g. `renamePost` calls `getSession()` but never checks it). SEC-07 must do the **ordering/enforcement** check itself: auth call before the first mutation, plus a throw/return/redirect on failure. Don't rely only on `hasAuthGuard`.
 2. Table keys in `ctx.dbTables` are lowercased (`post`), while `route.dbTablesAccessed` uses the Prisma table name as declared (`Post`). Compare case-insensitively.
@@ -299,6 +313,13 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
     - CACHE-02 flags only dynamic keys (a constant key is one bounded entry), so it isn't noise on singleton config keys.
     - All five are `scope: "file"`. In partial scans, a client defined in an unchanged `lib/` file isn't in `files.all`, so calls through it aren't collected.
     - Receivers on `self.x`/`this.x` (Python/JS class fields) aren't tracked.
+39. **BaaS/edge interpretations (stricter side).**
+    - BAAS-01 flags public `query`s too (HIGH), so deliberately public reads (marketing lists) need `// preflight-ignore BAAS-01`. Reading the identity isn't enough: it must be followed by `if (!x`, a throw or a null comparison (quirk 1's lesson). An enforcing helper = any function in `convex/` that reads the identity *and* throws; `require*/assert*/ensure*User|Auth|…` calls are trusted by name. Webhook/cron/seed/migrate/backfill exports are always flagged; `admin`/`purge`/`grant`/`setRole`/… pass only when authed *and* the handler mentions a role/permission. Aliased imports (`mutation as m`) aren't tracked. `convex/http.ts` is skipped (SEC-08 territory).
+    - BAAS-02 also flags open/test-mode rules (`if true`, no condition, `request.time < …`) and auth-only *writes* on non-recursive paths (HIGH), beyond the roadmap's `{document=**}` case. Auth-only *reads* on a single collection pass. Helpers with parameters aren't inlined.
+    - BAAS-03 also flags tainted object *values* (`{ password: req.body.password }`), which is the real operator-injection shape, not just a whole-body filter. It's skipped repo-wide by `mongoSanitize()` / `sanitizeFilter: true`. Vars assigned from `schema.parse(...)` are clean even though `USER_INPUT_RE` treats `input.*` as tRPC input. `sequelize`/`knex`/`prisma` receivers are skipped.
+    - EDGE-01 fires on *any* local SQLite/replica when *any* table in `ctx.dbTables` has an unencrypted PII column (table dialect isn't recorded), so a Postgres app with a local SQLite cache would fire. `url` from env without `syncUrl` isn't checked (it might be remote).
+    - EDGE-02 is lexical: the tenant column must appear after `WHERE` in the same string literal. Dynamic SQL built in a variable isn't analysed (only literals in the call's first argument). D1 is detected by `d1_databases` in `wrangler.*`, libSQL by the `@libsql/client` dep.
+    - `/ponytail-review` still isn't installed as a skill. Sprint 10 review done by hand: removed a redundant `ci.lang` check in BAAS-03, a redundant masked `KEYED` test in EDGE-01, and a comma-operator loop in the rules parser. Nothing detection-related removed.
 13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed. Sprint 6: same (by hand). Dropped a redundant `Set` in `changedScope`, de-exported `isContextAnchor`/`compactFix`/`readBaseline`/`newBlockers`, and folded the `.mcp.json` merge into the shared `mergeJson()`. Sprint 7: same (by hand). De-exported `SAFE_HARBOR_MARK`, `appPrefixes`, `SafeHarborResult` and `ServerPackage`, dropped a redundant `apikey` alternative, and factored the duplicated write loop into `writeChanges()`.
 
 ---
@@ -339,12 +360,7 @@ Constraints that override the roadmaps:
 
 #### Sprint 9 ✅ done: napi spike → outcome B (hybrid stays), `SchemaAdapter` registry (`context/adapters.ts`), lazy `ctx.dataQueries`, VEC-01/02/03 + CACHE-01/02 (see §3 "Sprint 9 files" and quirks 37–38).
 
-#### Sprint 10: BaaS + edge databases
-- Convex: `convex/schema.ts` adapter. `BAAS-01` covers a public `mutation`/`query` without `ctx.auth.getUserIdentity()`, or an admin/webhook export that isn't `internal*`.
-- Firestore: `firestore.rules` mini-parser. `BAAS-02` covers `{document=**}` with `request.auth != null` alone.
-- Mongo/Mongoose: `BAAS-03` covers `find/findOne/updateOne(req.body | await req.json())` without a sanitizer or a schema parse (same taint shape as SEC-10).
-- Edge: `EDGE-01` covers Turso embedded replica or local SQLite with PII tables and no `encryptionKey`. `EDGE-02` covers D1/libSQL queries on tenant tables without a tenant predicate or helper.
-- New fixture sibling `fixtures/vulnerable-baas` (Convex + Firestore), so the Next/Supabase fixture doesn't get muddled.
+#### Sprint 10 ✅ done: Convex `SchemaAdapter`, Firebase rules mini-parser, BAAS-01/02/03 + EDGE-01/02, `fixtures/vulnerable-baas` (see §3 "Sprint 10 files" and quirk 39).
 
 #### Sprint 11: Infra + client configs
 - Hand-rolled YAML subset reader for `docker-compose*.yml` (no deps). Dockerfile line scanner.
