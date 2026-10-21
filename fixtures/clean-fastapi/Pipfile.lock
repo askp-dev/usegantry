@@ -1,0 +1,16 @@
+{
+  "_meta": { "hash": { "sha256": "0000" }, "pipfile-spec": 6, "requires": { "python_version": "3.12" } },
+  "default": {
+    "fastapi": { "version": "==0.111.0" },
+    "httpx": { "version": "==0.27.0" },
+    "openai": { "version": "==1.35.3" },
+    "pyyaml": { "version": "==6.0.1" },
+    "redis": { "version": "==5.0.7" },
+    "sqlalchemy": { "version": "==2.0.31" },
+    "torch": { "version": "==2.6.0" },
+    "uvicorn": { "version": "==0.30.1" }
+  },
+  "develop": {
+    "pytest": { "version": "==8.2.2" }
+  }
+}

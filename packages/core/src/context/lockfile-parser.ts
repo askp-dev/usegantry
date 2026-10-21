@@ -1,7 +1,7 @@
 /**
  * Dependency resolution across manifests and lockfiles:
  *   package.json, bun.lock (text JSONC), package-lock.json (v2/v3), pnpm-lock.yaml, yarn.lock,
- *   requirements*.txt, pyproject.toml (PEP 621 + Poetry), poetry.lock
+ *   requirements*.txt, pyproject.toml (PEP 621 + Poetry), poetry.lock, uv.lock, Pipfile.lock
  *
  * Produces a single Map<name, Dependency>. Direct deps come from manifests; transitive deps
  * and resolved versions come from lockfiles. License data comes from (in priority order):
@@ -80,7 +80,8 @@ export function parsePackageLock(text: string, into: DepMap) {
       const idx = key.lastIndexOf("node_modules/");
       if (idx === -1) continue;
       const name = key.slice(idx + "node_modules/".length);
-      const lic = typeof meta.license === "string" ? meta.license : Array.isArray(meta.licenses) ? meta.licenses.map((l: any) => l.type ?? l).join(" OR ") : undefined;
+      const lic =
+        typeof meta.license === "string" ? meta.license : Array.isArray(meta.licenses) ? meta.licenses.map((l: any) => l.type ?? l).join(" OR ") : undefined;
       upsertTransitive(into, name, meta.version ?? "", { spdxLicense: lic, isDev: !!meta.dev });
     }
   } else if (lock.dependencies) {
@@ -140,7 +141,16 @@ export function parseRequirementsTxt(relPath: string, text: string, into: DepMap
     const m = line.match(/^([A-Za-z0-9][A-Za-z0-9._-]*)(\[[^\]]*\])?\s*(?:([=<>!~]=?|===)\s*([^;\s,]+))?/);
     if (!m) return;
     const name = normPy(m[1]);
-    into.set(`pypi:${name}`, { name, version: m[4] ?? "*", isDirect: true, existsInRegistry: true, ecosystem: "pypi", isDev: /dev|test/i.test(relPath), declaredIn: relPath, declaredLine: i + 1 });
+    into.set(`pypi:${name}`, {
+      name,
+      version: m[4] ?? "*",
+      isDirect: true,
+      existsInRegistry: true,
+      ecosystem: "pypi",
+      isDev: /dev|test/i.test(relPath),
+      declaredIn: relPath,
+      declaredLine: i + 1,
+    });
   });
 }
 
@@ -152,7 +162,16 @@ export function parsePyproject(relPath: string, text: string, into: DepMap) {
     for (const s of dm[1].matchAll(/["']([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*([^"']*)["']/g)) {
       const name = normPy(s[1]);
       const lineIdx = lines.findIndex((l) => l.includes(`"${s[1]}`) || l.includes(`'${s[1]}`));
-      into.set(`pypi:${name}`, { name, version: s[2].trim() || "*", isDirect: true, existsInRegistry: true, ecosystem: "pypi", isDev: false, declaredIn: relPath, declaredLine: lineIdx + 1 });
+      into.set(`pypi:${name}`, {
+        name,
+        version: s[2].trim() || "*",
+        isDirect: true,
+        existsInRegistry: true,
+        ecosystem: "pypi",
+        isDev: false,
+        declaredIn: relPath,
+        declaredLine: lineIdx + 1,
+      });
     }
   }
   // Poetry [tool.poetry.dependencies]
@@ -162,7 +181,16 @@ export function parsePyproject(relPath: string, text: string, into: DepMap) {
       if (s[1].toLowerCase() === "python") continue;
       const name = normPy(s[1]);
       const lineIdx = lines.findIndex((l) => l.startsWith(s[1]));
-      into.set(`pypi:${name}`, { name, version: s[2].replace(/["'{}]/g, "").trim(), isDirect: true, existsInRegistry: true, ecosystem: "pypi", isDev: false, declaredIn: relPath, declaredLine: lineIdx + 1 });
+      into.set(`pypi:${name}`, {
+        name,
+        version: s[2].replace(/["'{}]/g, "").trim(),
+        isDirect: true,
+        existsInRegistry: true,
+        ecosystem: "pypi",
+        isDev: false,
+        declaredIn: relPath,
+        declaredLine: lineIdx + 1,
+      });
     }
   }
 }
@@ -178,6 +206,39 @@ export function parsePoetryLock(text: string, into: DepMap) {
   }
 }
 
+function upsertPy(into: DepMap, rawName: string, version: string, isDev: boolean) {
+  const name = normPy(rawName);
+  const existing = into.get(`pypi:${name}`);
+  if (existing) existing.version = version;
+  else into.set(`pypi:${name}`, { name, version, isDirect: false, existsInRegistry: true, ecosystem: "pypi", isDev });
+}
+
+/** uv.lock (TOML `[[package]]` tables). The project itself (`source = { editable | virtual = "." }`) is skipped. */
+export function parseUvLock(text: string, into: DepMap) {
+  for (const block of text.split(/^\[\[package\]\]\s*$/m).slice(1)) {
+    const name = block.match(/^name\s*=\s*"([^"]+)"/m)?.[1];
+    const version = block.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+    if (!name || /^source\s*=\s*\{[^}]*\b(?:editable|virtual)\s*=/m.test(block)) continue;
+    upsertPy(into, name, version ?? "*", false);
+  }
+}
+
+/** Pipfile.lock (JSON: `default` + `develop` sections, versions pinned as `==x.y.z`). */
+export function parsePipfileLock(text: string, into: DepMap) {
+  let lock: Record<string, Record<string, { version?: string }>>;
+  try {
+    lock = JSON.parse(text);
+  } catch {
+    return;
+  }
+  for (const [section, isDev] of [
+    ["default", false],
+    ["develop", true],
+  ] as const) {
+    for (const [name, meta] of Object.entries(lock?.[section] ?? {})) upsertPy(into, name, meta?.version?.replace(/^==/, "") ?? "*", isDev);
+  }
+}
+
 /** Fill missing licenses from node_modules/<pkg>/package.json (bounded). */
 export function enrichLicensesFromNodeModules(rootDir: string, deps: DepMap, limit = 4000) {
   const nm = join(rootDir, "node_modules");
@@ -189,7 +250,10 @@ export function enrichLicensesFromNodeModules(rootDir: string, deps: DepMap, lim
     const pj = join(nm, d.name, "package.json");
     try {
       const meta = JSON.parse(readFileSync(pj, "utf8"));
-      const lic = typeof meta.license === "string" ? meta.license : meta.license?.type ?? (Array.isArray(meta.licenses) ? meta.licenses.map((l: any) => l.type ?? l).join(" OR ") : undefined);
+      const lic =
+        typeof meta.license === "string"
+          ? meta.license
+          : (meta.license?.type ?? (Array.isArray(meta.licenses) ? meta.licenses.map((l: any) => l.type ?? l).join(" OR ") : undefined));
       if (lic) d.spdxLicense = lic;
       if (meta.version && !d.isDirect) d.version = meta.version;
       else if (meta.version) (d as any).installedVersion = meta.version;

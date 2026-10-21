@@ -49,6 +49,10 @@ import { priv04ConsentGate } from "./privacy/priv-04-consent-gate";
 import { priv05LlmPii } from "./privacy/priv-05-llm-pii";
 import { priv06DataExport } from "./privacy/priv-06-data-export";
 import { priv07SecurityHeaders } from "./privacy/priv-07-security-headers";
+import { py01UnsafeDeserialization } from "./python/py-01-unsafe-deserialization";
+import { py02SyncInAsync } from "./python/py-02-sync-in-async";
+import { py03AgentExecSinks } from "./python/py-03-agent-exec-sinks";
+import { py04SharedState } from "./python/py-04-shared-state";
 // Pillar 1: Security & Tenant Isolation (12)
 import { sec01Rls } from "./security/sec-01-rls";
 import { sec02ViewsRpc } from "./security/sec-02-views-rpc";
@@ -98,6 +102,11 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   client01TauriScopes,
   client02AsyncstorageTokens,
   sov01TelemetryBeacons,
+  // Python backends (4)
+  py01UnsafeDeserialization,
+  py02SyncInAsync,
+  py03AgentExecSinks,
+  py04SharedState,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

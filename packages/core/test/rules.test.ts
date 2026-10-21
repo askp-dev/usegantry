@@ -12,7 +12,12 @@ const INFRA = "fixtures/vulnerable-infra";
 const CLEAN_INFRA = "fixtures/clean-infra";
 /** Rules whose positive cases live in the infra/client sibling fixture (compose, Dockerfile, Tauri, Expo); each must also be silent on its clean twin. */
 const ON_INFRA = new Set(["IAC-01", "IAC-02", "SOV-01", "CLIENT-01", "CLIENT-02"]);
-const vulnRoot = (id: string) => (ON_BAAS.has(id) ? BAAS : ON_INFRA.has(id) ? INFRA : VULN);
+const FASTAPI = "fixtures/vulnerable-fastapi";
+const CLEAN_FASTAPI = "fixtures/clean-fastapi";
+/** Python rules: positive cases in the FastAPI sibling fixture, held silent on its clean twin too. */
+const ON_PY = new Set(["PY-01", "PY-02", "PY-03", "PY-04"]);
+const vulnRoot = (id: string) => (ON_BAAS.has(id) ? BAAS : ON_INFRA.has(id) ? INFRA : ON_PY.has(id) ? FASTAPI : VULN);
+const cleanTwin = (id: string) => (ON_INFRA.has(id) ? CLEAN_INFRA : ON_PY.has(id) ? CLEAN_FASTAPI : undefined);
 
 /** What each rule must report on the vulnerable fixture: [file, evidence substring]. */
 const EXPECT: Record<string, Array<[string, string]>> = {
@@ -179,6 +184,27 @@ const EXPECT: Record<string, Array<[string, string]>> = {
   ],
   "EDGE-01": [["lib/replica.ts", "createClient"]],
   "EDGE-02": [["worker/src/index.ts", 'WHERE id = ?")']],
+  "PY-01": [
+    ["app/ml.py", "torch.load(path)"],
+    ["app/ml.py", "Loader=yaml.Loader"],
+    ["app/ml.py", "pickle.loads(raw)"],
+    ["app/ml.py", "weights_only=False"],
+  ],
+  "PY-02": [
+    ["app/main.py", "requests.get("],
+    ["app/main.py", "time.sleep(1)"],
+    ["app/main.py", "client.chat.completions.create"],
+    ["app/main.py", "db.query(Order)"],
+  ],
+  "PY-03": [
+    ["app/agent.py", "PythonREPLTool()"],
+    ["app/agent.py", "allow_dangerous_code=True"],
+  ],
+  "PY-04": [
+    ["app/chat.py", "tags=[]"],
+    ["app/chat.py", "ConversationBufferMemory()"],
+    ["app/chat.py", "chat_histories = {}"],
+  ],
 };
 
 let vuln: RepoContext;
@@ -186,6 +212,8 @@ let clean: RepoContext;
 let baas: RepoContext;
 let infra: RepoContext;
 let cleanInfra: RepoContext;
+let fastapi: RepoContext;
+let cleanFastapi: RepoContext;
 const vulnOut = new Map<string, Finding[]>();
 const cleanOut = new Map<string, Finding[]>();
 
@@ -195,16 +223,20 @@ beforeAll(async () => {
   baas = await buildRepoContext(BAAS, { config: { offline: true } });
   infra = await buildRepoContext(INFRA, { config: { offline: true } });
   cleanInfra = await buildRepoContext(CLEAN_INFRA, { config: { offline: true } });
-  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(ON_BAAS.has(r.id) ? baas : ON_INFRA.has(r.id) ? infra : vuln))));
+  fastapi = await buildRepoContext(FASTAPI, { config: { offline: true } });
+  cleanFastapi = await buildRepoContext(CLEAN_FASTAPI, { config: { offline: true } });
+  const vulnCtx = (id: string) => (ON_BAAS.has(id) ? baas : ON_INFRA.has(id) ? infra : ON_PY.has(id) ? fastapi : vuln);
+  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(vulnCtx(r.id)))));
   // Profile-only rules (SOV-01) never run on clean-saas without their profile, so they're held to the clean twin instead.
   await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, r.profiles ? [] : await r.run(clean))));
   await Promise.all([...ON_INFRA].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanInfra)))));
+  await Promise.all([...ON_PY].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanFastapi)))));
 });
 
-test("registry has 54 unique rules covering every expectation", () => {
+test("registry has 58 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(54);
-  expect(new Set(ids).size).toBe(54);
+  expect(ids.length).toBe(58);
+  expect(new Set(ids).size).toBe(58);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 
@@ -229,7 +261,7 @@ for (const rule of ALL_STATIC_RULES) {
         expect(f.blocking).toBe(f.severity === "CRITICAL");
       }
     });
-    test(`is silent on ${ON_INFRA.has(rule.id) ? `${CLEAN} + ${CLEAN_INFRA}` : CLEAN}`, () => {
+    test(`is silent on ${[CLEAN, cleanTwin(rule.id)].filter(Boolean).join(" + ")}`, () => {
       const fs = cleanOut.get(rule.id)!;
       expect(fs.map((f) => `${f.file}:${f.line} ${f.evidence}`)).toEqual([]);
     });

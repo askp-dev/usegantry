@@ -1,0 +1,25 @@
+version = 1
+requires-python = ">=3.11"
+
+[[package]]
+name = "chatbot-api"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastapi" },
+]
+
+[[package]]
+name = "fastapi"
+version = "0.111.0"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "torch"
+version = "2.3.1"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "starlette"
+version = "0.37.2"
+source = { registry = "https://pypi.org/simple" }

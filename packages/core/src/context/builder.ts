@@ -17,10 +17,12 @@ import {
   parseBunLock,
   parsePackageJson,
   parsePackageLock,
+  parsePipfileLock,
   parsePnpmLock,
   parsePoetryLock,
   parsePyproject,
   parseRequirementsTxt,
+  parseUvLock,
   parseYarnLock,
 } from "./lockfile-parser";
 import { GENAI_PACKAGES } from "./patterns";
@@ -273,10 +275,13 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     ["pnpm-lock.yaml", parsePnpmLock],
     ["yarn.lock", parseYarnLock],
     ["poetry.lock", parsePoetryLock],
+    ["uv.lock", parseUvLock],
+    ["Pipfile.lock", parsePipfileLock],
   ];
-  for (const [lf, fn] of lockOrder) if (hasFile(lf)) fn(getText(lf), dependencies);
+  // Python manifests first, so lockfiles overwrite their ranges with the resolved version.
   for (const f of all.filter((f) => /(^|\/)requirements[\w.-]*\.txt$/.test(f))) parseRequirementsTxt(f, getText(f), dependencies);
   if (hasFile("pyproject.toml")) parsePyproject("pyproject.toml", getText("pyproject.toml"), dependencies);
+  for (const [lf, fn] of lockOrder) if (hasFile(lf)) fn(getText(lf), dependencies);
   enrichLicensesFromNodeModules(rootDir, dependencies);
   // fill from embedded seed DB (version-aware)
   for (const d of dependencies.values()) {

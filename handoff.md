@@ -38,6 +38,7 @@ The user's answers before the build started:
 | 9. napi spike, SchemaAdapter registry, `ctx.dataQueries`, VEC-01..03 + CACHE-01/02 | ✅ Done: 206 tests pass, typecheck + biome clean (touched files), bench 287 ms median, vuln fixture 44/44 rules, clean fixture 100/100 with 0 findings. Spike → **outcome B** (stay hybrid, quirk 37) |
 | 10. BaaS + edge DBs: Convex adapter, Firebase rules parser, BAAS-01..03, EDGE-01/02, `fixtures/vulnerable-baas` | ✅ Done: 230 tests pass, typecheck + biome clean (touched files), bench 283 ms median, vuln fixtures 49/49 rules (44 on vulnerable-saas, 5 on vulnerable-baas), clean fixture 100/100 with 0 findings |
 | 11. Infra + client configs: YAML subset reader, Dockerfile scanner, IAC-01/02, SOV-01 (`--profile airgap`), CLIENT-01/02, `fixtures/vulnerable-infra` + `clean-infra` | ✅ Done: 253 tests pass, typecheck + biome clean (touched files), bench 306 ms median, vuln fixtures fire all 54 rules, clean-saas 100/100 with 0 findings, clean-infra silent for the five new rules |
+| 12. Python rules: `uv.lock` + `Pipfile.lock`, PY-01..04, `fixtures/vulnerable-fastapi` + `clean-fastapi` | ✅ Done: 273 tests pass, typecheck + biome clean (touched files), bench 313 ms median, vuln fixtures fire all 58 rules, clean-saas 100/100 with 0 findings, clean-fastapi silent for the four PY rules |
 
 ---
 
@@ -259,6 +260,16 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 | `test/infra-client.test.ts` | YAML/Dockerfile parsers, `fixShortPort`, apply-every-autofix-then-silent, severity matrix, stage inheritance, compose overrides, profile gating, `--profile` parsing, self-hosted opt-outs, Tauri inline capabilities, aliased AsyncStorage. `rules.test.ts` runs the five rules against `vulnerable-infra` (`ON_INFRA`) and holds them silent on `clean-saas` **and** `clean-infra`. |
 | Fixtures | `fixtures/vulnerable-infra/` (compose with trust-auth Postgres, password-less Redis, long-syntax Mongo, docker.sock in the app; root Dockerfile; `.env` LangSmith tracing; Google Fonts/CDN script; Tauri v1 conf + v2 capabilities; Expo AsyncStorage tokens) with OK cases in each file, and its twin `fixtures/clean-infra/`. `vulnerable-saas` now also trips IAC-01 on its qdrant port (engine/cert tests moved 44→45 failed rules). |
 
+### Sprint 12 files
+| File | Purpose |
+|---|---|
+| `context/lockfile-parser.ts` `parseUvLock()`, `parsePipfileLock()` | uv.lock `[[package]]` blocks (the project's own `editable`/`virtual` entry skipped) and Pipfile.lock JSON (`default` + `develop` → `isDev`). Shared `upsertPy()`. |
+| `context/builder.ts` (order fix) | Python manifests (requirements/pyproject) are now parsed **before** lockfiles, so a lock's resolved version replaces the manifest range instead of the other way round (PY-01 needs the real torch version). |
+| `rules/python/py-helpers.ts` | `pyFiles()` (non-test `.py` + raw-text prefilter), `pyBindings()`/`qualify()` (alias-aware: `import pickle as pk` → `pickle.loads`), `pyCalls()` (every call, qualified, filtered), `kwarg()`, `isRouteHandler()`, `servesUsers()`. |
+| `rules/python/py-01-unsafe-deserialization.ts` … `py-04-shared-state.ts` | PY-01 (SECURITY, HIGH/CRITICAL), PY-02 (FINOPS_OPS, HIGH), PY-03 (SECURITY, HIGH/CRITICAL), PY-04 (SECURITY, HIGH/MEDIUM). Rows added to RULES_SPEC Pillar 1/4 + registry. All `scope: "file"`. |
+| `test/python.test.ts` | Lockfile parsers, lock-beats-manifest, alias resolution, and positive + negative cases per rule (torch ≥2.6 gate, offloads/nested defs, sync vs async SDK clients, `load_tools` names, mutated vs unmutated defaults, class attrs/constants). `rules.test.ts` runs the four rules on `vulnerable-fastapi` (`ON_PY`) and holds them silent on `clean-saas` **and** `clean-fastapi`. |
+| Fixtures | `fixtures/vulnerable-fastapi/` (pyproject + uv.lock with torch 2.3.1; `app/main.py` blocking calls in async routes, `app/ml.py` pickle/torch/yaml, `app/agent.py` PythonREPLTool + pandas agent, `app/chat.py` mutable default + module-level memory/history) with OK cases in each file, and its twin `fixtures/clean-fastapi/` (Pipfile + Pipfile.lock with torch 2.6.0, async clients, `to_thread`, `safe_load`, Redis-backed history). |
+
 ### Known quirks to address
 1. `RouteNode.hasAuthGuard` is true when an auth call **appears** in the body (e.g. `renamePost` calls `getSession()` but never checks it). SEC-07 must do the **ordering/enforcement** check itself: auth call before the first mutation, plus a throw/return/redirect on failure. Don't rely only on `hasAuthGuard`.
 2. Table keys in `ctx.dbTables` are lowercased (`post`), while `route.dbTablesAccessed` uses the Prisma table name as declared (`Post`). Compare case-insensitively.
@@ -343,6 +354,13 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
     - **CLIENT-02** keys off a broad secret-ish regex (`auth`, `session`, `pin`, …) over the call's arguments, so `setItem("authorName", …)` fires. Supabase/auth clients with `storage: AsyncStorage` are MEDIUM (that's Supabase's own Expo quickstart; the safe pattern is a SecureStore adapter). MMKV and web `localStorage` aren't covered.
     - **Profiles:** an explicit `ruleIds: ["SOV-01"]` (MCP/IDE) runs it without the profile. `report.rulesRun` is new, and older reports without it fall back to the full registry.
     - `/ponytail-review` still isn't installed. Sprint 11 review done by hand: dropped a redundant `fixLine` parameter and a too-loose data-store check (an image *named* `cache` used to match) in IAC-01, and a dead `names` filter in CLIENT-02. Nothing detection-related removed.
+41. **Python interpretations (stricter side).**
+    - **PY-01** is CRITICAL when the argument text looks like a request/upload/cache/network value or the call is inside a route handler, and always for `weights_only=False`. `torch.load` without the kwarg passes only when the *resolved* torch version is ≥2.6 (a plain range like `>=2.2` counts by its lower bound; ranges with `<`/`~`/`^`/commas never pass). `yaml.full_load` is flagged (FullLoader's history of bypasses). `shelve.open` and `marshal` are included as pickle-family. `transformers` `trust_remote_code=True` isn't covered.
+    - **PY-02** only checks `async def` functions with a route decorator (`@x.get/…`, including `websocket`/`api_route`), not async dependencies or background tasks. Sync SDK clients are tracked only when assigned in the same file (`client = OpenAI()`). Sync SQLAlchemy is detected by a param typed `Session`/`SessionDep`/`cursor`/`connection` *and* a sync `Session`/psycopg2 import; `open()` file I/O isn't flagged. `requests.Session()` instances aren't tracked.
+    - **PY-03** never exempts sandboxes by name (use `# preflight-ignore PY-03` after sandboxing). CRITICAL when the file imports a web/chat framework (FastAPI, Flask, Django, Streamlit, Gradio, Chainlit, Slack/Discord/Telegram bots, …) or defines a route; a sink in a helper module imported by a route is HIGH.
+    - **PY-04** flags *every* mutable default (MEDIUM), HIGH when the function mutates it, including FastAPI route params (`q: list = []`), which FastAPI copies; prefer `None` anyway. Module stores: only column-0 assignments mutated in the **same file**; imported state mutated elsewhere is missed. Non-user-ish names (`_cache`) fire only when mutated inside a route handler (MEDIUM).
+    - `Pipfile` itself isn't parsed, so Pipfile-only projects have no direct deps (everything from `Pipfile.lock` is `isDirect: false`).
+    - `/ponytail-review` still isn't installed. Sprint 12 review done by hand: de-exported `ROUTE_DECORATOR_RE`/`WEB_FRAMEWORK_RE`, inlined a one-use `bindings` in PY-02, merged PY-04's two overlapping mutable-value regexes into `MUTABLE_START`. Nothing detection-related removed.
 13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed. Sprint 6: same (by hand). Dropped a redundant `Set` in `changedScope`, de-exported `isContextAnchor`/`compactFix`/`readBaseline`/`newBlockers`, and folded the `.mcp.json` merge into the shared `mergeJson()`. Sprint 7: same (by hand). De-exported `SAFE_HARBOR_MARK`, `appPrefixes`, `SafeHarborResult` and `ServerPackage`, dropped a redundant `apikey` alternative, and factored the duplicated write loop into `writeChanges()`.
 
 ---
@@ -387,13 +405,7 @@ Constraints that override the roadmaps:
 
 #### Sprint 11 ✅ done: YAML subset reader + Dockerfile scanner, IAC-01 (with autofix) / IAC-02, profile-only SOV-01 (`--profile airgap`), CLIENT-01 (Tauri v1+v2) / CLIENT-02 (Expo AsyncStorage), `fixtures/vulnerable-infra` + `clean-infra` (see §3 "Sprint 11 files" and quirk 40).
 
-#### Sprint 12: Python rules
-- `CodeIndex` already lexes Python and `lockfile-parser.ts` already reads requirements/pyproject/poetry.lock. Add `uv.lock` + `Pipfile.lock`.
-- `PY-01` covers `pickle.loads`, `torch.load` without `weights_only=True`, and `yaml.load` without SafeLoader.
-- `PY-02` covers blocking calls inside `async def` FastAPI routes.
-- `PY-03` covers LangChain/LlamaIndex exec sinks (`PythonREPLTool`, `allow_dangerous_code=True`).
-- `PY-04` covers mutable defaults and module-level per-request state.
-- New fixture: `fixtures/vulnerable-fastapi` plus a clean twin.
+#### Sprint 12 ✅ done: `uv.lock` + `Pipfile.lock` parsers (and lock-beats-manifest order fix), PY-01..04, `fixtures/vulnerable-fastapi` + `clean-fastapi` (see §3 "Sprint 12 files" and quirk 41).
 
 #### Sprint 13: Compliance profiles (agency tier)
 - `--profile hipaa|fintech-pci|legal-privilege|eu-ai-act|airgap`. These are extra rule packs plus stricter severities, gated through `requireFeature("profiles")` (agency). The gate goes in `entitlements.ts` only, with no env override (quirk 14).
