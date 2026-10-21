@@ -1,9 +1,0 @@
-{
-  "extends": "$app/tsconfig",
-  "include": ["src", "*.ts"],
-  "compilerOptions": {
-    "strict": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true
-  }
-}

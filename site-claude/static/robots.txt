@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /verify/
-Sitemap: https://usegantry.app/sitemap.xml
