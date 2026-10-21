@@ -10,8 +10,8 @@ const cleanVersion = (v: string) => v.replace(/^[\^~>=<v\s]+/, "").split(/\s/)[0
 
 export function purl(d: Dependency): string {
   const eco = d.ecosystem ?? "npm";
-  const name = eco === "npm" ? d.name.replace(/^@/, "%40") : d.name.toLowerCase();
-  return `pkg:${eco}/${name}@${encodeURIComponent(cleanVersion(d.version))}`;
+  const name = eco === "npm" ? d.name.replace(/^@/, "%40") : eco === "pypi" ? d.name.toLowerCase() : d.name;
+  return `pkg:${eco === "go" ? "golang" : eco}/${name}@${encodeURIComponent(cleanVersion(d.version))}`;
 }
 
 export function buildSbom(ctx: RepoContext, now = new Date()): Record<string, unknown> {

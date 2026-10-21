@@ -22,22 +22,23 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Data contracts (already implemented in `packages/core/src/context/types.ts`) | SPEC.md 68–172 |
 | Exact algorithms for SEC-01 / SEC-03 / SEC-07 / FIN-01 / PAY-02 | SPEC.md 173–221 |
 | UI server REST + WS protocol | SPEC.md 222–232 |
-| Scoring & blocking matrix (+ partial scans, profile-only rules) | RULES_SPEC.md 3–14 |
-| Security rules SEC-01..12 + MCP-01..02 + VEC-01..02 + CACHE-01 + BAAS-01..03 + EDGE-02 + IAC-01..02 + CLIENT-01..02 + PY-01/03/04 | RULES_SPEC.md 17–49 |
-| Privacy rules PRIV-01..07 + VEC-03 + EDGE-01 + SOV-01 | RULES_SPEC.md 52–66 |
-| Legal rules LEG-01..06 | RULES_SPEC.md 69–79 |
-| FIN / PAY / OPS / A11Y / SEO / CACHE-02 / PY-02 rules | RULES_SPEC.md 82–100 |
-| Compliance profile packs HIPAA-01..03 + PCI-01..03 + LGL-01..03 + AIA-01 | RULES_SPEC.md 103–117 |
-| Pentest probes PT-01..06 | RULES_SPEC.md 120–144 |
-| Rule registry (`rules/index.ts`) | RULES_SPEC.md 147–316 |
+| Scoring & blocking matrix (+ partial scans, profile-only rules) | RULES_SPEC.md 3–16 |
+| Security rules SEC-01..12 + MCP-01..02 + VEC-01..02 + CACHE-01 + BAAS-01..03 + EDGE-02 + IAC-01..02 + CLIENT-01..02 + PY-01/03/04 + SYS-02 | RULES_SPEC.md 19–52 |
+| Privacy rules PRIV-01..07 + VEC-03 + EDGE-01 + SOV-01 | RULES_SPEC.md 55–69 |
+| Legal rules LEG-01..06 | RULES_SPEC.md 72–82 |
+| FIN / PAY / OPS / A11Y / SEO / CACHE-02 / PY-02 / SYS-01 / SYS-03 rules | RULES_SPEC.md 85–105 |
+| Compliance profile packs HIPAA-01..03 + PCI-01..03 + LGL-01..03 + AIA-01 | RULES_SPEC.md 108–122 |
+| Pentest probes PT-01..06 | RULES_SPEC.md 125–149 |
+| Rule registry (`rules/index.ts`) | RULES_SPEC.md 152–329 |
 | Design tokens / typography | DESIGN.md 9–50 |
 | UI components (header, data-flow graph, pentest console, legal studio) | DESIGN.md 51–101 |
-| Handoff: status / quirks / remaining work | handoff.md 25–44 / 288–390 / 392–451 |
+| Handoff: status / quirks / remaining work | handoff.md 25–44 / 307–420 / 423–473 |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.
 - Use `ctx.getCode(rel)`, which returns a `CodeIndex` (`code-index.ts`). Pattern-match on `.masked` (strings/comments blanked); read literals from `.noComments`. It provides `calls()`, `args()`, `objectEntries()`, `functions()`, `enclosingFunction()`, `imports()` and `snippet()`. Don't require `@ast-grep/napi`: it's optional and `getAst()` throws if it's missing. The Sprint 9 spike kept it optional (outcome B, handoff quirk 37).
 - ORM/DDL sources go through the `SchemaAdapter` registry (`context/adapters.ts`): to support a new ORM, add one adapter. Vector-DB and cache client calls are pre-collected, lazily, in `ctx.dataQueries` (`context/data-queries.ts`).
+- Go/Rust (Sprint 14) is the one place ast-grep is used: `context/systems-lang.ts` lazily loads the optional grammars, `ctx.getAst()` parses `.go`/`.rs`, and SYS rules get handler nodes from `sysHandlers()` (it throws `RuleSkipped` → `report.notices` when the grammars are missing). Body-level TS route rules iterate `scriptRoutes(ctx)`, not `ctx.routes`.
 - Shared regexes live in `context/patterns.ts`; vendor/package lookups in `context/knowledge.ts`. Reuse them; don't duplicate them.
 - `ctx.dbTables` keys are lowercase, so compare table names case-insensitively. PyPI deps are keyed `pypi:<name>`.
 - `RouteNode.hasAuthGuard` only means an auth call appears. SEC-07 must check order (auth before first mutation) and enforcement itself.
@@ -52,7 +53,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 - `bun run bench` runs the perf SLA check (Sprint 5).
 
 ## Conventions
-- Rule file names and export names must match the registry in RULES_SPEC.md 147–316 exactly.
+- Rule file names and export names must match the registry in RULES_SPEC.md 152–329 exactly.
 - Every finding needs `evidence` (a snippet), plain-English `impact`, and a surgical `agentRemediationPrompt`. Add `autoFixPatch` only when the fix is deterministic.
 - Each rule gets a test asserting it fires on `fixtures/vulnerable-saas`. Every rule must also pass on `fixtures/clean-saas` (create it in Sprint 2) with no findings.
 - Commit after each sprint with message `feat(sprint-N): …`.

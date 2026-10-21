@@ -27,6 +27,9 @@ import {
 } from "./lockfile-parser";
 import { GENAI_PACKAGES } from "./patterns";
 import { extractRoutes, type MiddlewareGuard } from "./routes";
+import { parseCargoLock, parseCargoToml, parseGoMod, parseGoSum } from "./systems-deps";
+import { parseSys, type SysLang, sysLangOf, sysLangUnavailable } from "./systems-lang";
+import { extractSystemsRoutes } from "./systems-routes";
 import type { Dependency, DetectedSubprocessor, EnvEntry, PreflightConfig, RepoContext, SgRoot } from "./types";
 
 const SKIP_DIRS = new Set([
@@ -194,6 +197,14 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
   const getAst = (rel: string): SgRoot => {
     const hit = astCache.get(rel);
     if (hit) return hit;
+    const sys: SysLang | null = rel.endsWith(".go") ? "go" : rel.endsWith(".rs") ? "rust" : null;
+    if (sys) {
+      const why = sysLangUnavailable(sys);
+      if (why) throw new Error(why);
+      const root = parseSys(sys, getText(rel));
+      astCache.set(rel, root);
+      return root;
+    }
     if (astGrep === undefined) {
       try {
         astGrep = require("@ast-grep/napi");
@@ -282,6 +293,12 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
   for (const f of all.filter((f) => /(^|\/)requirements[\w.-]*\.txt$/.test(f))) parseRequirementsTxt(f, getText(f), dependencies);
   if (hasFile("pyproject.toml")) parsePyproject("pyproject.toml", getText("pyproject.toml"), dependencies);
   for (const [lf, fn] of lockOrder) if (hasFile(lf)) fn(getText(lf), dependencies);
+  // Go / Rust: manifests (root + workspace members) before lockfiles, which pin the resolved versions.
+  const nested = (name: string) => all.filter((f) => (f === name || f.endsWith(`/${name}`)) && f.split("/").length <= 3 && !f.includes("fixtures/"));
+  for (const f of nested("go.mod")) parseGoMod(f, getText(f), dependencies);
+  for (const f of nested("go.sum")) parseGoSum(getText(f), dependencies);
+  for (const f of nested("Cargo.toml")) parseCargoToml(f, getText(f), dependencies);
+  for (const f of nested("Cargo.lock")) parseCargoLock(getText(f), dependencies);
   enrichLicensesFromNodeModules(rootDir, dependencies);
   // fill from embedded seed DB (version-aware)
   for (const d of dependencies.values()) {
@@ -321,6 +338,11 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     frameworkVersion = dependencies.get("@sveltejs/kit")?.version.replace(/^[^\d]*/, "");
   } else if (dependencies.has("pypi:fastapi")) framework = "fastapi";
   else if (hasDep(/^(express|hono|fastify|koa|@nestjs\/core|elysia)$/)) framework = "express";
+  else if (depNames.has("github.com/gin-gonic/gin")) framework = "gin";
+  else if ([...depNames].some((n) => n.startsWith("github.com/labstack/echo"))) framework = "echo";
+  else if ([...depNames].some((n) => n.startsWith("github.com/gofiber/fiber"))) framework = "fiber";
+  else if (dependencies.get("cargo:axum")?.isDirect) framework = "axum";
+  else if (dependencies.get("cargo:actix-web")?.isDirect) framework = "actix";
   const envKeys = new Set(env.map((e) => e.key));
   let deployTarget: PreflightConfig["deployTarget"] = config.deployTarget;
   if (!deployTarget) {
@@ -352,6 +374,19 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
   // ── routes ────────────────────────────────────────────────────────────────
   const tRoutes = performance.now();
   const { routes, middleware } = extractRoutes({ files: serverRoutesAndActions, getCode, hasFile, prismaModels, drizzleVars });
+  // Go/Rust routes need the optional grammars; without them SYS-* rules report a notice instead of a clean pass.
+  const sysFiles = all.flatMap((rel) => {
+    const lang = sysLangOf(rel);
+    return lang ? [{ rel, lang }] : [];
+  });
+  const usable = new Set((["go", "rust"] as SysLang[]).filter((l) => sysFiles.some((f) => f.lang === l) && !sysLangUnavailable(l)));
+  if (usable.size)
+    routes.push(
+      ...extractSystemsRoutes(
+        sysFiles.filter((f) => usable.has(f.lang)),
+        getAst,
+      ),
+    );
   mark("routes", tRoutes);
 
   // ── sub-processors ────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { DB_MUTATION_RE } from "../../context/patterns";
-import { defineRule, isWebhookRoute, routeBody } from "../helpers";
+import { defineRule, isWebhookRoute, routeBody, scriptRoutes } from "../helpers";
 
 const IDEMPOTENT =
   /\bevent\.id\b|\bevt\.id\b|\beventId\b|\bevent_id\b|idempoten|processed_?webhook|webhook_?events|webhookEvent|svix-id|webhook-id|ON\s+CONFLICT|onConflictDoNothing|skipDuplicates|\.upsert\s*\(/i;
@@ -7,7 +7,7 @@ const IDEMPOTENT =
 export const pay01WebhookIdempotency = defineRule(
   { id: "PAY-01", pillar: "FINOPS_OPS", severity: "HIGH", title: "Non-Idempotent Webhook Event Processing (Double-Grant Bug)" },
   (ctx, emit) => {
-    for (const r of ctx.routes) {
+    for (const r of scriptRoutes(ctx)) {
       if (!isWebhookRoute(ctx, r)) continue;
       const { ci, a, b } = routeBody(ctx, r);
       const masked = ci.slice(a, b, "masked");

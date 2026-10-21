@@ -37,6 +37,7 @@ export function renderPretty(r: AuditReport, opts: { verbose?: boolean } = {}): 
     "",
     `${color.bold("Score")} ${statusColor(color.bold(`${r.score}/100`))}  ${statusColor(r.status)}  ${r.blockers} blocker(s)${r.suppressed ? color.dim(`  ${r.suppressed} suppressed`) : ""}`,
   );
+  for (const n of r.notices ?? []) out.push(color.dim(`ℹ ${n.ruleIds.join(", ")} skipped: ${n.message}`));
   if (r.errors?.length) out.push(color.amber(`⚠ ${r.errors.length} rule(s) errored: ${r.errors.map((e) => `${e.ruleId} (${e.message})`).join(", ")}`));
   if (!opts.verbose && r.findings.length) out.push(color.dim("Run with --verbose for impact and agent fix prompts, or --json / --sarif for machine output."));
   return `${out.join("\n")}\n`;

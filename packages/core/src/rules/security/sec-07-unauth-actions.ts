@@ -1,5 +1,5 @@
 import { AUTH_ASSERTION_RE, DB_MUTATION_RE, PAID_SDK_CALL_RE } from "../../context/patterns";
-import { defineRule, isWebhookRoute, MUTATING_METHODS, routeBody } from "../helpers";
+import { defineRule, isWebhookRoute, MUTATING_METHODS, routeBody, scriptRoutes } from "../helpers";
 
 /** Auth helpers that throw / redirect on failure by convention, so the call itself enforces. */
 const SELF_ENFORCING =
@@ -11,7 +11,7 @@ const ENFORCE =
 export const sec07UnauthActions = defineRule(
   { id: "SEC-07", pillar: "SECURITY", severity: "CRITICAL", title: "Unauthenticated Server Action or Mutation Route" },
   (ctx, emit) => {
-    for (const r of ctx.routes) {
+    for (const r of scriptRoutes(ctx)) {
       if (!MUTATING_METHODS.has(r.method) || isWebhookRoute(ctx, r)) continue;
       const { ci, a, b, fn } = routeBody(ctx, r);
       const body = ci.slice(a, b, "masked");

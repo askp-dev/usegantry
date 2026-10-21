@@ -1,5 +1,5 @@
 import { vendorById } from "../../context/knowledge";
-import { defineRule, isWebhookRoute, routeBody, snake } from "../helpers";
+import { defineRule, isWebhookRoute, routeBody, scriptRoutes, snake } from "../helpers";
 import { MONEY_TABLE_RE } from "./compliance-helpers";
 
 const METHODS = new Set(["POST", "PUT", "PATCH", "SERVER_ACTION"]);
@@ -8,7 +8,7 @@ const IDEMPOTENT_RE = /idempoten|on\s+conflict\s*(?:\([^)]*\)\s*)?do\s+nothing/i
 export const pci03MutationIdempotency = defineRule(
   { id: "PCI-03", pillar: "FINOPS_OPS", severity: "HIGH", title: "Money-Moving Route Without an Idempotency Key", profiles: ["fintech-pci"] },
   (ctx, emit) => {
-    for (const r of ctx.routes) {
+    for (const r of scriptRoutes(ctx)) {
       if (!METHODS.has(r.method) || isWebhookRoute(ctx, r)) continue; // webhooks: PAY-01
       const payVendor = r.externalSdksCalled.map(vendorById).find((v) => v && /^(?:Payments|Subscription Billing)/.test(v.category));
       const table = r.dbTablesAccessed.find((t) => MONEY_TABLE_RE.test(snake(t)));

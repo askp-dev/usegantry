@@ -76,6 +76,10 @@ import { sec09WalletDrain } from "./security/sec-09-wallet-drain";
 import { sec10MassAssignment } from "./security/sec-10-mass-assignment";
 import { sec11SsrfRedirect } from "./security/sec-11-ssrf-redirect";
 import { sec12SqlXss } from "./security/sec-12-sql-xss";
+// Go / Rust services (3, need the optional ast-grep grammars)
+import { sys01UnboundedSpawn } from "./systems/sys-01-unbounded-spawn";
+import { sys02RequestUnwrap } from "./systems/sys-02-request-unwrap";
+import { sys03DetachedContext } from "./systems/sys-03-detached-context";
 
 export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   // Security (12)
@@ -117,6 +121,10 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   py02SyncInAsync,
   py03AgentExecSinks,
   py04SharedState,
+  // Go / Rust services (3)
+  sys01UnboundedSpawn,
+  sys02RequestUnwrap,
+  sys03DetachedContext,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

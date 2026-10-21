@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { buildRepoContext } from "../src/context/builder";
+import { sysLangUnavailable } from "../src/context/systems-lang";
 import type { Finding, RepoContext } from "../src/context/types";
 import { ALL_STATIC_RULES } from "../src/rules/index";
 
@@ -20,8 +21,31 @@ const COMPLIANCE = "fixtures/vulnerable-compliance";
 const CLEAN_COMPLIANCE = "fixtures/clean-compliance";
 /** Compliance-profile rules (hipaa, fintech-pci, legal-privilege, eu-ai-act): positive cases in their own fixture, held silent on its clean twin. */
 const ON_COMP = new Set(["HIPAA-01", "HIPAA-02", "HIPAA-03", "PCI-01", "PCI-02", "PCI-03", "LGL-01", "LGL-02", "LGL-03", "AIA-01"]);
-const vulnRoot = (id: string) => (ON_BAAS.has(id) ? BAAS : ON_INFRA.has(id) ? INFRA : ON_PY.has(id) ? FASTAPI : ON_COMP.has(id) ? COMPLIANCE : VULN);
-const cleanTwin = (id: string) => (ON_INFRA.has(id) ? CLEAN_INFRA : ON_PY.has(id) ? CLEAN_FASTAPI : ON_COMP.has(id) ? CLEAN_COMPLIANCE : undefined);
+/** Go/Rust rules: positives across the Go and Rust fixtures, silent on both clean twins. Skipped (not failed) without the optional ast-grep grammars. */
+const ON_SYS = new Set(["SYS-01", "SYS-02", "SYS-03"]);
+const HAS_SYS = !sysLangUnavailable("go") && !sysLangUnavailable("rust");
+const vulnRoot = (id: string) =>
+  ON_BAAS.has(id)
+    ? BAAS
+    : ON_INFRA.has(id)
+      ? INFRA
+      : ON_PY.has(id)
+        ? FASTAPI
+        : ON_COMP.has(id)
+          ? COMPLIANCE
+          : ON_SYS.has(id)
+            ? "fixtures/vulnerable-go + vulnerable-rust"
+            : VULN;
+const cleanTwin = (id: string) =>
+  ON_INFRA.has(id)
+    ? CLEAN_INFRA
+    : ON_PY.has(id)
+      ? CLEAN_FASTAPI
+      : ON_COMP.has(id)
+        ? CLEAN_COMPLIANCE
+        : ON_SYS.has(id)
+          ? "fixtures/clean-go + clean-rust"
+          : undefined;
 
 /** What each rule must report on the vulnerable fixture: [file, evidence substring]. */
 const EXPECT: Record<string, Array<[string, string]>> = {
@@ -228,6 +252,22 @@ const EXPECT: Record<string, Array<[string, string]>> = {
   ],
   "LGL-03": [["package.json", "@ai-sdk/deepseek"]],
   "AIA-01": [["package.json", "AI_INVENTORY.md not found"]],
+  "SYS-01": [
+    ["handlers/orders.go", "go sendReceipt("],
+    ["handlers/orders.go", "go push(id)"],
+    ["src/main.rs", "tokio::spawn("],
+    ["src/legacy.rs", "actix_rt::spawn("],
+  ],
+  "SYS-02": [
+    ["src/main.rs", "id.parse().unwrap()"],
+    ["src/main.rs", '.expect("name is required")'],
+    ["src/main.rs", 'headers.get("x-token").unwrap()'],
+    ["src/legacy.rs", 'req.match_info().get("n").unwrap()'],
+  ],
+  "SYS-03": [
+    ["handlers/orders.go", "context.Background()"],
+    ["internal/admin.go", "context.TODO()"],
+  ],
 };
 
 let vuln: RepoContext;
@@ -252,24 +292,34 @@ beforeAll(async () => {
   cleanFastapi = await buildRepoContext(CLEAN_FASTAPI, { config: { offline: true } });
   compliance = await buildRepoContext(COMPLIANCE, { config: { offline: true } });
   cleanCompliance = await buildRepoContext(CLEAN_COMPLIANCE, { config: { offline: true } });
+  if (HAS_SYS) {
+    const [goV, rsV, goC, rsC] = await Promise.all(
+      ["vulnerable-go", "vulnerable-rust", "clean-go", "clean-rust"].map((f) => buildRepoContext(`fixtures/${f}`, { config: { offline: true } })),
+    );
+    for (const r of ALL_STATIC_RULES.filter((r) => ON_SYS.has(r.id))) {
+      vulnOut.set(r.id, [...(await r.run(goV)), ...(await r.run(rsV))]);
+      cleanOut.set(r.id, [...(await r.run(clean)), ...(await r.run(goC)), ...(await r.run(rsC))]);
+    }
+  }
   const vulnCtx = (id: string) => (ON_BAAS.has(id) ? baas : ON_INFRA.has(id) ? infra : ON_PY.has(id) ? fastapi : ON_COMP.has(id) ? compliance : vuln);
-  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(vulnCtx(r.id)))));
+  const rest = ALL_STATIC_RULES.filter((r) => !ON_SYS.has(r.id));
+  await Promise.all(rest.map(async (r) => vulnOut.set(r.id, await r.run(vulnCtx(r.id)))));
   // Profile-only rules (SOV-01) never run on clean-saas without their profile, so they're held to the clean twin instead.
-  await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, r.profiles ? [] : await r.run(clean))));
+  await Promise.all(rest.map(async (r) => cleanOut.set(r.id, r.profiles ? [] : await r.run(clean))));
   await Promise.all([...ON_INFRA].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanInfra)))));
   await Promise.all([...ON_PY].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanFastapi)))));
   await Promise.all([...ON_COMP].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanCompliance)))));
 });
 
-test("registry has 68 unique rules covering every expectation", () => {
+test("registry has 71 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(68);
-  expect(new Set(ids).size).toBe(68);
+  expect(ids.length).toBe(71);
+  expect(new Set(ids).size).toBe(71);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 
 for (const rule of ALL_STATIC_RULES) {
-  describe(rule.id, () => {
+  describe.skipIf(ON_SYS.has(rule.id) && !HAS_SYS)(rule.id, () => {
     test(`fires on ${vulnRoot(rule.id)}`, () => {
       const fs = vulnOut.get(rule.id)!;
       for (const [file, needle] of EXPECT[rule.id]) {

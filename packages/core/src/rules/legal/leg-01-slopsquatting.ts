@@ -59,7 +59,8 @@ export const leg01Slopsquatting = defineRule(
       });
     const unknown: Dependency[] = [];
     for (const d of ctx.dependencies.values()) {
-      if (!d.isDirect || d.isLocal) continue;
+      // Go modules / crates: no offline seed or registry lookup yet (handoff quirk 43).
+      if (!d.isDirect || d.isLocal || d.ecosystem === "go" || d.ecosystem === "cargo") continue;
       const eco = d.ecosystem ?? "npm";
       const known = lookupKnownPackage(eco, d.name);
       // The seed is a curated top-package list (no repo_url data yet), so membership is the trust signal.
@@ -69,7 +70,7 @@ export const leg01Slopsquatting = defineRule(
       else unknown.push(d);
     }
     if (ctx.config.offline || !unknown.length) return;
-    const infos = await Promise.all(unknown.map((d) => registryInfo(d.ecosystem ?? "npm", d.name)));
+    const infos = await Promise.all(unknown.map((d) => registryInfo(d.ecosystem === "pypi" ? "pypi" : "npm", d.name)));
     unknown.forEach((d, i) => {
       const info = infos[i];
       if (!info) return;

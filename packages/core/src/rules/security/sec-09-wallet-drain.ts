@@ -1,5 +1,5 @@
 import { PAID_SDK_CALL_RE, RATE_LIMIT_RE } from "../../context/patterns";
-import { defineRule, isPaidVendor, isWebhookRoute, routeBody } from "../helpers";
+import { defineRule, isPaidVendor, isWebhookRoute, routeBody, scriptRoutes } from "../helpers";
 
 const INPUT_CAP =
   /\bmax_?tokens\b|\bmaxTokens\b|\bmax_output_tokens\b|\bmaxOutputTokens\b|\.max\s*\(\s*\d|\.slice\s*\(\s*0\s*,|\.substring\s*\(\s*0\s*,|\.length\s*>=?\s*(?:\d{3,}|[A-Z_]{3,})|max_length\s*=|maxLength\b/;
@@ -7,7 +7,7 @@ const INPUT_CAP =
 export const sec09WalletDrain = defineRule(
   { id: "SEC-09", pillar: "SECURITY", severity: "HIGH", title: "Unthrottled Paid API / LLM Endpoint (Wallet-Drain Vector)" },
   (ctx, emit) => {
-    for (const r of ctx.routes) {
+    for (const r of scriptRoutes(ctx)) {
       if (r.method === "GET" && !r.externalSdksCalled.some(isPaidVendor)) continue;
       if (isWebhookRoute(ctx, r)) continue;
       const { ci, a, b } = routeBody(ctx, r);

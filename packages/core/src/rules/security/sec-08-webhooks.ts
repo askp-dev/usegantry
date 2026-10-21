@@ -1,10 +1,10 @@
 import { WEBHOOK_VERIFY_RE } from "../../context/patterns";
-import { defineRule, isWebhookRoute, routeBody } from "../helpers";
+import { defineRule, isWebhookRoute, routeBody, scriptRoutes } from "../helpers";
 
 export const sec08Webhooks = defineRule(
   { id: "SEC-08", pillar: "SECURITY", severity: "CRITICAL", title: "Unverified Payment or Auth Webhook Handler" },
   (ctx, emit) => {
-    for (const r of ctx.routes) {
+    for (const r of scriptRoutes(ctx)) {
       if (!isWebhookRoute(ctx, r)) continue;
       const { ci, a, b } = routeBody(ctx, r);
       const body = ci.slice(a, b, "noComments");

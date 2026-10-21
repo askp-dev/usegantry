@@ -6,6 +6,7 @@
 import type { Database } from "bun:sqlite";
 import knownDb from "../../../../data/known-packages.sqlite" with { embed: "true", type: "sqlite" };
 import subMap from "../../../../data/subprocessor-map.json";
+import type { Dependency } from "./types";
 
 export interface VendorRecord {
   id: string;
@@ -39,7 +40,7 @@ const db = knownDb as unknown as Database;
 const cache = new Map<string, KnownPackage | null>();
 let stmt: ReturnType<Database["query"]> | null = null;
 
-export function lookupKnownPackage(ecosystem: "npm" | "pypi", name: string): KnownPackage | null {
+export function lookupKnownPackage(ecosystem: NonNullable<Dependency["ecosystem"]>, name: string): KnownPackage | null {
   const key = `${ecosystem}:${name}`;
   if (cache.has(key)) return cache.get(key)!;
   stmt ??= db.query("SELECT * FROM packages WHERE ecosystem = ? AND name = ?");
@@ -99,7 +100,7 @@ for (const v of VENDORS) {
   for (const p of v.packages.pypi) byPkg.set(`pypi:${p.toLowerCase()}`, v);
 }
 
-export function vendorForPackage(name: string, ecosystem: "npm" | "pypi" = "npm"): VendorRecord | undefined {
+export function vendorForPackage(name: string, ecosystem: NonNullable<Dependency["ecosystem"]> = "npm"): VendorRecord | undefined {
   return byPkg.get(`${ecosystem}:${ecosystem === "pypi" ? name.toLowerCase() : name}`);
 }
 

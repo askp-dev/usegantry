@@ -16,6 +16,11 @@ export interface SgNode {
   findAll(pattern: string | object): SgNode[];
   getMatch(name: string): SgNode | null;
   getMultipleMatches(name: string): SgNode[];
+  field(name: string): SgNode | null;
+  children(): SgNode[];
+  parent(): SgNode | null;
+  prev(): SgNode | null;
+  isNamed(): boolean;
 }
 export interface SgRoot {
   root(): SgNode;
@@ -92,7 +97,7 @@ export interface RouteNode {
   /** Character offsets of the handler body inside `getText(file)` (internal). */
   bodyStart?: number;
   bodyEnd?: number;
-  language?: "ts" | "py";
+  language?: "ts" | "py" | "go" | "rust";
 }
 
 export interface SqlView {
@@ -139,7 +144,7 @@ export interface Dependency {
   weeklyDownloads?: number;
   existsInRegistry: boolean;
   /** Extended fields */
-  ecosystem?: "npm" | "pypi";
+  ecosystem?: "npm" | "pypi" | "go" | "cargo";
   isDev?: boolean;
   declaredIn?: string;
   declaredLine?: number;
@@ -197,7 +202,7 @@ export interface PreflightConfig {
 
 export interface RepoContext {
   rootDir: string;
-  framework: "nextjs" | "sveltekit" | "fastapi" | "express" | "unknown";
+  framework: "nextjs" | "sveltekit" | "fastapi" | "express" | "gin" | "echo" | "fiber" | "axum" | "actix" | "unknown";
   gitCommitSha: string;
   files: {
     all: string[];
@@ -295,6 +300,8 @@ export interface AuditReport {
   suppressed: number;
   graph: DataFlowGraph;
   stats: { files: number; routes: number; tables: number; dependencies: number; subprocessors: number };
+  /** Rules that couldn't run here (e.g. Go/Rust without the optional ast-grep grammars). They're absent from `rulesRun`. */
+  notices?: Array<{ ruleIds: string[]; message: string }>;
   /** Rules that threw; isolated so one bad rule never sinks the scan. */
   errors?: Array<{ ruleId: string; message: string }>;
 }

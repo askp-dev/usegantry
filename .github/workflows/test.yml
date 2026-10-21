@@ -1,0 +1,24 @@
+name: test
+on: [push, pull_request]
+jobs:
+  # Default install: optional @ast-grep/napi + Go/Rust grammars present, so SYS-* tests run.
+  with-napi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.10 }
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test packages/core/test
+      - run: bun run bench
+  # Standalone-binary conditions: SYS-* tests skip and Go/Rust repos get a notice instead of a clean pass.
+  without-napi:
+    runs-on: ubuntu-latest
+    env: { PREFLIGHT_NO_NAPI: "1" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.10 }
+      - run: bun install --frozen-lockfile
+      - run: bun test packages/core/test
