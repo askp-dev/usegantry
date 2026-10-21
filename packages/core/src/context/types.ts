@@ -184,6 +184,8 @@ export interface PreflightConfig {
   ignoreRules: string[];
   ignorePaths: string[];
   offline: boolean;
+  /** Opt-in rule profiles, e.g. ["airgap"] (CLI `--profile airgap`). */
+  profiles?: string[];
   deployTarget?: "vercel" | "cloudflare" | "aws-lambda" | "netlify" | "node" | "unknown";
   clauses: {
     aiOutputDisclaimer: boolean;
@@ -263,6 +265,8 @@ export interface RuleDefinition {
   title: string;
   /** "repo" = the finding depends on the whole repo (usually an absence check), so partial scans skip it. Default "file". */
   scope?: "file" | "repo";
+  /** Opt-in rule: runs only when one of these profiles is active (`--profile airgap`, config `profiles`). */
+  profiles?: string[];
   /** Rules return findings; severity on a finding may be overridden per-finding. */
   run: (ctx: RepoContext) => Finding[] | Promise<Finding[]>;
 }
@@ -277,6 +281,8 @@ export interface PillarScore {
 
 export interface AuditReport {
   tool: { name: "preflight"; version: string; rulesetVersion: string };
+  /** Rule ids that actually ran (profile-only and partial-scan-skipped rules are absent). */
+  rulesRun?: string[];
   repo: { name: string; rootDir: string; framework: RepoContext["framework"]; frameworkVersion?: string; gitCommitSha: string; stack: string[] };
   generatedAt: string;
   durationMs: number;

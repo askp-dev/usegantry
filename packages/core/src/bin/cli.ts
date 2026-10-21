@@ -18,7 +18,7 @@ import { toSarif } from "../reporters/sarif";
 const HELP = `preflight ${VERSION}: launch readiness for AI-generated repos
 
 Usage:
-  preflight scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--write-checklist] [--verbose]
+  preflight scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--profile airgap] [--write-checklist] [--verbose]
   preflight legal [path] [--apply]
   preflight cert [path] [--allow-blocked] [--strict] [--offline]
   preflight attack --target <url> [path]
@@ -37,7 +37,7 @@ export function parseArgs(argv: string[]): { cmd: string; path: string; flags: R
     const a = rest[i];
     if (!a.startsWith("--")) positional.push(a);
     else if (a.includes("=")) flags[a.slice(2, a.indexOf("="))] = a.slice(a.indexOf("=") + 1);
-    else if (["--target", "--port", "--out", "--agent"].includes(a) && rest[i + 1] && !rest[i + 1].startsWith("--")) flags[a.slice(2)] = rest[++i];
+    else if (["--target", "--port", "--out", "--agent", "--profile"].includes(a) && rest[i + 1] && !rest[i + 1].startsWith("--")) flags[a.slice(2)] = rest[++i];
     else flags[a.slice(2)] = true;
   }
   return { cmd, path: resolve(positional[0] ?? "."), flags };
@@ -59,7 +59,11 @@ async function delegate(mod: keyof typeof MODULES, args: { path: string; flags: 
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   const { cmd, path, flags } = parseArgs(argv);
-  const config = { strict: flags.strict === true || undefined, offline: flags.offline === true || undefined };
+  const config = {
+    strict: flags.strict === true || undefined,
+    offline: flags.offline === true || undefined,
+    profiles: typeof flags.profile === "string" ? flags.profile.split(",").map((p) => p.trim()) : undefined,
+  };
   switch (cmd) {
     case "scan": {
       const scope = flags["changed-only"] ? changedScope(path, loadConfig(path, config)) : null;

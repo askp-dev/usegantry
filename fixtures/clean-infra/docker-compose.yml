@@ -1,0 +1,45 @@
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  db:
+    <<: *restart
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+  redis:
+    image: redis:7
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    expose:
+      - "6379"
+  mongo:
+    image: mongo:7
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - target: 27017
+        published: 27017
+        host_ip: 127.0.0.1
+  chroma:
+    image: chromadb/chroma:0.5.20
+    environment:
+      ANONYMIZED_TELEMETRY: "False"
+    ports:
+      - "127.0.0.1:8000:8000"
+  web:
+    build: .
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+  worker:
+    build:
+      context: ./worker
+    user: "1000:1000"
+  proxy:
+    image: traefik:v3.2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

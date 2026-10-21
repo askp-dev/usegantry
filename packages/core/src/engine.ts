@@ -31,7 +31,9 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
   const t0 = performance.now();
   const strict = opts.strict ?? ctx.config.strict;
   const changed = opts.changedFiles && new Set(opts.changedFiles);
-  const rules = (opts.rules ?? ALL_STATIC_RULES).filter((r) => (!opts.ruleIds || opts.ruleIds.includes(r.id)) && !(changed && r.scope === "repo"));
+  // Profile-only rules (e.g. SOV-01 under `airgap`) run when their profile is active or they're requested by id.
+  const active = (r: RuleDefinition) => !r.profiles || !!opts.ruleIds?.includes(r.id) || r.profiles.some((p) => ctx.config.profiles?.includes(p));
+  const rules = (opts.rules ?? ALL_STATIC_RULES).filter((r) => (!opts.ruleIds || opts.ruleIds.includes(r.id)) && !(changed && r.scope === "repo") && active(r));
   const timings: Record<string, number> = { ...ctx.timings };
   const errors: NonNullable<AuditReport["errors"]> = [];
   const results = await Promise.all(
@@ -72,6 +74,7 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
   const s = ctx.stack;
   return {
     tool: { name: "preflight", version: VERSION, rulesetVersion: RULESET_VERSION },
+    rulesRun: rules.map((r) => r.id),
     repo: {
       name: (ctx.packageJson?.name as string | undefined) ?? basename(ctx.rootDir),
       rootDir: ctx.rootDir,

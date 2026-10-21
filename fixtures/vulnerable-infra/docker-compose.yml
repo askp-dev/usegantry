@@ -1,0 +1,42 @@
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  db:
+    <<: *restart
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust # IAC-01 CRITICAL: no password at all
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - 6379:6379
+  mongo:
+    image: mongo:7
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - target: 27017
+        published: 27017
+  chroma:
+    image: chromadb/chroma:0.5.20
+    ports:
+      - "127.0.0.1:8000:8000" # OK: loopback
+  web:
+    build: .
+    ports:
+      - "3000:3000" # OK: the app itself is meant to be public
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # IAC-02: host root from the app container
+  worker:
+    build:
+      context: ./worker
+    user: "1000:1000"
+  proxy:
+    image: traefik:v3.2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # OK: socket tool, not the app

@@ -69,7 +69,7 @@ export function buildPayload(report: AuditReport): CertPayload {
     verificationHash: createHash("sha256")
       .update(canonicalJson({ score: report.score, findings: report.findings.map((f) => f.fingerprint).sort(), ruleset: report.tool.rulesetVersion }))
       .digest("hex"),
-    passedRules: ALL_STATIC_RULES.map((r) => r.id).filter((id) => !failed.includes(id)),
+    passedRules: (report.rulesRun ?? ALL_STATIC_RULES.map((r) => r.id)).filter((id) => !failed.includes(id)),
     failedRules: failed,
     subprocessors: [...new Set(report.graph.nodes.filter((n) => n.column === "vendor").map((n) => n.label))].sort(),
     rulesetVersion: report.tool.rulesetVersion,

@@ -21,7 +21,7 @@ export function renderChecklist(report: AuditReport): string {
   for (const p of Object.keys(PILLAR_TITLE) as Array<keyof typeof PILLAR_TITLE>) {
     const ps = report.pillars.find((x) => x.pillar === p);
     lines.push(`### ${PILLAR_TITLE[p]} (${ps?.score ?? 100}/100)`, "");
-    for (const r of ALL_STATIC_RULES.filter((x) => x.pillar === p)) {
+    for (const r of ALL_STATIC_RULES.filter((x) => x.pillar === p && (!report.rulesRun || report.rulesRun.includes(x.id)))) {
       const fs = report.findings.filter((f) => f.ruleId === r.id);
       lines.push(`- [${fs.length ? " " : "x"}] **${r.id}** ${r.title}${fs.length ? ` (${fs.length})` : ""}`);
       for (const f of fs.slice(0, 10))

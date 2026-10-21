@@ -8,6 +8,11 @@ const CLEAN = "fixtures/clean-saas";
 const BAAS = "fixtures/vulnerable-baas";
 /** Rules whose positive cases live in the BaaS/edge sibling fixture (Convex, Firestore, Mongo, D1, Turso). */
 const ON_BAAS = new Set(["BAAS-01", "BAAS-02", "BAAS-03", "EDGE-01", "EDGE-02"]);
+const INFRA = "fixtures/vulnerable-infra";
+const CLEAN_INFRA = "fixtures/clean-infra";
+/** Rules whose positive cases live in the infra/client sibling fixture (compose, Dockerfile, Tauri, Expo); each must also be silent on its clean twin. */
+const ON_INFRA = new Set(["IAC-01", "IAC-02", "SOV-01", "CLIENT-01", "CLIENT-02"]);
+const vulnRoot = (id: string) => (ON_BAAS.has(id) ? BAAS : ON_INFRA.has(id) ? INFRA : VULN);
 
 /** What each rule must report on the vulnerable fixture: [file, evidence substring]. */
 const EXPECT: Record<string, Array<[string, string]>> = {
@@ -138,6 +143,36 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     ["firestore.rules", "{document=**}"],
     ["firestore.rules", "profiles/{uid}"],
   ],
+  "IAC-01": [
+    ["docker-compose.yml", "postgres:16-alpine"],
+    ["docker-compose.yml", "6379:6379"],
+    ["docker-compose.yml", "published: 27017"],
+  ],
+  "IAC-02": [
+    ["Dockerfile", "no USER instruction"],
+    ["docker-compose.yml", "docker.sock"],
+  ],
+  "SOV-01": [
+    ["package.json", "next@"],
+    ["package.json", "chromadb@"],
+    ["package.json", "posthog-js@"],
+    [".env", "LANGCHAIN_TRACING_V2=true"],
+    ["app/layout.tsx", "next/font/google"],
+    ["app/layout.tsx", "fonts.googleapis.com"],
+    ["public/widget.html", "cdn.jsdelivr.net"],
+  ],
+  "CLIENT-01": [
+    ["src-tauri/tauri.conf.json", '"all": true'],
+    ["src-tauri/tauri.conf.json", "$HOME/**"],
+    ["src-tauri/tauri.conf.json", '"args": true'],
+    ["src-tauri/capabilities/default.json", "https://*.example.com"],
+    ["src-tauri/capabilities/default.json", "fs:allow-home-read-recursive"],
+    ["src-tauri/capabilities/default.json", '"cmd": "sh"'],
+  ],
+  "CLIENT-02": [
+    ["mobile/lib/auth.ts", 'setItem("access_token"'],
+    ["mobile/lib/auth.ts", "storage: AsyncStorage"],
+  ],
   "BAAS-03": [
     ["server/routes.js", "req.body.password"],
     ["server/routes.js", "Note.find(filter)"],
@@ -149,6 +184,8 @@ const EXPECT: Record<string, Array<[string, string]>> = {
 let vuln: RepoContext;
 let clean: RepoContext;
 let baas: RepoContext;
+let infra: RepoContext;
+let cleanInfra: RepoContext;
 const vulnOut = new Map<string, Finding[]>();
 const cleanOut = new Map<string, Finding[]>();
 
@@ -156,20 +193,24 @@ beforeAll(async () => {
   vuln = await buildRepoContext(VULN, { config: { offline: true } });
   clean = await buildRepoContext(CLEAN, { config: { offline: true } });
   baas = await buildRepoContext(BAAS, { config: { offline: true } });
-  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(ON_BAAS.has(r.id) ? baas : vuln))));
-  await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, await r.run(clean))));
+  infra = await buildRepoContext(INFRA, { config: { offline: true } });
+  cleanInfra = await buildRepoContext(CLEAN_INFRA, { config: { offline: true } });
+  await Promise.all(ALL_STATIC_RULES.map(async (r) => vulnOut.set(r.id, await r.run(ON_BAAS.has(r.id) ? baas : ON_INFRA.has(r.id) ? infra : vuln))));
+  // Profile-only rules (SOV-01) never run on clean-saas without their profile, so they're held to the clean twin instead.
+  await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, r.profiles ? [] : await r.run(clean))));
+  await Promise.all([...ON_INFRA].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanInfra)))));
 });
 
-test("registry has 49 unique rules covering every expectation", () => {
+test("registry has 54 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(49);
-  expect(new Set(ids).size).toBe(49);
+  expect(ids.length).toBe(54);
+  expect(new Set(ids).size).toBe(54);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 
 for (const rule of ALL_STATIC_RULES) {
   describe(rule.id, () => {
-    test(`fires on ${ON_BAAS.has(rule.id) ? BAAS : VULN}`, () => {
+    test(`fires on ${vulnRoot(rule.id)}`, () => {
       const fs = vulnOut.get(rule.id)!;
       for (const [file, needle] of EXPECT[rule.id]) {
         const hit = fs.find((f) => f.file === file && (f.evidence.includes(needle) || f.impact.includes(needle)));
@@ -188,7 +229,7 @@ for (const rule of ALL_STATIC_RULES) {
         expect(f.blocking).toBe(f.severity === "CRITICAL");
       }
     });
-    test(`is silent on ${CLEAN}`, () => {
+    test(`is silent on ${ON_INFRA.has(rule.id) ? `${CLEAN} + ${CLEAN_INFRA}` : CLEAN}`, () => {
       const fs = cleanOut.get(rule.id)!;
       expect(fs.map((f) => `${f.file}:${f.line} ${f.evidence}`)).toEqual([]);
     });

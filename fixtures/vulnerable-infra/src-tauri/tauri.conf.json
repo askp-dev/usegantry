@@ -1,0 +1,15 @@
+{
+  "package": { "productName": "infra-desktop", "version": "0.1.0" },
+  "tauri": {
+    "allowlist": {
+      "all": true,
+      "fs": {
+        "scope": ["$HOME/**", "$APPDATA/**"]
+      },
+      "shell": {
+        "scope": [{ "name": "run-git", "cmd": "git", "args": true }]
+      }
+    },
+    "security": { "csp": null }
+  }
+}

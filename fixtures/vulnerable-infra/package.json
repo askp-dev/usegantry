@@ -1,0 +1,19 @@
+{
+  "name": "vulnerable-infra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build" },
+  "dependencies": {
+    "next": "15.1.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "chromadb": "^1.9.2",
+    "posthog-js": "^1.180.0",
+    "@tauri-apps/api": "^1.6.0",
+    "expo": "~52.0.0",
+    "expo-secure-store": "~14.0.0",
+    "react-native": "0.76.3",
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

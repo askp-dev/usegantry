@@ -104,7 +104,7 @@ describe("certificate", () => {
     const r = await audit(root, { config: { offline: true } });
     const res = generateCertificate(r, { outDir: root, ...SECRET });
     expect(res.payload.overallScore).toBe(100);
-    expect(res.payload.passedRules.length).toBe(49);
+    expect(res.payload.passedRules.length).toBe(53);
     const fragment = res.url.split("#")[1];
     expect(verifyCertificate(fragment, res.publicKey)?.overallScore).toBe(100);
     const [body, sig] = fragment.split(".");
@@ -126,7 +126,7 @@ describe("certificate", () => {
 
   test("payload lists failed rules", async () => {
     const r = await audit("fixtures/vulnerable-saas", { config: { offline: true } });
-    expect(buildPayload(r).failedRules.length).toBe(44);
+    expect(buildPayload(r).failedRules.length).toBe(45);
   });
 
   test("renderPdf escapes parentheses", () => {
@@ -157,7 +157,7 @@ describe("vendor pack & SARIF", () => {
     expect(mm).toContain("-.->");
     const sarif = toSarif(r) as any;
     expect(sarif.version).toBe("2.1.0");
-    expect(sarif.runs[0].tool.driver.rules.length).toBe(49);
+    expect(sarif.runs[0].tool.driver.rules.length).toBe(54);
     expect(sarif.runs[0].results.length).toBe(r.findings.length);
     expect(sarif.runs[0].results[0]).toMatchObject({ level: "error", locations: [{ physicalLocation: { region: { startLine: expect.any(Number) } } }] });
   });

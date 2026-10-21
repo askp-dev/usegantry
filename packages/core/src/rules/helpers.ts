@@ -9,7 +9,7 @@ export type FindingInput = Omit<Finding, "ruleId" | "pillar" | "severity" | "blo
   title?: string;
 };
 export type Emit = (p: FindingInput) => void;
-type Meta = { id: string; pillar: Pillar; severity: Severity; title: string; scope?: "file" | "repo" };
+type Meta = { id: string; pillar: Pillar; severity: Severity; title: string; scope?: "file" | "repo"; profiles?: string[] };
 
 export const isBlocking = (sev: Severity, strict = false) => sev === "CRITICAL" || (strict && sev === "HIGH");
 

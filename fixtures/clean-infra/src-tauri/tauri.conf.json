@@ -1,0 +1,8 @@
+{
+  "productName": "clean-desktop",
+  "version": "0.1.0",
+  "identifier": "example.northwind.desktop",
+  "app": {
+    "security": { "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost" }
+  }
+}

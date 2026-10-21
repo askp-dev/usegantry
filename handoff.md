@@ -37,6 +37,7 @@ The user's answers before the build started:
 | 8. Distribution (badge, Action, roast) | ⏸ Deferred at the user's request (see §5) |
 | 9. napi spike, SchemaAdapter registry, `ctx.dataQueries`, VEC-01..03 + CACHE-01/02 | ✅ Done: 206 tests pass, typecheck + biome clean (touched files), bench 287 ms median, vuln fixture 44/44 rules, clean fixture 100/100 with 0 findings. Spike → **outcome B** (stay hybrid, quirk 37) |
 | 10. BaaS + edge DBs: Convex adapter, Firebase rules parser, BAAS-01..03, EDGE-01/02, `fixtures/vulnerable-baas` | ✅ Done: 230 tests pass, typecheck + biome clean (touched files), bench 283 ms median, vuln fixtures 49/49 rules (44 on vulnerable-saas, 5 on vulnerable-baas), clean fixture 100/100 with 0 findings |
+| 11. Infra + client configs: YAML subset reader, Dockerfile scanner, IAC-01/02, SOV-01 (`--profile airgap`), CLIENT-01/02, `fixtures/vulnerable-infra` + `clean-infra` | ✅ Done: 253 tests pass, typecheck + biome clean (touched files), bench 306 ms median, vuln fixtures fire all 54 rules, clean-saas 100/100 with 0 findings, clean-infra silent for the five new rules |
 
 ---
 
@@ -244,6 +245,20 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 | `test/baas-edge.test.ts` | Convex adapter, rules parser, positive + negative cases for all five rules. `rules.test.ts` runs the five rules against `fixtures/vulnerable-baas` (`ON_BAAS`) and every rule against `clean-saas`. |
 | `fixtures/vulnerable-baas/` | Convex (`convex/schema.ts`, `convex/notes.ts`), `firestore.rules`, Express + Mongoose (`server/routes.js`), Cloudflare Worker + D1 (`wrangler.toml`, `migrations/0001_init.sql`, `worker/src/index.ts`), Turso replica (`lib/replica.ts`). Each file also has an OK case. |
 
+### Sprint 11 files
+| File | Purpose |
+|---|---|
+| `context/yaml.ts` | `parseYaml()`: zero-dep YAML subset (block maps/seqs, `- key: v` items, quoted/plain scalars, flow `[]`/`{}`, comments, `|`/`>` block scalars, anchors/aliases + `<<` merge, first document only). Every node is `{ line, value }` so rules can emit exact patch lines. `isMap`/`isSeq`/`str` helpers. |
+| `context/dockerfile.ts` | `parseDockerfile()` → stages (`FROM … AS name`) with instructions; joins `\` continuations, skips comment lines inside them. `DOCKERFILE_RE`. |
+| `rules/infra/infra-helpers.ts` | `composeServices(ctx)` (parsed once per context via a WeakMap), `imageName()`, `builtDockerfile()`, `scalars()`, `isRootUser()`, `COMPOSE_RE`. |
+| `rules/infra/iac-01-public-data-ports.ts` | IAC-01 + exported `fixShortPort()` (deterministic `autoFixPatch`). |
+| `rules/infra/iac-02-root-container.ts` | IAC-02 (Dockerfile final-stage USER, compose docker.sock / privileged / `user: root`). |
+| `rules/infra/sov-01-telemetry-beacons.ts` | SOV-01, `profiles: ["airgap"]`. |
+| `rules/client/client-01-tauri-scopes.ts`, `client-02-asyncstorage-tokens.ts` | CLIENT-01 (Tauri v1 allowlist + v2 capabilities, schema checked via Context7), CLIENT-02. |
+| Profiles | `RuleDefinition.profiles`, `PreflightConfig.profiles`, CLI `--profile a,b`. `runAudit` skips a profile rule unless its profile is active or its id is in `ruleIds`. New `AuditReport.rulesRun`; the cert's `passedRules` and the checklist use it so a skipped rule is never shown as passed. |
+| `test/infra-client.test.ts` | YAML/Dockerfile parsers, `fixShortPort`, apply-every-autofix-then-silent, severity matrix, stage inheritance, compose overrides, profile gating, `--profile` parsing, self-hosted opt-outs, Tauri inline capabilities, aliased AsyncStorage. `rules.test.ts` runs the five rules against `vulnerable-infra` (`ON_INFRA`) and holds them silent on `clean-saas` **and** `clean-infra`. |
+| Fixtures | `fixtures/vulnerable-infra/` (compose with trust-auth Postgres, password-less Redis, long-syntax Mongo, docker.sock in the app; root Dockerfile; `.env` LangSmith tracing; Google Fonts/CDN script; Tauri v1 conf + v2 capabilities; Expo AsyncStorage tokens) with OK cases in each file, and its twin `fixtures/clean-infra/`. `vulnerable-saas` now also trips IAC-01 on its qdrant port (engine/cert tests moved 44→45 failed rules). |
+
 ### Known quirks to address
 1. `RouteNode.hasAuthGuard` is true when an auth call **appears** in the body (e.g. `renamePost` calls `getSession()` but never checks it). SEC-07 must do the **ordering/enforcement** check itself: auth call before the first mutation, plus a throw/return/redirect on failure. Don't rely only on `hasAuthGuard`.
 2. Table keys in `ctx.dbTables` are lowercased (`post`), while `route.dbTablesAccessed` uses the Prisma table name as declared (`Post`). Compare case-insensitively.
@@ -320,6 +335,14 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
     - EDGE-01 fires on *any* local SQLite/replica when *any* table in `ctx.dbTables` has an unencrypted PII column (table dialect isn't recorded), so a Postgres app with a local SQLite cache would fire. `url` from env without `syncUrl` isn't checked (it might be remote).
     - EDGE-02 is lexical: the tenant column must appear after `WHERE` in the same string literal. Dynamic SQL built in a variable isn't analysed (only literals in the call's first argument). D1 is detected by `d1_databases` in `wrangler.*`, libSQL by the `@libsql/client` dep.
     - `/ponytail-review` still isn't installed as a skill. Sprint 10 review done by hand: removed a redundant `ci.lang` check in BAAS-03, a redundant masked `KEYED` test in EDGE-01, and a comma-operator loop in the rules parser. Nothing detection-related removed.
+40. **Infra/client interpretations (stricter side).**
+    - **IAC-01** CRITICAL when auth is off/missing (trust, empty-password flags, Redis-family without `requirepass`, Memcached always, Mongo without a root password, Elastic/OpenSearch security disabled), otherwise HIGH. A bare `"5432"` (random host port on all interfaces) fires; `expose:` never does. A `${VAR}` host IP without a loopback default fires, and the patch replaces it with `127.0.0.1`. Overlaps VEC-02 on vector images by design (VEC-02 = missing auth, IAC-01 = binding). Locally built services count only when named `db`/`redis`/`postgres`/…. Unquoted ports are re-quoted in the patch (YAML 1.1 sexagesimal trap).
+    - **IAC-02** treats every Dockerfile outside `.devcontainer/` as an app image. Only `:nonroot`/`-nonroot` tags and `bitnami/*` count as non-root bases (Chainguard etc. need an explicit `USER` or `preflight-ignore`). A compose `user:` clears a Dockerfile only when the service's `build` resolves to exactly that path. `docker.sock` fires even `:ro`, and `privileged: true` was added as the same host-root class. Socket tools (Traefik, Portainer, Watchtower, socket-proxy, …) are exempt by image name.
+    - **SOV-01** is profile-only, so `rules.test.ts` doesn't hold it to clean-saas (which legitimately uses EU PostHog cloud) and checks it against `clean-infra` instead. Opt-outs are searched across env files, Dockerfiles, compose, `package.json`, `*.config.*`, YAML and all JS/TS/Python text, so an opt-out anywhere in the repo clears the dep. PostHog/Sentry pass only with a non-`posthog.com` / non-`sentry.io` host/DSN; the other analytics SDKs always fire. `next/font/google` is MEDIUM (build-time fetch). One finding per file+host for remote assets.
+    - **CLIENT-01** flags v2 `remote.urls` with a wildcard as CRITICAL and plain `http://` as HIGH. Any `shell:allow-execute/spawn` on a shell/interpreter (`sh`, `bash`, `cmd`, `powershell`, `node`, `python`, `osascript`) fires even with a validator, including the Tauri docs' own `sh -c` example. `fs:allow-<dir>-*` fires for every non-`app*` base dir, not just `-recursive`. A missing CSP is mentioned in the impact, never a separate finding. `Tauri.toml` / `tauri.conf.json5` aren't parsed.
+    - **CLIENT-02** keys off a broad secret-ish regex (`auth`, `session`, `pin`, …) over the call's arguments, so `setItem("authorName", …)` fires. Supabase/auth clients with `storage: AsyncStorage` are MEDIUM (that's Supabase's own Expo quickstart; the safe pattern is a SecureStore adapter). MMKV and web `localStorage` aren't covered.
+    - **Profiles:** an explicit `ruleIds: ["SOV-01"]` (MCP/IDE) runs it without the profile. `report.rulesRun` is new, and older reports without it fall back to the full registry.
+    - `/ponytail-review` still isn't installed. Sprint 11 review done by hand: dropped a redundant `fixLine` parameter and a too-loose data-store check (an image *named* `cache` used to match) in IAC-01, and a dead `names` filter in CLIENT-02. Nothing detection-related removed.
 13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed. Sprint 6: same (by hand). Dropped a redundant `Set` in `changedScope`, de-exported `isContextAnchor`/`compactFix`/`readBaseline`/`newBlockers`, and folded the `.mcp.json` merge into the shared `mergeJson()`. Sprint 7: same (by hand). De-exported `SAFE_HARBOR_MARK`, `appPrefixes`, `SafeHarborResult` and `ServerPackage`, dropped a redundant `apikey` alternative, and factored the duplicated write loop into `writeChanges()`.
 
 ---
@@ -362,13 +385,7 @@ Constraints that override the roadmaps:
 
 #### Sprint 10 ✅ done: Convex `SchemaAdapter`, Firebase rules mini-parser, BAAS-01/02/03 + EDGE-01/02, `fixtures/vulnerable-baas` (see §3 "Sprint 10 files" and quirk 39).
 
-#### Sprint 11: Infra + client configs
-- Hand-rolled YAML subset reader for `docker-compose*.yml` (no deps). Dockerfile line scanner.
-- `IAC-01` DB/cache/vector ports published on 0.0.0.0, with a deterministic `autoFixPatch` that changes them to `127.0.0.1:`.
-- `IAC-02` no non-root `USER`, or `docker.sock` mounted into a web container.
-- `SOV-01` telemetry/phone-home beacons (Next telemetry, Chroma/LangChain PostHog, Google Fonts, CDN scripts). It's **profile-only** (`--profile airgap`), because it would be noise for indie apps.
-- `CLIENT-01` Tauri `tauri.conf.json` covers v1 `allowlist` all/`**` scopes and v2 `capabilities/*.json` (verify the v2 schema via docs).
-- `CLIENT-02` Expo/RN covers tokens in `AsyncStorage.setItem` instead of `expo-secure-store`.
+#### Sprint 11 ✅ done: YAML subset reader + Dockerfile scanner, IAC-01 (with autofix) / IAC-02, profile-only SOV-01 (`--profile airgap`), CLIENT-01 (Tauri v1+v2) / CLIENT-02 (Expo AsyncStorage), `fixtures/vulnerable-infra` + `clean-infra` (see §3 "Sprint 11 files" and quirk 40).
 
 #### Sprint 12: Python rules
 - `CodeIndex` already lexes Python and `lockfile-parser.ts` already reads requirements/pyproject/poetry.lock. Add `uv.lock` + `Pipfile.lock`.

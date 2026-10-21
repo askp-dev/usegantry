@@ -6,6 +6,9 @@ import { mcp02UnpinnedServers } from "./agent/mcp-02-unpinned-servers";
 import { baas01ConvexAuth } from "./baas/baas-01-convex-auth";
 import { baas02FirestoreRules } from "./baas/baas-02-firestore-rules";
 import { baas03NosqlInjection } from "./baas/baas-03-nosql-injection";
+// Client apps (2)
+import { client01TauriScopes } from "./client/client-01-tauri-scopes";
+import { client02AsyncstorageTokens } from "./client/client-02-asyncstorage-tokens";
 // Vector & cache data layer (5)
 import { cache01GlobalKeys } from "./data/cache-01-global-keys";
 import { cache02NoTtl } from "./data/cache-02-no-ttl";
@@ -27,6 +30,10 @@ import { pay01WebhookIdempotency } from "./finops-ops/pay-01-webhook-idempotency
 import { pay02CreditRace } from "./finops-ops/pay-02-credit-race";
 import { pay03ChurnLifecycle } from "./finops-ops/pay-03-churn-lifecycle";
 import { seo01LaunchMeta } from "./finops-ops/seo-01-launch-meta";
+// Infra (3)
+import { iac01PublicDataPorts } from "./infra/iac-01-public-data-ports";
+import { iac02RootContainer } from "./infra/iac-02-root-container";
+import { sov01TelemetryBeacons } from "./infra/sov-01-telemetry-beacons";
 // Pillar 3: EULA, Licensing & Legal Scaffolding (6)
 import { leg01Slopsquatting } from "./legal/leg-01-slopsquatting";
 import { leg02CopyleftEula } from "./legal/leg-02-copyleft-eula";
@@ -85,6 +92,12 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   baas03NosqlInjection,
   edge01UnencryptedReplica,
   edge02D1TenantPredicate,
+  // Infra & client apps (5); SOV-01 is profile-only (`--profile airgap`)
+  iac01PublicDataPorts,
+  iac02RootContainer,
+  client01TauriScopes,
+  client02AsyncstorageTokens,
+  sov01TelemetryBeacons,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

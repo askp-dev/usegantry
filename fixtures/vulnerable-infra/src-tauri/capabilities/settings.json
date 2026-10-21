@@ -1,0 +1,9 @@
+{
+  "identifier": "settings",
+  "windows": ["settings"],
+  "permissions": [
+    "core:default",
+    { "identifier": "fs:scope", "allow": [{ "path": "$APPDATA" }, { "path": "$APPDATA/**/*" }] },
+    { "identifier": "shell:allow-execute", "allow": [{ "name": "binaries/helper", "sidecar": true, "args": true }] }
+  ]
+}
