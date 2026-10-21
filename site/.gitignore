@@ -1,0 +1,5 @@
+node_modules
+.svelte-kit
+build
+src/lib/data/*.json
+static/install.sh

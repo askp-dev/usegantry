@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/martian-mono/400.css";
+@import "@fontsource/martian-mono/500.css";
+
+/* DESIGN.md §3: Paper is the default theme; Console follows the OS dark setting or [data-theme="console"]. */
+:root {
+  --paper: #f1eee6;
+  --paper-2: #e6e1d5;
+  --rule: #c9c3b4;
+  --grid: #ddd7c9;
+  --ink: #17181b;
+  --ink-2: #4a4c52;
+  --ink-3: #6b6c70;
+  --signal: #ff4f00;
+  --signal-ink: #b33a00;
+  --go: #1d6b45;
+  --hold: #b87c00;
+  --nogo: #b8231e;
+  --on-go: var(--paper);
+  --on-hold: var(--ink);
+  --on-nogo: var(--paper);
+  --on-signal: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="paper"]) {
+    --paper: #1b1b18;
+    --paper-2: #24241f;
+    --rule: #3a3a33;
+    --grid: #2c2c27;
+    --ink: #ece7da;
+    --ink-2: #b5b0a4;
+    --ink-3: #8e8a80;
+    --signal: #ff6a1f;
+    --signal-ink: #ff6a1f;
+    --go: #4fb37e;
+    --hold: #e3a92b;
+    --nogo: #f0645b;
+    --on-go: #1b1b18;
+    --on-hold: #1b1b18;
+    --on-nogo: #1b1b18;
+    --on-signal: #1b1b18;
+  }
+}
+:root[data-theme="console"] {
+  --paper: #1b1b18;
+  --paper-2: #24241f;
+  --rule: #3a3a33;
+  --grid: #2c2c27;
+  --ink: #ece7da;
+  --ink-2: #b5b0a4;
+  --ink-3: #8e8a80;
+  --signal: #ff6a1f;
+  --signal-ink: #ff6a1f;
+  --go: #4fb37e;
+  --hold: #e3a92b;
+  --nogo: #f0645b;
+  --on-go: #1b1b18;
+  --on-hold: #1b1b18;
+  --on-nogo: #1b1b18;
+  --on-signal: #1b1b18;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-rule: var(--rule);
+  --color-grid: var(--grid);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-signal: var(--signal);
+  --color-signal-ink: var(--signal-ink);
+  --color-go: var(--go);
+  --color-hold: var(--hold);
+  --color-nogo: var(--nogo);
+  --font-display: "Archivo Variable", "Arial Narrow", sans-serif;
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, monospace;
+  --radius-sm: 2px;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  margin: 0;
+}
+::selection {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* Expanded caps for station labels and eyebrows (DESIGN.md §3.4). */
+.label {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 125;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.display {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 112;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+.condensed {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 75;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+/* Drawing grid for documents (8px minor / 40px major). */
+.drawing-grid {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
