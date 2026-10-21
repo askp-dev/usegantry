@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preflight Mission Control</title>
+<style>
+:root {
+  --bg-canvas: #090a0f; --bg-surface-1: #11131c; --bg-surface-2: #181b26; --bg-glass: rgba(17, 19, 28, 0.82);
+  --border-subtle: #222634; --border-focus: #3b82f6;
+  --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b;
+  --status-ready: #10b981; --status-ready-bg: rgba(16, 185, 129, 0.12);
+  --status-warn: #f59e0b; --status-warn-bg: rgba(245, 158, 11, 0.12);
+  --status-block: #ef4444; --status-block-bg: rgba(239, 68, 68, 0.14);
+  --accent-agent: #6366f1;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg-canvas); color: var(--text-primary); font: 14px/1.5 var(--font-sans); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--border-subtle); background: var(--bg-surface-2); border-radius: 6px; padding: 6px 12px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+button.primary { background: var(--accent-agent); border-color: var(--accent-agent); color: #fff; font-weight: 600; }
+input, select { background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 6px 10px; }
+.mono, code, pre { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
+header { position: sticky; top: 0; z-index: 2; height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-glass); backdrop-filter: blur(8px); }
+.cluster { display: flex; align-items: center; gap: 8px; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); color: var(--text-secondary); }
+.tabs { display: flex; gap: 2px; padding: 2px; background: var(--bg-surface-1); border: 1px solid var(--border-subtle); border-radius: 8px; margin: 0 auto; }
+.tabs button { border: 0; background: transparent; color: var(--text-secondary); }
+.tabs button[aria-selected="true"] { background: var(--bg-surface-2); color: var(--text-primary); }
+.pill { font-family: var(--font-mono); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.ready { color: var(--status-ready); background: var(--status-ready-bg); }
+.warn { color: var(--status-warn); background: var(--status-warn-bg); }
+.block { color: var(--status-block); background: var(--status-block-bg); }
+main { padding: 16px; }
+.card { background: var(--bg-surface-1); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px; }
+.grid { display: grid; gap: 16px; }
+.matrix { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.score { font-family: var(--font-mono); font-size: 2.25rem; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.node { width: 100%; text-align: left; margin-bottom: 8px; border-left-width: 3px; }
+.node.ok { border-left-color: var(--status-ready); } .node.warn { border-left-color: var(--status-warn); } .node.block { border-left-color: var(--status-block); }
+.node[aria-pressed="true"] { outline: 2px solid var(--border-focus); }
+.flash { animation: flash 1s steps(2) infinite; } @keyframes flash { 50% { opacity: 0.35; } }
+.finding { border-top: 1px solid var(--border-subtle); padding: 10px 0; }
+.finding summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+pre { background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.muted { color: var(--text-muted); } .secondary { color: var(--text-secondary); }
+.split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.probe { width: 100%; display: flex; gap: 8px; align-items: center; text-align: left; margin-bottom: 6px; }
+.studio { grid-template-columns: 260px minmax(0, 1fr); }
+.add { color: var(--status-ready); } .del { color: var(--status-block); }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+@media (max-width: 900px) { .matrix, .split, .studio, .lanes { grid-template-columns: 1fr; } header { height: auto; flex-wrap: wrap; padding: 8px 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="cluster">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--accent-agent)" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z"/></svg>
+    <strong class="mono" id="repo">preflight</strong><span id="badges" class="cluster"></span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="matrix" aria-selected="true">Readiness Matrix</button>
+    <button role="tab" data-tab="pentest" aria-selected="false">Live Pentest Console</button>
+    <button role="tab" data-tab="legal" aria-selected="false">Legal &amp; EULA Studio</button>
+    <button role="tab" data-tab="finops" aria-selected="false">FinOps &amp; Burn Simulator</button>
+  </nav>
+  <div class="cluster">
+    <span id="status" class="pill warn">SCANNING…</span>
+    <button class="primary" id="fixAll" title="⌘⇧F">✨ Fix All in Agent (⌘⇧F)</button>
+    <button id="exportCert">📄 Export Certificate</button>
+  </div>
+</header>
+<main>
+  <section id="tab-matrix">
+    <div class="pillars" id="pillars"></div>
+    <div class="grid matrix">
+      <div class="card"><div class="label">Architecture data flow</div><div class="lanes" id="graph"></div></div>
+      <div class="card"><div class="toolbar"><span class="label">Findings</span><span id="filter" class="badge" hidden></span></div><div id="findings"></div></div>
+    </div>
+  </section>
+  <section id="tab-pentest" hidden>
+    <div class="card toolbar">
+      <input id="target" value="http://localhost:3000" size="28" aria-label="Target URL" />
+      <input id="sbUrl" placeholder="Supabase URL (auto-detected from .env)" size="30" aria-label="Supabase URL" />
+      <input id="anonKey" placeholder="Anon key (optional)" size="22" aria-label="Supabase anon key" />
+      <button class="primary" id="fire">🎯 Fire 6 Non-Destructive Exploit Probes</button>
+      <span class="muted">Loopback targets only.</span>
+    </div>
+    <div class="grid split">
+      <div class="card"><div class="label">Probe stream</div><div id="stream"></div></div>
+      <div class="card"><div class="label">Forensic inspector</div><div id="inspector" class="muted">Select a probe.</div></div>
+    </div>
+  </section>
+  <section id="tab-legal" hidden>
+    <div class="grid studio">
+      <aside class="card">
+        <div class="label">Sub-processors</div><div id="subs"></div>
+        <div class="label" style="margin-top:12px">Active clauses</div><div id="clauses"></div>
+        <div class="label" style="margin-top:12px">Jurisdiction</div><div id="juris" class="secondary"></div>
+      </aside>
+      <div class="card">
+        <div class="toolbar"><button id="preview">Refresh diff</button><button class="primary" id="apply">Commit Legal Sync</button><span id="legalMsg" class="muted"></span></div>
+        <div id="diff"></div>
+      </div>
+    </div>
+  </section>
+  <section id="tab-finops" hidden>
+    <div class="card">
+      <div class="label">Burn simulator</div>
+      <div class="toolbar">
+        <label>Daily active users <input id="dau" type="number" min="0" value="1000" /></label>
+        <label>AI calls / user / day <input id="calls" type="number" min="0" value="10" /></label>
+        <label>Tokens / call <input id="tokens" type="number" min="0" value="2000" /></label>
+        <label>$ / 1M tokens <input id="price" type="number" min="0" step="0.01" value="5" /></label>
+      </div>
+      <div class="score" id="burn"></div><div class="muted" id="burnNote"></div>
+      <div class="label" style="margin-top:16px">FinOps &amp; payment findings</div><div id="finFindings"></div>
+    </div>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const tone = (s) => (s === "block" || s === "CRITICAL" ? "block" : s === "warn" || s === "HIGH" ? "warn" : "ready");
+let report = null, nodeFilter = null, probes = {};
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+const copy = (text) => navigator.clipboard?.writeText(text);
+
+for (const b of document.querySelectorAll("[data-tab]")) b.onclick = () => {
+  for (const o of document.querySelectorAll("[data-tab]")) { o.setAttribute("aria-selected", o === b); $(`tab-${o.dataset.tab}`).hidden = o !== b; }
+  if (b.dataset.tab === "legal") loadLegal();
+};
+
+function findingHtml(f) {
+  return `<details class="finding"><summary><span class="pill ${tone(f.severity)}">${esc(f.severity)}</span><span class="mono">${esc(f.ruleId)}</span><span>${esc(f.title)}</span></summary>
+    <div class="mono secondary">${esc(f.file)}:${esc(f.line)}</div><p>${esc(f.impact)}</p><pre>${esc(f.evidence)}</pre>
+    <button class="primary" data-prompt="${esc(f.agentRemediationPrompt)}">✨ Copy fix prompt</button></details>`;
+}
+document.addEventListener("click", (e) => { const p = e.target.closest?.("[data-prompt]"); if (p) { copy(p.dataset.prompt); p.textContent = "Copied ✓"; } });
+
+function render() {
+  const r = report;
+  $("repo").textContent = r.repo.name;
+  $("badges").innerHTML = [`${r.repo.framework}${r.repo.frameworkVersion ? ` ${r.repo.frameworkVersion.split(".")[0]}` : ""}`, ...r.repo.stack.filter((s) => s !== r.repo.framework), r.repo.gitCommitSha.slice(0, 7)]
+    .filter(Boolean).map((b) => `<span class="badge mono">${esc(b)}</span>`).join("");
+  const ready = r.status === "LAUNCH_READY";
+  $("status").className = `pill ${ready ? "ready" : r.status === "LAUNCH_BLOCKED" ? "block" : "warn"}`;
+  $("status").textContent = `${r.status.replace("_", " ")} • ${r.score}/100`;
+  $("pillars").innerHTML = r.pillars.map((p) => `<div class="card"><div class="label">${esc(p.pillar)}</div><div class="score" style="color:var(--status-${p.critical ? "block" : p.high ? "warn" : "ready"})">${p.score}</div>
+    <div class="mono muted">${p.critical} crit · ${p.high} high · ${p.medium} med</div></div>`).join("");
+  const cols = { entrypoint: "Entrypoints", api: "API & server actions", database: "Database tables", vendor: "Sub-processors" };
+  $("graph").innerHTML = Object.entries(cols).map(([c, title]) => `<div><div class="label">${title}</div>${r.graph.nodes.filter((n) => n.column === c).map((n) =>
+    `<button class="node ${esc(n.status)}" data-node="${esc(n.id)}" aria-pressed="${nodeFilter === n.id}"><div class="mono">${esc(n.label)}</div>
+     ${n.sublabel ? `<div class="muted">${esc(n.sublabel)}</div>` : ""}${n.badges.map((b) => `<span class="badge ${/OFF|SEC-01/.test(b) ? "block flash" : ""}">${esc(b)}</span>`).join(" ")}</button>`).join("")}</div>`).join("");
+  for (const b of document.querySelectorAll("[data-node]")) b.onclick = () => { nodeFilter = nodeFilter === b.dataset.node ? null : b.dataset.node; render(); };
+  const node = r.graph.nodes.find((n) => n.id === nodeFilter);
+  const list = node ? r.findings.filter((f) => f.nodeRef === node.id || node.ruleIds.includes(f.ruleId)) : r.findings;
+  $("filter").hidden = !node; $("filter").textContent = node ? `${node.label} ✕` : "";
+  $("findings").innerHTML = list.length ? list.map(findingHtml).join("") : `<p class="muted">No findings${node ? " for this node" : ""}. 🚀</p>`;
+  $("finFindings").innerHTML = r.findings.filter((f) => /^(FIN|PAY)-/.test(f.ruleId)).map(findingHtml).join("") || `<p class="muted">No FinOps findings.</p>`;
+  burn();
+}
+$("filter").onclick = () => { nodeFilter = null; render(); };
+$("fixAll").onclick = () => {
+  if (!report) return;
+  copy(report.findings.filter((f) => f.blocking).concat(report.findings.filter((f) => !f.blocking)).map((f, i) => `${i + 1}. [${f.ruleId}] ${f.file}:${f.line}\n${f.agentRemediationPrompt}`).join("\n\n"));
+  $("fixAll").textContent = "Copied all prompts ✓";
+};
+document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") { e.preventDefault(); $("fixAll").click(); } });
+$("exportCert").onclick = async () => {
+  try {
+    let res = await api("/api/cert/export", {}).catch(async (e) => {
+      if (!/blocker/.test(e.message) || !confirm(`${e.message}\n\nIssue a certificate stamped BLOCKED?`)) throw e;
+      return api("/api/cert/export", { allowBlocked: true });
+    });
+    alert(`Wrote:\n${res.files.join("\n")}`);
+  } catch (e) { alert(e.message); }
+};
+
+function burn() {
+  const v = (id) => Math.max(0, Number($(id).value) || 0);
+  const monthly = v("dau") * v("calls") * v("tokens") * 30 / 1e6 * v("price");
+  $("burn").textContent = `$${monthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo`;
+  const fin = report?.findings.filter((f) => f.ruleId === "FIN-01" || f.ruleId === "FIN-02").length ?? 0;
+  $("burnNote").textContent = fin ? `${fin} unbounded-spend finding(s): one abusive user can multiply this.` : "Spend caps detected on AI routes.";
+}
+for (const id of ["dau", "calls", "tokens", "price"]) $(id).oninput = burn;
+
+function probeRow(id) {
+  const p = probes[id], r = p.result;
+  const st = r ? r.status : "RUNNING";
+  const code = r?.traces?.find((t) => t.response)?.response?.status;
+  return `<button class="probe" data-probe="${esc(id)}"><span class="pill ${st === "EXPLOITED" ? "block" : st === "BLOCKED" ? "ready" : "warn"}">[${esc(st)}${code ? ` - ${code}` : ""}]</span>
+    <span class="mono">${esc(id)}</span><span>${esc(p.name)}</span><span class="mono muted" style="margin-left:auto">${r ? `${r.latencyMs}ms` : "…"}</span></button>`;
+}
+function renderStream() {
+  $("stream").innerHTML = Object.keys(probes).map(probeRow).join("");
+  for (const b of document.querySelectorAll("[data-probe]")) b.onclick = () => inspect(b.dataset.probe);
+}
+function inspect(id) {
+  const p = probes[id], r = p.result, traces = r?.traces ?? p.traces;
+  const prompt = `${id} ${p.name}: ${r?.status ?? "RUNNING"}\n${r?.summary ?? ""}\n\n${traces.map((t) => t.curl).join("\n")}\n\n${(r?.findings ?? []).map((f) => f.agentRemediationPrompt).join("\n\n")}`;
+  $("inspector").innerHTML = `<p>${esc(r?.summary ?? "Running…")}</p>${traces.map((t) => `<div class="label">Request</div><pre>${esc(t.curl)}</pre>
+    <div class="label">Response</div><pre>${esc(t.response ? `HTTP ${t.response.status}\n${Object.entries(t.response.headers).map(([k, v]) => `${k}: ${v}`).join("\n")}\n\n${t.response.bodySnippet}` : t.error)}</pre>`).join("")}
+    <button class="primary" id="copyProof">🔧 Copy Exploit Proof + Fix Prompt to Cursor</button>`;
+  $("copyProof").onclick = () => copy(prompt);
+}
+$("fire").onclick = () => {
+  probes = {}; renderStream(); $("fire").disabled = true;
+  const ws = new WebSocket(`ws://${location.host}/ws/pentest`);
+  ws.onopen = () => ws.send(JSON.stringify({ type: "START", target: $("target").value, supabaseUrl: $("sbUrl").value || undefined, anonKey: $("anonKey").value || undefined }));
+  ws.onmessage = (m) => {
+    const e = JSON.parse(m.data);
+    if (e.type === "PROBE_START") probes[e.probeId] = { name: e.name, traces: [] };
+    else if (e.type === "HTTP_TRACE" && probes[e.probeId]) probes[e.probeId].traces.push(e.trace);
+    else if (e.type === "PROBE_RESULT" && probes[e.probeId]) probes[e.probeId].result = e.result;
+    else if (e.type === "PENTEST_ERROR") $("stream").insertAdjacentHTML("beforeend", `<p class="block pill">${esc(e.message)}</p>`);
+    if (e.type !== "PENTEST_ERROR") renderStream();
+    if (e.type === "PENTEST_COMPLETE" || e.type === "PENTEST_ERROR") { $("fire").disabled = false; ws.close(); }
+  };
+  ws.onclose = () => { $("fire").disabled = false; };
+};
+
+function renderDiff(changes) {
+  $("diff").innerHTML = changes.length ? changes.map((c) => `<div class="label">${esc(c.path)}</div><pre>${c.diff.split("\n").map((l) =>
+    `<span class="${l.startsWith("+") && !l.startsWith("+++") ? "add" : l.startsWith("-") && !l.startsWith("---") ? "del" : ""}">${esc(l)}</span>`).join("\n")}</pre>`).join("")
+    : `<p class="muted">Legal docs are in sync with the detected stack.</p>`;
+}
+async function loadLegal() {
+  try {
+    const d = await api("/api/legal/preview", {});
+    $("subs").innerHTML = d.manifest.subprocessors.map((s) => `<div><label><input type="checkbox" checked disabled /> ${esc(s.entityName)} <span class="muted">${esc(s.category)}</span></label></div>`).join("") || `<p class="muted">None detected.</p>`;
+    $("clauses").innerHTML = (d.manifest.clauses ?? []).map((c) => `<div title="${esc(c.reason)}"><label><input type="checkbox" ${c.enabled ? "checked" : ""} disabled /> ${esc(c.label)}</label></div>`).join("");
+    $("juris").textContent = d.manifest.jurisdiction;
+    $("legalMsg").textContent = d.disclaimer;
+    renderDiff(d.changes);
+  } catch (e) { $("diff").innerHTML = `<p class="block pill">${esc(e.message)}</p>`; }
+}
+$("preview").onclick = loadLegal;
+$("apply").onclick = async () => {
+  if (!confirm("Write the generated legal blocks into legal/*.md and bump the legal version?")) return;
+  try { const d = await api("/api/legal/apply", {}); $("legalMsg").textContent = `Wrote ${d.changes.length} file(s).`; await loadLegal(); }
+  catch (e) { $("legalMsg").textContent = e.message; }
+};
+
+api("/api/report").then((d) => { report = d.report; render(); }).catch((e) => { $("status").className = "pill block"; $("status").textContent = e.message; });
+</script>
+</body>
+</html>

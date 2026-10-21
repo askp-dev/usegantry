@@ -20,7 +20,7 @@
     "build:bin": "bun run --cwd packages/core build",
     "build:ext": "bun run --cwd packages/vscode-ext build",
     "build": "bun run build:ui && bun run build:bin && bun run build:ext",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/vscode-ext/tsconfig.json --noEmit && bun run --cwd packages/ui check",
     "lint": "biome check packages scripts",
     "format": "biome format --write packages scripts"
   },

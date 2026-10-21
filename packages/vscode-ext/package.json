@@ -1,0 +1,86 @@
+{
+  "name": "preflight-ai",
+  "displayName": "Preflight AI",
+  "description": "Launch-readiness diagnostics, CodeLens fixes and Mission Control for AI-generated repos.",
+  "publisher": "preflight-ai",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Linters", "Other"],
+  "main": "./dist/extension.js",
+  "activationEvents": ["workspaceContains:package.json", "workspaceContains:pyproject.toml", "workspaceContains:requirements.txt"],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Preflight runs a local scanner binary against the workspace."
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "preflight.scan",
+        "title": "Preflight: Scan Workspace"
+      },
+      {
+        "command": "preflight.fixWithAgent",
+        "title": "Preflight: Fix with AI Agent"
+      },
+      {
+        "command": "preflight.openMissionControl",
+        "title": "Preflight: Open Mission Control"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [{
+        "id": "preflight",
+        "title": "Preflight",
+        "icon": "media/shield.svg"
+      }]
+    },
+    "views": {
+      "preflight": [{
+        "type": "webview",
+        "id": "preflight.sidebar",
+        "name": "Readiness"
+      }]
+    },
+    "configuration": {
+      "title": "Preflight",
+      "properties": {
+        "preflight.command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["preflight"],
+          "scope": "machine",
+          "markdownDescription": "Command (argv) that runs the Preflight CLI, e.g. `[\"bun\", \"/path/to/cli.ts\"]`. Machine-scoped so a workspace can't swap in another binary."
+        },
+        "preflight.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-scan (debounced) after saving a file."
+        },
+        "preflight.agentCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["composer.startComposerPrompt", "aichat.newchataction", "claude-vscode.editor.open"],
+          "scope": "machine",
+          "description": "VS Code command IDs tried in order after the fix prompt is copied (Cursor, then Claude Code). The first one installed is run."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/vscode": "~1.90.0"
+  }
+}

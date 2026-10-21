@@ -8,3 +8,4 @@ packages/vscode-ext/*.vsix
 .DS_Store
 _to_delete/
 .claude/settings.local.json
+packages/vscode-ext/media/ui/

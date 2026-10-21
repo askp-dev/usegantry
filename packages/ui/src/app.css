@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* DESIGN.md §2 tokens, exposed as Tailwind v4 theme values (bg-canvas, text-secondary, border-subtle, …). */
+@theme {
+  --color-canvas: #090a0f;
+  --color-surface-1: #11131c;
+  --color-surface-2: #181b26;
+  --color-glass: rgba(17, 19, 28, 0.82);
+  --color-subtle: #222634;
+  --color-focus: #3b82f6;
+  --color-primary: #f8fafc;
+  --color-secondary: #94a3b8;
+  --color-muted: #64748b;
+  --color-ready: #10b981;
+  --color-ready-bg: rgba(16, 185, 129, 0.12);
+  --color-warn: #f59e0b;
+  --color-warn-bg: rgba(245, 158, 11, 0.12);
+  --color-block: #ef4444;
+  --color-block-bg: rgba(239, 68, 68, 0.14);
+  --color-agent: #6366f1;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+@layer base {
+  body { @apply bg-canvas text-primary font-sans text-sm antialiased; }
+  :focus-visible { @apply outline-2 outline-focus outline-offset-1; }
+}
+
+@utility label { @apply font-sans text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-secondary; }
+@utility score { @apply font-mono text-[2.25rem] font-extrabold tracking-[-0.04em] tabular-nums; }
+@utility code-ref { @apply font-mono text-xs tabular-nums; }
+@utility card { @apply bg-surface-1 border border-subtle rounded-lg p-4; }
+@utility btn { @apply rounded-md border border-subtle bg-surface-2 px-3 py-1.5 hover:border-focus disabled:opacity-50; }
+@utility btn-agent { @apply rounded-md bg-agent px-3 py-1.5 font-semibold text-white hover:brightness-110 disabled:opacity-50; }
+@utility field { @apply rounded-md border border-subtle bg-surface-2 px-2.5 py-1.5; }
