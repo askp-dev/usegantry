@@ -21,5 +21,32 @@
     "@ast-grep/lang-go": "^0.0.6",
     "@ast-grep/lang-rust": "^0.0.7",
     "@ast-grep/napi": "^0.51.0"
+  },
+  "description": "Launch-readiness scanner for AI-generated repos: security, privacy, legal and cost checks in one CLI.",
+  "keywords": [
+    "security",
+    "scanner",
+    "supabase",
+    "rls",
+    "gdpr",
+    "ai",
+    "vibe-coding",
+    "sast"
+  ],
+  "homepage": "https://usegantry.app",
+  "files": [
+    "src",
+    "schema",
+    "data/known-packages.sqlite",
+    "data/subprocessor-map.json",
+    "dist/ui-assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "bun": ">=1.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

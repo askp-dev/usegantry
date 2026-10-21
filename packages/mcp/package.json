@@ -14,5 +14,13 @@
   },
   "dependencies": {
     "@usegantry/cli": "workspace:*"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }

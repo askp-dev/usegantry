@@ -4,8 +4,8 @@
  *   data/subprocessor-map.json   — SDK / env-key → legal entity, DPA, GDPR category
  */
 import type { Database } from "bun:sqlite";
-import knownDb from "../../../../data/known-packages.sqlite" with { embed: "true", type: "sqlite" };
-import subMap from "../../../../data/subprocessor-map.json";
+import knownDb from "../../data/known-packages.sqlite" with { embed: "true", type: "sqlite" };
+import subMap from "../../data/subprocessor-map.json";
 import type { Dependency } from "./types";
 
 export interface VendorRecord {
