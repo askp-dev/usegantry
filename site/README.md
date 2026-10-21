@@ -1,11 +1,11 @@
-# usegantry.app — Claude's version
+# usegantry.app
 
-A static site for Gantry built to `DESIGN.md` (paper, ink, one orange; go/no-go board, remove-before-flight tags, title blocks). One of three candidates (Gemini: `preflight-web/`, DeepSeek, this one).
+The static site for Gantry, built to `DESIGN.md` (paper, ink, one orange; go/no-go board, remove-before-flight tags, title blocks). Chosen on 2026-10-21 over the Gemini and DeepSeek candidates.
 
 ## Run it
 
 ```bash
-cd site-claude && bun install
+cd site && bun install
 bun run dev        # regenerates data, then http://localhost:5173
 bun run build      # static output in build/
 bun run check      # svelte-check
@@ -27,7 +27,8 @@ bun run check      # svelte-check
 
 Static files only. Either:
 
-- **Cloudflare Pages**: build command `cd site-claude && bun install && bun run build`, output `site-claude/build`. Note the build needs the whole monorepo checked out (the data step imports `packages/core`).
+- **Cloudflare (Workers static assets, uses `site/wrangler.jsonc`)**: root directory `/`, build command `bun install && cd site && bun install && bun run build`, deploy command `cd site && npx wrangler deploy`. The root must be the repo root: the data step imports `packages/core` and scans `fixtures/`.
+- **Cloudflare Pages (classic)**: same build command, output directory `site/build`.
 - **GitHub Pages**: copy `deploy-pages.yml` to `.github/workflows/` (it isn't active by default, so it can't clash with the other candidates). `static/CNAME` is set to `usegantry.app`.
 
 Keep `api.usegantry.app` (the signer Worker) on its own route either way.

@@ -1,4 +1,4 @@
-> **Superseded (2026-10-21).** The site is `site-claude/`, built to the new `DESIGN.md`. This spec's tokens, rule counts, pricing and commands are out of date; see `site-claude/README.md` for what changed and why.
+> **Superseded (2026-10-21).** The site is `site/`, built to the new `DESIGN.md`. This spec's tokens, rule counts, pricing and commands are out of date; see `site/README.md` for what changed and why.
 
 This static site specification (`WEBSITE_SPEC.md`) is engineered to be compiled into pure HTML/CSS/JS via **SvelteKit (`@sveltejs/adapter-static`)** or **Astro** and deployed directly to **GitHub Pages** with zero backend dependencies.
 

@@ -3,7 +3,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ["site-claude/**", "packages/core/src/**", "fixtures/**", "install.sh"]
+    paths: ["site/**", "packages/core/src/**", "fixtures/**", "install.sh"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,11 +18,11 @@ jobs:
         with: { bun-version: 1.2.10 }
       - run: bun install --frozen-lockfile
       - run: bun install --frozen-lockfile
-        working-directory: site-claude
+        working-directory: site
       - run: bun run build
-        working-directory: site-claude
+        working-directory: site
       - uses: actions/upload-pages-artifact@v3
-        with: { path: site-claude/build }
+        with: { path: site/build }
   deploy:
     needs: build
     runs-on: ubuntu-latest

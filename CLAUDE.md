@@ -5,7 +5,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 ## Token budget rules (follow strictly)
 - **Never read whole spec files.** Read only the line range you need, using the map below (`Read` with offset/limit). Use `Grep` for a single rule ID (e.g. `SEC-08`) instead of opening RULES_SPEC.md.
 - **Don't read** `data/subprocessor-map.json` (76 KB), `data/known-packages.sqlite`, `data/seed/*.txt`, lockfiles or `node_modules/`. Query them with `bun -e` or `grep` and print only what you need.
-- **The site is `site-claude/`** (SvelteKit 3 static + Tailwind v4, built to DESIGN.md). Its data comes from real scans (`bun run data`); see `site-claude/README.md`. SvelteKit 3: config lives in `vite.config.ts`, use `#lib/…` (with `.ts` extensions) and `resolve()` from `$app/paths`.
+- **The site is `site/`** (SvelteKit 3 static + Tailwind v4, built to DESIGN.md). Its data comes from real scans (`bun run data`); see `site/README.md`. SvelteKit 3: config lives in `vite.config.ts`, use `#lib/…` (with `.ts` extensions) and `resolve()` from `$app/paths`.
 - Once you've read a file this session, don't re-read it; rely on your edits.
 - Truncate command output: `bun test <file> --bail 2>&1 | tail -40`, `bun run typecheck 2>&1 | head -40`.
 - Use the Explore subagent only for broad multi-file searches. Use Grep/Glob for anything targeted.

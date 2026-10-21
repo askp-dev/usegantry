@@ -2,7 +2,7 @@
 
 Gantry is the service tower beside a rocket on the pad: the structure where the last checks happen before anything is allowed to fly. The product does the same job for a codebase. The design takes its cues from the **working documents of launch operations** — flight checklists, go/no-go polls, engineering drawings, remove-before-flight tags — not from space-themed decoration. It should feel like a tool a launch director would trust, not a poster of one.
 
-This file is the source of truth for every Gantry surface: Mission Control (`packages/ui`), the lite UI, the VS Code webview, the Launch Clearance Certificate, the roast card, the README badge, CLI output, and the site in `site-claude/`.
+This file is the source of truth for every Gantry surface: Mission Control (`packages/ui`), the lite UI, the VS Code webview, the Launch Clearance Certificate, the roast card, the README badge, CLI output, and the site in `site/`.
 
 ## 1. Principles
 
@@ -241,7 +241,7 @@ The labels are 9px expanded caps in `--ink-3`; the values are Martian Mono in `-
 - Blockers are prefixed `[TAG]` instead of `⛔`. No emoji; `✔` and `→` are the only glyphs.
 - Section headings are short and ruled with `─`.
 
-### 7.5 Site (`site-claude/`)
+### 7.5 Site (`site/`)
 
 Use the same tokens, type and components. The hero is a real go/no-go board for a sample repo and a real `gantry check` transcript, not an illustration. The roast box renders `roast --json` (see `docs/check-json.md`). The verify page shows the certificate form from §7.1.
 

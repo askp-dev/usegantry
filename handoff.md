@@ -330,7 +330,7 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 | `packages/signer/` | Cloudflare Worker (`src/index.ts`, `src/jwt.ts`, `wrangler.toml`, `scripts/keygen.ts`). RS256 OIDC check against GitHub's JWKS (cached 1 h): `alg` must be RS256, `iss`, `aud`, `exp`/`nbf`, `job_workflow_ref` prefix `askp-dev/usegantry/.github/workflows/scan.yml@refs/tags/v`. Payload whitelisted + validated (64 KB cap); repository/sha/run id from the token. Ed25519 via WebCrypto, key = `SIGNING_KEY` secret. |
 | `.github/workflows/scan.yml`, `action.yml` | Reusable workflow (OIDC + central cert + badge) and composite action (self-signed). Both: scan JSON + SARIF upload + `check --md` to the step summary + artifact; fail only with `strict: true` on LAUNCH_BLOCKED; inputs reach shell via env only and are validated. Scanner version pinned in the workflow (`GANTRY_VERSION`). |
 | `.github/workflows/release.yml`, `packages/core/scripts/build-binaries.ts`, `install.sh` | Tag → tests → 4 cross-compiled binaries + `SHA256SUMS` → `gh release create`. Installer: OS/arch detect, https-only base (localhost http for tests), refuses on missing/mismatched checksum, notes no Go/Rust. |
-| `packages/core/schema/{check,roast}.schema.json`, `docs/check-json.md` | The JSON contracts the site (`site-claude/`) renders. |
+| `packages/core/schema/{check,roast}.schema.json`, `docs/check-json.md` | The JSON contracts the site (`site/`) renders. |
 | `test/check.test.ts`, `test/distribution.test.ts` | Allowlist, tar safety + caps, mocked GitHub (token placement, redirect refusal, caps, scrubbed errors), summaries, card allowed-text + no-specifics, schema validation (mini validator), CLI; Worker accept/reject matrix, payload validation, end-to-end OIDC → signer → cert → Verified badge, self-signed/tampered never Verified, installer success + mismatch refusal. |
 
 ### Known quirks to address
@@ -483,7 +483,7 @@ How each sprint starts: add the new rule IDs to the RULES_SPEC registry (lines 1
 
 Constraints that override the roadmaps:
 - EXPANSION §2 overstates `@ast-grep/napi`: it only includes JS/TS/TSX/HTML/CSS, and every other language is a separate native `@ast-grep/lang-*` package loaded via `registerDynamicLanguage`. **Hybrid policy:** `CodeIndex` stays the always-on baseline (TS/JS + Python). napi is an optional accelerator behind `getAst()`, used for Go/Rust rules (which skip with an info notice when it's missing) and for deterministic rewrite-based `autoFixPatch`. The Sprint 9 spike decides whether it can become a real dependency.
-- The roast page lives in `site-claude/` (`/roast/`): it builds the CLI command and renders `roast --json`. There's no hosted roast endpoint.
+- The roast page lives in `site/` (`/roast/`): it builds the CLI command and renders `roast --json`. There's no hosted roast endpoint.
 - Anything that needs a hosted always-on service (daily canary SaaS, vendor DPA watcher) is out of scope. We ship the local command plus a scheduled GitHub Action template.
 
 #### Sprint 6 ✅ done: `--compact` reporter (MCP default), `scan --changed-only` with `scope: "repo"` rule tags, and `gantry hook` + init-merged Claude/Cursor Stop (+ opt-in pre-commit) hooks with a baseline (see §3 "Sprint 6 files" and quirks 30–32).
@@ -496,7 +496,7 @@ Original blocker: no product name or domain. **Decided:** the product is **Gantr
 **Naming map (user-supplied 2026-10-21, reconciled with the code):**
 | Touchpoint | Identifier |
 |---|---|
-| Site, docs, verifier | `https://usegantry.app`, `https://usegantry.app/verify#<cert>` (site is `site-claude/`) |
+| Site, docs, verifier | `https://usegantry.app`, `https://usegantry.app/verify#<cert>` (site is `site/`) |
 | Signing API (8b) | `https://api.usegantry.app/sign`: a Cloudflare Worker on its own subdomain, so the site can live on GitHub Pages or Cloudflare Pages without affecting it |
 | Installer | `curl -fsSL https://usegantry.app/install.sh \| sh` downloads the standalone binary from GitHub Releases and **verifies its SHA-256** before installing. The binary has no Go/Rust coverage (quirk 37); the script says so and points to `bunx @usegantry/cli` |
 | CLI binary | `gantry` |
@@ -511,7 +511,7 @@ Original blocker: no product name or domain. **Decided:** the product is **Gantr
 - `cert` → **`clear`** (adopted; "Launch Clearance Certificate"). It writes JSON + PDF every time; `--pdf` isn't needed.
 - **Both `check` and `roast`** (user decision 2026-10-21): same fetch + scan engine, two outputs. `check` is the neutral, plain-language report for the repo owner. `roast` is the shareable "Vibe-Code Survival Card" for X/GitHub.
 - `attack` keeps requiring `--target` (no silent default to `localhost:3000`): it's an active probe, so the target stays explicit.
-- Marketing copy in the paste is stale: it's 71 rules now (not 37), and a cold scan takes ≈0.3 s, not "<1.1 s". (`site-claude/` already uses the current numbers.)
+- Marketing copy in the paste is stale: it's 71 rules now (not 37), and a cold scan takes ≈0.3 s, not "<1.1 s". (`site/` already uses the current numbers.)
 
 #### Sprint 8a ✅ done: Preflight → Gantry rename, `cert` → `clear`, `legal --sync`, `@usegantry/mcp`, MIT LICENSE + repository fields, one-release `preflight-ignore`/`.preflight/` shims (see §3 "Sprint 8a files" and quirk 44).
 
@@ -561,7 +561,7 @@ Closes the quirk 43 gap: those five rules skip Go/Rust routes via `scriptRoutes(
 ## 7. Where things live
 
 - The working copy was built in the Cowork cloud sandbox at `/home/claude/pf/` and synced to the user's folder **`/Users/askpak/PreFlight/`**, at the repo root next to the spec files. Treat the user's folder as canonical from now on.
-- **`site-claude/`** is the marketing/docs/verify site, chosen 2026-10-21 over the Gemini (`preflight-web/`, now deleted) and DeepSeek candidates. The certificate verify URL (`/verify#payload.sig`) must keep matching `site-claude/src/lib/verify.ts`.
+- **`site/`** is the marketing/docs/verify site, chosen 2026-10-21 over the Gemini (`preflight-web/`, now deleted) and DeepSeek candidates. The certificate verify URL (`/verify#payload.sig`) must keep matching `site/src/lib/verify.ts`.
 - `_to_delete/gantry-build.tgz` is the transfer archive used for the sync. It's safe to delete.
 - `PreFlight/` is its own git repo (`main`, initial commit `b28ca0e`), nested inside the unrelated repo at `/Users/askpak`. Always commit from `PreFlight/`. `preflight-web/` is left untracked on purpose (Gemini's workstream).
 - Local toolchain (2026-10-20): Bun 1.2.10, Node 25. `bun install` done (Biome 2.5, TS 5.9). The optional `@ast-grep/napi` did install, but rules should still use `ctx.getCode()`. Typecheck is clean. `bunx biome check` still reports pre-existing style diagnostics (useTemplate, format) in Sprint 1 code; the PostToolUse hook fixes formatting as files are edited.

@@ -1,6 +1,6 @@
 # `gantry check --json` and `gantry roast --json`
 
-Gantry owns these contracts. The site (`site-claude/`, usegantry.app) renders them. The schemas are in
+Gantry owns these contracts. The site (`site/`, usegantry.app) renders them. The schemas are in
 [`packages/core/schema/check.schema.json`](../packages/core/schema/check.schema.json) and
 [`packages/core/schema/roast.schema.json`](../packages/core/schema/roast.schema.json), and a test validates
 real output against both. `schemaVersion` is `1`. Additive changes keep `1`; anything else bumps it.
