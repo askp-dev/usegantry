@@ -4,7 +4,7 @@ argument-hint: <sprint number 2-5>
 ---
 Build **Sprint $ARGUMENTS** of Preflight AI.
 
-1. Read `handoff.md` lines 25–37 (status) and 132–139 (known quirks), then only the "Sprint $ARGUMENTS" subsection of §5 (lines 140–198). Don't read the rest.
+1. Read `handoff.md` lines 25–38 (status) and 217–274 (known quirks), then only the "Sprint $ARGUMENTS" subsection of §5 (lines 275–372). Don't read the rest.
 2. Use the spec line map in CLAUDE.md to read **only** the spec ranges this sprint needs.
 3. Create a task list for the sprint. Implement in small files, and test each piece as you go. Use truncated output: `bun test <file> --bail 2>&1 | tail -40`.
 4. Definition of done:

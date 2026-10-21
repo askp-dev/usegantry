@@ -4,6 +4,7 @@ import { CertificateBlockedError, generateCertificate } from "../compilers/cert-
 import { writeChecklist } from "../compilers/checklist-writer";
 import { compileLegalDocs } from "../compilers/legal-compiler";
 import { LEGAL_DISCLAIMER } from "../compilers/legal-templates";
+import { compileSafeHarbor } from "../compilers/safe-harbor";
 import { writeVendorPack } from "../compilers/vendor-pack";
 import { buildRepoContext } from "../context/builder";
 import { changedScope } from "../context/changed";
@@ -79,13 +80,16 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     }
     case "legal": {
       const ctx = await buildRepoContext(path, { config });
-      const { manifest, changes } = compileLegalDocs(ctx, { apply: flags.apply === true });
+      const { manifest, changes: legalChanges } = compileLegalDocs(ctx, { apply: flags.apply === true });
+      const harbor = compileSafeHarbor(ctx, { apply: flags.apply === true });
+      const changes = [...legalChanges, ...harbor.changes];
       console.log(`${color.bold("Legal manifest")} v${manifest.version} · stack hash ${manifest.stackHash} · ${manifest.subprocessors.length} sub-processors`);
       if (!changes.length) console.log(color.green("Legal docs are up to date."));
       for (const c of changes) {
         if (flags.apply) console.log(`${color.green("✔ wrote")} ${c.path}`);
         else process.stdout.write(c.diff);
       }
+      for (const s of harbor.skipped) console.log(color.amber(`skipped ${s.path}: ${s.reason}`));
       if (!flags.apply && changes.length) console.log(color.dim("Dry run. Re-run with --apply to write these changes."));
       console.log(color.amber(`⚠ ${LEGAL_DISCLAIMER}`));
       return 0;

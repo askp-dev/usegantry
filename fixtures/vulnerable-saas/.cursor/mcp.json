@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "internal-api": {
+      "url": "https://mcp.internal.example.net/sse",
+      "headers": {
+        "Authorization": "Bearer KLzdocJ2isAjIhKtJ0RlgLKOmxgJTeKdNnFRIBXu"
+      }
+    }
+  }
+}

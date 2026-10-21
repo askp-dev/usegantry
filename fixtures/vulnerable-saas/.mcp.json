@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_u8jzPde0IgxLd6GncfBAepfJBd0Kh8oOOL8d"
+      }
+    },
+    "files": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesytem@0.6.2",
+        "."
+      ]
+    },
+    "preflight": {
+      "command": "preflight",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

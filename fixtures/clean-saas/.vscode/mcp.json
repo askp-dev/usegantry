@@ -1,0 +1,11 @@
+{
+  // Secrets come from a password prompt, never from this file.
+  "inputs": [{ "type": "promptString", "id": "stripe-key", "description": "Stripe restricted key", "password": true }],
+  "servers": {
+    "stripe": {
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp@0.2.4", "--tools=all", "--api-key=${input:stripe-key}"],
+    },
+    "fetch": { "command": "uvx", "args": ["mcp-server-fetch==2025.4.7"] },
+  },
+}

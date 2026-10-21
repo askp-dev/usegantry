@@ -1,0 +1,10 @@
+{
+  "env": {
+    "OPENAI_API_KEY": "sk-proj-_1fjORS-6ilI8ihN5KXSc7Tvo-hBKqFYY-kv5ZJr3J1TWDtk"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run test)"
+    ]
+  }
+}

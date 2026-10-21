@@ -9,7 +9,7 @@ const DAY = 86_400_000;
 type RegistryInfo = { exists: boolean; createdAt?: number; weekly?: number } | null;
 
 /** Live registry check; null = couldn't tell (network error / timeout), never a finding by itself. */
-async function registryInfo(eco: "npm" | "pypi", name: string): Promise<RegistryInfo> {
+export async function registryInfo(eco: "npm" | "pypi", name: string): Promise<RegistryInfo> {
   const signal = AbortSignal.timeout(REGISTRY_TIMEOUT_MS);
   try {
     if (eco === "npm") {

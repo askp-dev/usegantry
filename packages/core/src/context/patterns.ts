@@ -72,5 +72,8 @@ export const SECRET_PATTERNS: Array<{ id: string; name: string; re: RegExp; seve
   { id: "linear-key", name: "Linear API Key", re: /\blin_api_[A-Za-z0-9]{40}\b/ },
 ];
 
+/** Values that are obviously not a real secret (SEC-06 / MCP-01 entropy checks). */
+export const SECRET_PLACEHOLDER_RE = /your|xxx|example|changeme|placeholder|dummy|sample|test_?key|<|\.\.\./i;
+
 /** Placeholders that should never ship in legal copy. */
 export const PLACEHOLDER_RE = /\[(?:COMPANY(?: NAME)?|YOUR (?:COMPANY|NAME|EMAIL)|DATE|ADDRESS|EMAIL|JURISDICTION|PRODUCT(?: NAME)?)\]|\bTODO\b|\bTBD\b|lorem ipsum|\{\{\s*company\s*\}\}|\bACME (?:Inc|Corp)\b/i;

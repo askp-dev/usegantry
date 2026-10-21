@@ -1,0 +1,10 @@
+{
+  // Shared MCP servers for the team
+  "servers": {
+    "fetch": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["mcp-server-fetch", "--api-key", "DL7DxtpYlSXpfKtHF4vUCsMehGAkWvj7"],
+    },
+  },
+}

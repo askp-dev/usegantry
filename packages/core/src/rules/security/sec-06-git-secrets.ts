@@ -2,16 +2,16 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { shannonEntropy } from "../../context/code-index";
-import { SECRET_NAME_RE, SECRET_PATTERNS } from "../../context/patterns";
+import { SECRET_NAME_RE, SECRET_PATTERNS, SECRET_PLACEHOLDER_RE } from "../../context/patterns";
 import type { RepoContext } from "../../context/types";
 import { type GitSecretHit, scanGitHistory } from "../../workers/git-history";
+import { AGENT_CONFIG_RE } from "../agent/mcp-config";
 import { defineRule, type Emit, isGitIgnored, lineAt, redact, redactUrl } from "../helpers";
 
 const SKIP_FILE =
   /(^|\/)(bun\.lockb?|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|poetry\.lock|Cargo\.lock|composer\.lock)$|\.(png|jpe?g|gif|webp|ico|svg|pdf|woff2?|ttf|otf|zip|gz|sqlite|db|wasm|mp4|mp3|map|min\.js)$/i;
 const NAMED_LITERAL =
   /\b([\w]*(?:secret|token|api_?key|apikey|password|passwd|private_?key|auth_?key|signing_?key)[\w]*)["']?\s*[:=]\s*["'`]([A-Za-z0-9+/_\-=.~]{20,})["'`]/gi;
-const PLACEHOLDER = /your|xxx|example|changeme|placeholder|dummy|sample|test_?key|<|\.\.\./i;
 export const GIT_SCAN_TIMEOUT_MS = 1500;
 
 const fix = (what: string, file: string) =>
@@ -46,7 +46,8 @@ function gitHistory(root: string): Promise<GitSecretHit[]> {
 
 function scanTree(ctx: RepoContext, emit: Emit, found: Set<string>) {
   for (const file of ctx.files.all) {
-    if (SKIP_FILE.test(file)) continue;
+    // MCP-01 owns agent/MCP configs (reference-aware), so a key there is reported once.
+    if (SKIP_FILE.test(file) || AGENT_CONFIG_RE.test(file)) continue;
     const isEnv = ctx.files.envFiles.includes(file);
     // Real secrets in an untracked .env file are exactly where they belong.
     if (isEnv && isGitIgnored(ctx, file)) continue;
@@ -75,7 +76,7 @@ function scanTree(ctx: RepoContext, emit: Emit, found: Set<string>) {
       for (const m of text.matchAll(NAMED_LITERAL)) candidates.push([m[1], m[2], lineAt(text, m.index!)]);
     }
     for (const [name, value, line] of candidates) {
-      if (value.length < 16 || found.has(value) || PLACEHOLDER.test(value) || shannonEntropy(value) < (isEnv ? 3.5 : 4.0)) continue;
+      if (value.length < 16 || found.has(value) || SECRET_PLACEHOLDER_RE.test(value) || shannonEntropy(value) < (isEnv ? 3.5 : 4.0)) continue;
       if ([...found].some((f) => f.includes(value) || value.includes(f))) continue;
       found.add(value);
       emit({

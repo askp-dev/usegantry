@@ -1,4 +1,7 @@
 import type { RuleDefinition } from "../context/types";
+// Agent / MCP config (2)
+import { mcp01HardcodedCreds } from "./agent/mcp-01-hardcoded-creds";
+import { mcp02UnpinnedServers } from "./agent/mcp-02-unpinned-servers";
 import { a11y01InteractiveDom } from "./finops-ops/a11y-01-interactive-dom";
 // Pillar 4: FinOps, Payments, Ops & Accessibility (12)
 import { fin01InfiniteLoop } from "./finops-ops/fin-01-infinite-loop";
@@ -55,6 +58,9 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   sec10MassAssignment,
   sec11SsrfRedirect,
   sec12SqlXss,
+  // Agent / MCP config (2)
+  mcp01HardcodedCreds,
+  mcp02UnpinnedServers,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

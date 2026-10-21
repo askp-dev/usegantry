@@ -12,7 +12,7 @@
 
 ---
 
-## Pillar 1: Security & Tenant Isolation (`SEC-01` to `SEC-12`)
+## Pillar 1: Security & Tenant Isolation (`SEC-01` to `SEC-12`, `MCP-01` to `MCP-02`)
 
 | ID           | Rule Title                                                    | Severity   | Target Files                                                                            | Exact Detection Logic (`@ast-grep/napi` / Parser)                                                                                                                                                                                                                                                                                                                           | Agent Auto-Remediation Specification                                                                                                                                                  |
 | ------------ | ------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----- | ------------ | ------ | --------- | --------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -28,6 +28,8 @@
 | **`SEC-10`** | **ORM Mass Assignment / Over-Posting Vulnerability**          | `HIGH`     | Backend mutation routes & Server Actions                                                | AST check matching raw request payloads passed directly into ORM writes (`prisma.$MODEL.create({ data: req.body })`, ` prisma.$MODEL.update({ data: await req.json() })`, `db.insert($T).values(body)`), allowing users to overwrite `role`, `plan`, `isAdmin`, or `credits`.                                                                                               | Parse request body through an explicit Zod/Pydantic `.pick()` or allowlisted schema before passing to the ORM `data` property.                                                        |
 | **`SEC-11`** | **Server-Side Request Forgery (SSRF) & Open Redirect**        | `HIGH`     | Backend `fetch`, `axios`, `httpx` & `redirect()` calls                                  | Flags server-side `fetch($URL)` where `$URL` is derived from user input (`req.body`, `searchParams`) without protocol (`https:`) and private IP (`127.0.0.1`, `169.254.169.254`, `10.0.0.0/8`, `localhost`) blocklisting. Flags `redirect($TARGET)` without relative path validation.                                                                                       | Validate external URLs against an allowlist or block private CIDR ranges after DNS resolution; restrict redirects to relative paths (`url.startsWith("/") && !url.startsWith("//")`). |
 | **`SEC-12`** | **Raw SQL Injection & Unsanitized HTML/Markdown XSS**         | `MEDIUM`   | Backend raw SQL queries + Frontend `.tsx`, `.svelte`, `.vue`                            | Flags string interpolation inside `$queryRawUnsafe(\`...${x}`)`, `sql.raw()`, or `cursor.execute(f"...")`. Flags `dangerouslySetInnerHTML`, `{@html ...}`, or `v-html`rendering database/LLM strings without`DOMPurify.sanitize()`.                                                                                                                                         | Convert raw SQL to parameterized queries (`$queryRaw`) and wrap dynamic HTML rendering in `DOMPurify.sanitize()`.                                                                     |
+| **`MCP-01`** | **Hardcoded Credentials in Agent / MCP Config**                | `CRITICAL` | Committed `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json` (JSONC), `.claude/settings*.json` | Parses each server entry and runs the `SEC-06` vendor regexes over every string leaf, plus Shannon entropy (≥3.5, ≥16 chars) on secret-named `env` keys, `headers`, `args` flag values (`--api-key x`, `--token=x`) and URL query params. `${VAR}`, `${env:VAR}`, `${input:id}` and `$VAR` references are stripped first, so only literals are flagged. Git-ignored files are skipped (that's where local secrets belong); `SEC-06` skips these files so a hit is reported once. | Rotate the key, replace the literal with `${VAR}` (Claude Code), `${env:VAR}` (Cursor) or an `inputs` entry with `password: true` (VS Code), and keep the value in an untracked `.env`. |
+| **`MCP-02`** | **Unpinned or Unverified `npx` / `uvx` / `bunx` MCP Servers**  | `HIGH`     | Same files as `MCP-01`                                                                  | Resolves the package each `npx -y`, `bunx`, `pnpm dlx`, `yarn dlx`, `uvx` / `uv tool run` server launches. Flags it if it isn't pinned to an exact version (`pkg@1.2.3`, `pkg==1.2.3`) or isn't in the seed DB / curated official-server list. A name 1 edit from a top-1,000 package or official server is `CRITICAL` (LEG-01 typosquat logic), and so is a live-registry 404 (online only). | Pin the server to an exact, verified version (`npx -y @scope/server@1.2.3`), or install it as a pinned devDependency and run it from `node_modules/.bin`. Replace look-alike names with the official package. |
 
 ---
 
@@ -124,6 +126,9 @@ import { sec09WalletDrain } from "./security/sec-09-wallet-drain";
 import { sec10MassAssignment } from "./security/sec-10-mass-assignment";
 import { sec11SsrfRedirect } from "./security/sec-11-ssrf-redirect";
 import { sec12SqlXss } from "./security/sec-12-sql-xss";
+// Agent / MCP config (2)
+import { mcp01HardcodedCreds } from "./agent/mcp-01-hardcoded-creds";
+import { mcp02UnpinnedServers } from "./agent/mcp-02-unpinned-servers";
 
 // Pillar 2: Data Protection & Privacy Engineering (7)
 import { priv01PiiLogs } from "./privacy/priv-01-pii-logs";
@@ -170,6 +175,9 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   sec10MassAssignment,
   sec11SsrfRedirect,
   sec12SqlXss,
+  // Agent / MCP config (2)
+  mcp01HardcodedCreds,
+  mcp02UnpinnedServers,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

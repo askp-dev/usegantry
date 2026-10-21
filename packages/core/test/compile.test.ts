@@ -24,7 +24,7 @@ test("compiled binary scans both fixtures, finds history secrets and bundles sub
 
   const vuln = scan(join(import.meta.dir, "../../../fixtures/vulnerable-saas"));
   expect(vuln.errors).toBeUndefined();
-  expect(new Set(vuln.findings.map((f: { ruleId: string }) => f.ruleId)).size).toBeGreaterThanOrEqual(37);
+  expect(new Set(vuln.findings.map((f: { ruleId: string }) => f.ruleId)).size).toBeGreaterThanOrEqual(39);
   expect(scan(join(import.meta.dir, "../../../fixtures/clean-saas")).findings).toEqual([]);
 
   const repo = join(dir, "hist");

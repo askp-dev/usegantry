@@ -23,15 +23,15 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Exact algorithms for SEC-01 / SEC-03 / SEC-07 / FIN-01 / PAY-02 | SPEC.md 173–221 |
 | UI server REST + WS protocol | SPEC.md 222–232 |
 | Scoring & blocking matrix | RULES_SPEC.md 3–12 |
-| Security rules SEC-01..12 | RULES_SPEC.md 13–31 |
-| Privacy rules PRIV-01..07 | RULES_SPEC.md 32–45 |
-| Legal rules LEG-01..06 | RULES_SPEC.md 46–58 |
-| FIN / PAY / OPS / A11Y / SEO rules | RULES_SPEC.md 59–77 |
-| Pentest probes PT-01..06 | RULES_SPEC.md 78–104 |
-| Rule registry (`rules/index.ts`) | RULES_SPEC.md 105–200 |
+| Security rules SEC-01..12 + MCP-01..02 | RULES_SPEC.md 13–33 |
+| Privacy rules PRIV-01..07 | RULES_SPEC.md 34–47 |
+| Legal rules LEG-01..06 | RULES_SPEC.md 48–60 |
+| FIN / PAY / OPS / A11Y / SEO rules | RULES_SPEC.md 61–79 |
+| Pentest probes PT-01..06 | RULES_SPEC.md 80–106 |
+| Rule registry (`rules/index.ts`) | RULES_SPEC.md 107–210 |
 | Design tokens / typography | DESIGN.md 9–50 |
 | UI components (header, data-flow graph, pentest console, legal studio) | DESIGN.md 51–101 |
-| Handoff: status / quirks / remaining work | handoff.md 25–37 / 132–139 / 140–198 |
+| Handoff: status / quirks / remaining work | handoff.md 25–38 / 217–274 / 275–372 |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.
@@ -50,7 +50,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 - `bun run bench` runs the perf SLA check (Sprint 5).
 
 ## Conventions
-- Rule file names and export names must match the registry in RULES_SPEC.md 105–200 exactly.
+- Rule file names and export names must match the registry in RULES_SPEC.md 107–210 exactly.
 - Every finding needs `evidence` (a snippet), plain-English `impact`, and a surgical `agentRemediationPrompt`. Add `autoFixPatch` only when the fix is deterministic.
 - Each rule gets a test asserting it fires on `fixtures/vulnerable-saas`. Every rule must also pass on `fixtures/clean-saas` (create it in Sprint 2) with no findings.
 - Commit after each sprint with message `feat(sprint-N): …`.

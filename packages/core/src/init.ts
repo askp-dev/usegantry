@@ -4,6 +4,8 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { compileSafeHarbor } from "./compilers/safe-harbor";
+import { buildRepoContext } from "./context/builder";
 import { CONFIG_FILES } from "./context/config";
 import { audit } from "./engine";
 import { requireFeature } from "./entitlements";
@@ -102,7 +104,7 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
   else
     put(
       "preflight.config.json",
-      `${JSON.stringify({ mode: "commercial", companyName: "", contactEmail: "", jurisdiction: "US-DE", legalDir: "legal", ignoreRules: [], ignorePaths: [] }, null, 2)}\n`,
+      `${JSON.stringify({ mode: "commercial", companyName: "", contactEmail: "", securityContact: "", siteUrl: "", jurisdiction: "US-DE", legalDir: "legal", ignoreRules: [], ignorePaths: [] }, null, 2)}\n`,
       null,
     );
 
@@ -165,9 +167,19 @@ export async function initBaseline(root: string): Promise<InitAction> {
   return { path: BASELINE, action: "created" };
 }
 
+/** SECURITY.md, security.txt, robots.txt and ai.txt. Creates or refreshes only files Preflight generated. */
+export async function initSafeHarbor(root: string): Promise<InitAction[]> {
+  const { changes, skipped } = compileSafeHarbor(await buildRepoContext(root, { config: { offline: true } }), { apply: true });
+  return [
+    ...changes.map((c): InitAction => ({ path: c.path, action: c.before ? "updated" : "created" })),
+    ...skipped.map((s): InitAction => ({ path: s.path, action: "skipped", reason: s.reason })),
+  ];
+}
+
 export async function main({ path, flags }: { path: string; flags: Record<string, string | boolean> }): Promise<number> {
   const hooks = flags["no-hooks"] !== true;
   const actions = initProject(path, { ci: flags.ci === true, hooks, preCommit: flags["pre-commit"] === true });
+  actions.push(...(await initSafeHarbor(path)));
   if (hooks) actions.push(await initBaseline(path));
   for (const a of actions) console.log(`${a.action.padEnd(9)} ${a.path}${a.reason ? `  (${a.reason})` : ""}`);
   return 0;

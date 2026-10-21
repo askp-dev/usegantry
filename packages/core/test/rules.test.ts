@@ -56,6 +56,17 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     ["app/page.tsx", "dangerouslySetInnerHTML"],
     ["components/Markdown.tsx", "dangerouslySetInnerHTML"],
   ],
+  "MCP-01": [
+    [".mcp.json", "GitHub Personal Access Token"],
+    [".cursor/mcp.json", "headers.Authorization"],
+    [".vscode/mcp.json", "args[2]"],
+    [".claude/settings.json", "env.OPENAI_API_KEY"],
+  ],
+  "MCP-02": [
+    [".mcp.json", "server-github` isn't pinned"],
+    [".mcp.json", "likely typosquat"],
+    [".vscode/mcp.json", "mcp-server-fetch"],
+  ],
   "PRIV-01": [["app/api/chat/route.ts", 'console.log("chat request", body)']],
   "PRIV-02": [
     ["supabase/migrations/20240101000000_init.sql", "documents.owner_id"],
@@ -121,10 +132,10 @@ beforeAll(async () => {
   await Promise.all(ALL_STATIC_RULES.map(async (r) => cleanOut.set(r.id, await r.run(clean))));
 });
 
-test("registry has 37 unique rules covering every expectation", () => {
+test("registry has 39 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(37);
-  expect(new Set(ids).size).toBe(37);
+  expect(ids.length).toBe(39);
+  expect(new Set(ids).size).toBe(39);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 

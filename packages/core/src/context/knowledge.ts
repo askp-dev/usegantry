@@ -4,7 +4,7 @@
  *   data/subprocessor-map.json   — SDK / env-key → legal entity, DPA, GDPR category
  */
 import type { Database } from "bun:sqlite";
-import knownDb from "../../../../data/known-packages.sqlite" with { type: "sqlite", embed: "true" };
+import knownDb from "../../../../data/known-packages.sqlite" with { embed: "true", type: "sqlite" };
 import subMap from "../../../../data/subprocessor-map.json";
 
 export interface VendorRecord {
@@ -49,10 +49,38 @@ export function topPackages(ecosystem: "npm" | "pypi", n = 1000): string[] {
   const key = `${ecosystem}:${n}`;
   if (!topCache.has(key)) {
     const rows = db.query("SELECT name FROM packages WHERE ecosystem = ? ORDER BY rank LIMIT ?").all(ecosystem, n) as Array<{ name: string }>;
-    topCache.set(key, rows.map((r) => r.name));
+    topCache.set(
+      key,
+      rows.map((r) => r.name),
+    );
   }
   return topCache.get(key)!;
 }
+
+/** Official / vendor-published MCP servers (MCP-02). The seed DB only has the SDKs, not the servers. */
+export const OFFICIAL_MCP_SERVERS: Record<"npm" | "pypi", readonly string[]> = {
+  npm: [
+    "@modelcontextprotocol/server-filesystem",
+    "@modelcontextprotocol/server-memory",
+    "@modelcontextprotocol/server-everything",
+    "@modelcontextprotocol/server-sequential-thinking",
+    "@modelcontextprotocol/server-github",
+    "@modelcontextprotocol/server-brave-search",
+    "@modelcontextprotocol/server-slack",
+    "@modelcontextprotocol/server-puppeteer",
+    "@modelcontextprotocol/inspector",
+    "@playwright/mcp",
+    "@upstash/context7-mcp",
+    "@supabase/mcp-server-supabase",
+    "@stripe/mcp",
+    "@sentry/mcp-server",
+    "@notionhq/notion-mcp-server",
+    "@neondatabase/mcp-server-neon",
+    "chrome-devtools-mcp",
+    "mcp-remote",
+  ],
+  pypi: ["mcp-server-fetch", "mcp-server-git", "mcp-server-time", "mcp-server-sqlite"],
+};
 
 export function knownPackageCount(): number {
   return (db.query("SELECT count(*) AS n FROM packages").get() as { n: number }).n;

@@ -174,6 +174,10 @@ export interface PreflightConfig {
   companyName: string;
   productName: string;
   contactEmail: string;
+  /** security.txt / SECURITY.md contact (email or https URL); falls back to contactEmail */
+  securityContact?: string;
+  /** Production origin, e.g. https://app.example.com (security.txt Canonical, robots.txt Sitemap) */
+  siteUrl?: string;
   jurisdiction: "US-DE" | "EU" | "US-CA" | "UK";
   legalDir: string;
   strict: boolean;
