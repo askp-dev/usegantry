@@ -75,6 +75,22 @@ it non-specific: punch at the code, never the person, and make no "hacked"/"brea
 
 ## Certificates and the badge
 
+**Central public key** (raw Ed25519, base64url; the JWK `x`). The verify page trusts only this key:
+
+```
+cVt0WDM18pzsMSIqKTACaJrceJ_cX6DSVB5xZHbG7uY
+```
+
+```js
+const key = await crypto.subtle.importKey(
+  "jwk", { kty: "OKP", crv: "Ed25519", x: "cVt0WDM18pzsMSIqKTACaJrceJ_cX6DSVB5xZHbG7uY" },
+  { name: "Ed25519" }, false, ["verify"]);
+// fragment = "<base64url body>.<base64url signature>" from https://usegantry.app/verify#…
+const ok = await crypto.subtle.verify({ name: "Ed25519" }, key, sigBytes, bodyBytes);
+const verified = ok && JSON.parse(bodyText).issuer === "gantry-ci";
+```
+
+
 - `gantry clear` writes `LAUNCH_CERTIFICATE.{html,pdf}` and `.gantry/cert.url`
   (`https://usegantry.app/verify#<base64url canonical JSON>.<base64url Ed25519 signature>`).
 - The payload's `issuer` is `"self-signed"` (a local key) or `"gantry-ci"` (central signer). For `gantry-ci`,

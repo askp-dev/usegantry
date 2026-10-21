@@ -1,7 +1,7 @@
 /**
  * Launch Certificate: HTML (DESIGN tokens) + PDF, signed with Ed25519 over canonical JSON so the static
  * `/verify#<payload>.<sig>` page can check it in-browser with WebCrypto (WEBSITE_SPEC §3).
- * Key: GANTRY_CERT_SECRET (deterministic seed = sha256(secret)) or a generated ~/.gantry/cert.key.
+ * Key: cVt0WDM18pzsMSIqKTACaJrceJ_cX6DSVB5xZHbG7uY (deterministic seed = sha256(secret)) or a generated ~/.gantry/cert.key.
  */
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, type KeyObject, sign, verify } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -17,9 +17,10 @@ export { canonicalJson };
 
 /**
  * Raw Ed25519 public key (base64url) of the central signer (`packages/signer`, a Worker secret).
- * Empty until the production key is generated: then nothing is ever "Verified" (fail closed).
+ * Production key (generated 2026-10-21; private half lives only in the Worker's SIGNING_KEY secret).
+ * Empty = nothing is ever "Verified" (fail closed). Rotating it means old certs stop verifying.
  */
-export const CENTRAL_PUBLIC_KEY = "";
+export const CENTRAL_PUBLIC_KEY = "cVt0WDM18pzsMSIqKTACaJrceJ_cX6DSVB5xZHbG7uY";
 
 export const DEFAULT_VERIFY_BASE = process.env.GANTRY_VERIFY_BASE ?? "https://usegantry.app";
 const PKCS8_ED25519_PREFIX = Buffer.from("302e020100300506032b657004220420", "hex");
