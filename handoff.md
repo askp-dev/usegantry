@@ -32,6 +32,7 @@ The user's answers before the build started:
 | 3. MCP server, pentest runner, `init` | ✅ Done: 143 tests pass, typecheck + biome clean, live probes verified against a local vuln/safe target |
 | 4. Svelte UI, ui-server, VS Code extension | ✅ Done: 155 tests pass, typecheck (core + ext + svelte-check) clean, UI builds to `packages/core/dist/ui-assets`, both UIs checked in a browser |
 | 5. Tests, perf benchmark, final verification | ✅ Done: 158 tests pass, typecheck + biome clean, `bun run bench` ≈0.29 s median (SLA 3 s), compiled binary smoke-tested, `.vsix` packaged, lite UI screenshotted, README written |
+| 6. Agent loop: compact output, `--changed-only`, agent hooks | ✅ Done: 168 tests pass, typecheck + biome clean (touched files), bench 276 ms median, compact = −70% bytes/finding (measured), changed-only scan ≈33 ms in-process / ≈80 ms CLI wall on the vuln fixture |
 
 ---
 
@@ -182,9 +183,20 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
   - `bun run scan fixtures/vulnerable-saas --offline` scores 0, LAUNCH_BLOCKED, with 74 findings across all 37 rules in ≈30 ms (exit 1).
   - `fixtures/clean-saas` scores 100, LAUNCH_READY, with 0 findings (exit 0).
   - SLA: cold CLI scan of 503 files + git history takes 0.3–0.4 s wall.
+- **Sprint 6 (2026-10-21):** `bun test packages/core/test` = 168 pass / 0 fail; `bun run typecheck` clean; biome clean on touched files. `bun run bench`: 503 files, median 276 ms. CLI e2e: `init` on a git copy of the vuln fixture wrote `.claude/settings.json`, `.cursor/hooks.json` and `.preflight/baseline.json`; copying a vulnerable route then made `preflight hook stop --agent claude` exit 2 with 2 compact blockers (≈80 ms wall). `stop_hook_active: true` → exit 0. Cursor hooks print valid JSON.
 - **Sprint 5 (2026-10-20):** `bun test packages/core/test` = 158 pass / 0 fail; `bun run typecheck` clean; biome clean on touched files. `bun run bench`: 503 files, wall min 282 / median 284 / max 344 ms. Compiled binary: vuln fixture 37/37 rules, clean fixture 0 findings, git-history leak found, `init`/`mcp` (initialize + tools/list)/`attack` refusal/`ui` all work.
 - **Sprint 4 (2026-10-20):** `bun test packages/core/test` = 155 pass / 0 fail; `bun run typecheck` (now core + vscode-ext + svelte-check) clean; biome clean on touched files. `/api/report` on the vuln fixture ≈45 ms. Svelte UI and lite UI both rendered against a temp copy of the vuln fixture in a browser (matrix graph, legal diff). SLA test ~0.46 s.
 - **Sprint 3 (2026-10-20):** `bun test packages/core/test` = 143 pass / 0 fail; typecheck + biome clean. MCP verified over real stdio (`initialize` + `tools/list`). `preflight init` is non-destructive and idempotent. `preflight attack` exits 2 on a non-local target; against a local vuln target PT-02/03/04/05/06 report EXPLOITED and against a hardened target everything is BLOCKED/SKIPPED. SLA still ~0.3 s.
+
+### Sprint 6 files
+| File | Purpose |
+|---|---|
+| `packages/core/src/reporters/compact.ts` | `renderCompact()` / `compactLine()` / `compactFix()`. PRE_EXPANSION §1 format: `SCORE:x/100\|BLOCKED:bool` then `[CRIT\|HIGH\|MED][RULE] file:line \| title (parentheticals dropped) \| FIX:<prompt>`. `!` after the tag means a non-critical finding that blocks (strict mode). Used by `scan --compact`, the MCP default and the hooks. |
+| `packages/core/src/context/changed.ts` | `gitChangedFiles()` (`git diff --name-only --relative HEAD` + `ls-files --others --exclude-standard`, or every tracked file before the first commit) and `changedScope()` → `{ only, changed }`. `only` = changed files ∩ walk, plus *context anchors* (every non-code file, and middleware/schema/model/db/config code files) so cross-file facts survive. `null` outside git. |
+| `packages/core/src/hooks.ts` | `preflight hook <stop\|pre-commit> [path] --agent claude\|cursor`. `runHook()` is pure for tests. `newBlockers()` = changed-only scan, blocking findings minus `.preflight/baseline.json`. Claude: exit 2 + compact on stderr; honours `stop_hook_active`. Cursor: always valid JSON on stdout (`{followup_message}` for stop, capped at loop_count 3; `{permission: "allow"\|"deny", user_message, agent_message}` for `beforeShellExecution`). Fails open on internal errors. |
+| `init.ts` (extended) | Merges a Claude `.claude/settings.json` `Stop` hook and a `.cursor/hooks.json` `stop` hook (`version: 1`). `--pre-commit` adds Claude `PreToolUse` (matcher `Bash`) and Cursor `beforeShellExecution` (matcher `git.*commit`). `--no-hooks` skips hooks and the baseline. `initBaseline()` writes `.preflight/baseline.json` once (full offline scan). Shared `mergeJson()` now also drives the `.mcp.json` merge. |
+| `engine.ts` `AuditOptions.changedFiles`, `RuleDefinition.scope`, `RepoContext.partial`, `listRepoFiles()` | Partial-scan plumbing: drop `scope: "repo"` rules, keep findings on changed files only; `partial` = built with `only` (SEC-06 skips git history). |
+| `test/agent-loop.test.ts` | Compact snapshot + measured byte reduction, repo-scope registry tags, changed-only file set in a temp git repo, hook decisions for both agents, and init hook merge idempotency. |
 
 ### Known quirks to address
 1. `RouteNode.hasAuthGuard` is true when an auth call **appears** in the body (e.g. `renamePost` calls `getSession()` but never checks it). SEC-07 must do the **ordering/enforcement** check itself: auth call before the first mutation, plus a throw/return/redirect on failure. Don't rely only on `hasAuthGuard`.
@@ -233,7 +245,10 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 27. **Lite UI layout nits (seen in the screenshot at 1440 px):** the header's "Fix All in Agent" button is clipped at the top, and the "ENTRYPOINTS" lane label crowds the "ARCHITECTURE DATA FLOW" title. Cosmetic only, not fixed.
 28. **Playwright on this Mac.** There's no `/opt/pw-browsers` (that's the cloud sandbox). The cached `~/Library/Caches/ms-playwright/chromium_headless_shell-1248/.../chrome-headless-shell --headless --screenshot=… --virtual-time-budget=5000 <url>` works without installing the Playwright package.
 29. Engine per-rule timings (`timings["rule:*"]`) overlap because rules run under `Promise.all`, so `bench` prints only the builder phases plus the `rules` total.
-13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed.
+30. **Compact is −70%, not "~80–82%".** Measured on the vuln fixture: 241 B/finding compact vs 810 B verbose JSON (single-line). The roadmap's 80% figure assumed dropping most of the fix. I didn't take that route: `FIX:` keeps the prompt (minus the `In file:line,` lead-in) up to 160 chars at a word boundary, because a first-sentence cut dropped the actual fix on SEC-01 (its prompt states the problem first). The test asserts ≥65%. MCP compact also omits `structuredContent`, so the saving per call is much larger than per finding. Agents pass `format: "verbose"` for evidence, impact and full prompts.
+31. **Changed-only accuracy vs speed.** Anchors are a path heuristic (`changed.ts` `CODE_ANCHOR`). A changed route whose auth wrapper lives in an unrelated, unchanged helper file could false-positive. Drizzle tables in a file not named schema/model/db are missed as context. `scope: "repo"` set (stricter choice: anything whose verdict can flip because of an unchanged file): OPS-01, OPS-04, SEO-01, LEG-03, LEG-04, LEG-05, LEG-06, PRIV-02, PRIV-06, PRIV-07. LEG-01/02 still fire when `package.json` is itself changed. `--write-checklist` is ignored with `--changed-only` (it would overwrite the checklist with a subset).
+32. **Hook semantics (interpretations).** "New" means not in `.preflight/baseline.json`, which `init` snapshots once and never overwrites. Delete it to re-baseline. With no baseline, every blocking finding in changed files counts as new. Hooks fail open (exit 0 + stderr note) if the scanner throws, so a Preflight bug can't trap the agent. Claude hook commands pass `"$CLAUDE_PROJECT_DIR"` as the path (`resolve("")` = cwd if it's unset). `preflight` must be on PATH, the same assumption as `.mcp.json`. The `git commit` regex also matches things like `git log --grep commit`, which just runs one extra scan.
+13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex. Sprint 4: same (by hand) — removed an unused `findingKey` export, de-exported `toDiagnostic`, and dropped the unused `mermaid` field from the UI audit store. Sprint 3: same (by-hand review) — de-exported two file-local consts (`PROBE_TIMEOUT_MS`, `RpcError`), removed an unused `blockedStatus`/`isRedirectToLogin` pair, and cut unused test imports. Sprint 5: same (by hand). Removed the now-dead `existsSync` import and the "not available in this build" branch from `cli.ts`, dropped the misleading per-rule timings from `bench`, and replaced six duplicated SLA-setup lines in `cli.test.ts` with the shared bench helpers. Nothing that affects detection was removed. Sprint 6: same (by hand). Dropped a redundant `Set` in `changedScope`, de-exported `isContextAnchor`/`compactFix`/`readBaseline`/`newBlockers`, and folded the `.mcp.json` merge into the shared `mergeJson()`.
 
 ---
 
@@ -246,6 +261,97 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
 ### Sprint 4 ✅ done: `ui-server` (REST + WS, lite-UI fallback), Svelte 5/Tailwind v4 Mission Control in `packages/ui`, and the VS Code extension (see §3 "Sprint 4 files" and quirks 20–25).
 
 ### Sprint 5 ✅ done: `bun run bench`, LEG-01 stubbed-fetch test, `bun build --compile` fixes and smoke test, `.vsix` packaging, lite-UI screenshot, README (see §3 "Sprint 5 files" and quirks 11, 26–29). Still open: Extension Development Host smoke test (quirk 26), LICENSE and repository URL, real verify domain (quirk 8).
+
+### Expansion sprints 6–14 (planned 2026-10-21 from PRE_EXPANSION_ROADMAP.md + EXPANSION_ROADMAP.md)
+
+How each sprint starts: add the new rule IDs to the RULES_SPEC registry (lines 105–200) and the scoring/blocking matrix (lines 3–12) **before** writing code. Every new rule needs a positive case in `fixtures/vulnerable-saas` (or a new sibling fixture) and must stay silent on `fixtures/clean-saas`. The 500-file cold scan SLA (<3 s, currently ~0.3 s) is re-checked with `bun run bench` at the end of every sprint.
+
+Constraints that override the roadmaps:
+- EXPANSION §2 overstates `@ast-grep/napi`: it only includes JS/TS/TSX/HTML/CSS, and every other language is a separate native `@ast-grep/lang-*` package loaded via `registerDynamicLanguage`. **Hybrid policy:** `CodeIndex` stays the always-on baseline (TS/JS + Python). napi is an optional accelerator behind `getAst()`, used for Go/Rust rules (which skip with an info notice when it's missing) and for deterministic rewrite-based `autoFixPatch`. The Sprint 9 spike decides whether it can become a real dependency.
+- The landing-page "roast" input box lives in `preflight-web/` (Gemini). Here we only ship the CLI command and its JSON output.
+- Anything that needs a hosted always-on service (daily canary SaaS, vendor DPA watcher) is out of scope. We ship the local command plus a scheduled GitHub Action template.
+
+#### Sprint 6 ✅ done: `--compact` reporter (MCP default), `scan --changed-only` with `scope: "repo"` rule tags, and `preflight hook` + init-merged Claude/Cursor Stop (+ opt-in pre-commit) hooks with a baseline (see §3 "Sprint 6 files" and quirks 30–32).
+
+#### Sprint 7: Agent-config auditor + safe-harbor bundle
+- `MCP-01` hardcoded creds in `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json` and committed `.claude/settings*.json`. It reuses the SEC-06 secret patterns from `patterns.ts` and only flags literals in `env`/`headers`/`args`, not `${VAR}` references.
+- `MCP-02` `npx -y` / `uvx` / `bunx` servers that are unpinned or not in the seed DB. It reuses LEG-01 typosquat logic, and our own `init` output must pass it.
+- Safe-harbor compiler (`compilers/safe-harbor.ts`), wired into `preflight legal --apply` and `init`:
+  - `SECURITY.md` + `public/.well-known/security.txt`. RFC 9116 requires `Contact` and `Expires`, so take the contact from config and refuse placeholders.
+  - `robots.txt` + `ai.txt` that block GPTBot/CCBot/ClaudeBot/Google-Extended on app routes and allow marketing routes. The output must satisfy SEO-01 and never block search crawlers.
+
+#### Sprint 8: Distribution (badge, GitHub Action, roast)
+- **Prerequisite:** decide the real verify domain (quirk 8, still open). The badge links to `/verify#<cert>`.
+- `preflight badge` writes `.preflight/badge.svg` (score + Verified only when there's a valid Ed25519 cert) and prints a README snippet.
+- Composite `action.yml`: scan, SARIF upload, badge commit or artifact, and fail on LAUNCH_BLOCKED.
+- `preflight roast <github-url>`:
+  - Download a GitHub tarball into a temp dir. No `git clone`, no installs, no scripts. Static, `--offline` rules only, never the pentester.
+  - Caps: 50 MB download, the existing 20k-file walk cap, and a timeout.
+  - Output a "survival card" (terminal + SVG) plus `--json` for preflight-web.
+  - Restrict the URL to `github.com/<owner>/<repo>` (no arbitrary hosts, which prevents SSRF).
+
+#### Sprint 9: RepoContext v2 adapters + vector/cache rules
+- **napi spike first (half a day, decision gate). Record the results as a quirk.**
+  - Install `@ast-grep/napi` + `@ast-grep/lang-python` + `@ast-grep/lang-go`, registered in **one** `registerDynamicLanguage` call (repeated calls are ignored).
+  - Check whether `bun build --compile` embeds the `.node` addon and the dynamic grammar libraries (compare quirk 11's SQLite embedding bug), and whether cross-target builds work.
+  - Measure `bun run bench` with ASTs on.
+  - Port one existing rule (e.g. SEC-10) to ast-grep and compare false positives on both fixtures.
+  - Outcome A (it embeds cleanly, SLA holds): napi becomes a real dependency of `packages/core`. Update the "zero runtime deps" line in CLAUDE.md and keep CONTRIBUTING_RULES' ast-grep-first guidance.
+  - Outcome B: stay hybrid, and rewrite CONTRIBUTING_RULES §2–3 to lead with `CodeIndex` (`calls/args/objectEntries/enclosingFunction`), with ast-grep as the optional path.
+- Refactor `schema-parser.ts`/`sql-parser.ts` behind a minimal `SchemaAdapter` registry (`context/adapters.ts`), adding only what's needed (no `LanguageAdapter` yet). This is a pure refactor gate: all existing tests pass and the bench is unchanged.
+- Add `ctx.dataQueries` (vector/cache client calls) from `CodeIndex.calls()`. Use the knowledge lookups for qdrant/pinecone/chroma/weaviate/milvus/pgvector/upstash/ioredis.
+- Rules:
+  - `VEC-01` search without a tenant filter: only on multi-user apps (auth present); false-positive risk is high, so seed the clean fixture with a correct filter.
+  - `VEC-02` vector client without apiKey/TLS, or ports 6333/8000/19530 in config.
+  - `VEC-03` PII keys in vector metadata (reuse PRIV-05 PII patterns).
+  - `CACHE-01` global cache keys in authed routes.
+  - `CACHE-02` `set` without TTL.
+
+#### Sprint 10: BaaS + edge databases
+- Convex: `convex/schema.ts` adapter. `BAAS-01` covers a public `mutation`/`query` without `ctx.auth.getUserIdentity()`, or an admin/webhook export that isn't `internal*`.
+- Firestore: `firestore.rules` mini-parser. `BAAS-02` covers `{document=**}` with `request.auth != null` alone.
+- Mongo/Mongoose: `BAAS-03` covers `find/findOne/updateOne(req.body | await req.json())` without a sanitizer or a schema parse (same taint shape as SEC-10).
+- Edge: `EDGE-01` covers Turso embedded replica or local SQLite with PII tables and no `encryptionKey`. `EDGE-02` covers D1/libSQL queries on tenant tables without a tenant predicate or helper.
+- New fixture sibling `fixtures/vulnerable-baas` (Convex + Firestore), so the Next/Supabase fixture doesn't get muddled.
+
+#### Sprint 11: Infra + client configs
+- Hand-rolled YAML subset reader for `docker-compose*.yml` (no deps). Dockerfile line scanner.
+- `IAC-01` DB/cache/vector ports published on 0.0.0.0, with a deterministic `autoFixPatch` that changes them to `127.0.0.1:`.
+- `IAC-02` no non-root `USER`, or `docker.sock` mounted into a web container.
+- `SOV-01` telemetry/phone-home beacons (Next telemetry, Chroma/LangChain PostHog, Google Fonts, CDN scripts). It's **profile-only** (`--profile airgap`), because it would be noise for indie apps.
+- `CLIENT-01` Tauri `tauri.conf.json` covers v1 `allowlist` all/`**` scopes and v2 `capabilities/*.json` (verify the v2 schema via docs).
+- `CLIENT-02` Expo/RN covers tokens in `AsyncStorage.setItem` instead of `expo-secure-store`.
+
+#### Sprint 12: Python rules
+- `CodeIndex` already lexes Python and `lockfile-parser.ts` already reads requirements/pyproject/poetry.lock. Add `uv.lock` + `Pipfile.lock`.
+- `PY-01` covers `pickle.loads`, `torch.load` without `weights_only=True`, and `yaml.load` without SafeLoader.
+- `PY-02` covers blocking calls inside `async def` FastAPI routes.
+- `PY-03` covers LangChain/LlamaIndex exec sinks (`PythonREPLTool`, `allow_dangerous_code=True`).
+- `PY-04` covers mutable defaults and module-level per-request state.
+- New fixture: `fixtures/vulnerable-fastapi` plus a clean twin.
+
+#### Sprint 13: Compliance profiles (agency tier)
+- `--profile hipaa|fintech-pci|legal-privilege|eu-ai-act|airgap`. These are extra rule packs plus stricter severities, gated through `requireFeature("profiles")` (agency). The gate goes in `entitlements.ts` only, with no env override (quirk 14).
+- Data: add `baa` / `zdr` / `trainsOnData` fields to `subprocessor-map.json` with a script (don't hand-edit or read the 76 KB file).
+- Checks per profile:
+  - HIPAA: non-BAA vendors, PHI tables without an audit log, session idle >15 min.
+  - Fintech: FLOAT/REAL money columns, DELETE/UPDATE on ledger tables, idempotency on mutation routes.
+  - Legal: no tenant/matter namespace in vectors (VEC-01 at blocking severity), legal-hold flag vs cascade delete.
+  - EU AI Act: `AI_INVENTORY.md` compiler (models, embedders, prompts, HITL routes) from `ctx` stack + subprocessors.
+
+#### Sprint 14: Go/Rust services (napi-gated)
+- `LanguageAdapter` for Go and Rust built on ast-grep: `go.sum`/`Cargo.lock` deps, plus Gin/Echo/Fiber and Axum/Actix route extraction into `ctx.routes`. Without napi, `ctx.routes` stays empty for these languages and the rules emit one info notice, never a false clean.
+- Rules:
+  - `SYS-01` unbounded `go func()`/`tokio::spawn` in handlers (no semaphore/`errgroup.SetLimit`/worker pool).
+  - `SYS-02` `.unwrap()`/`.expect()` on request-derived values in Axum/Actix handlers.
+  - `SYS-03` `context.Background()` for DB/HTTP calls inside handlers that have `r.Context()`/`c.Request.Context()`.
+- Fixtures: `fixtures/vulnerable-go` and `fixtures/vulnerable-rust` with clean twins. Tests skip (not fail) when napi is absent, and one CI job runs with it installed.
+- Prerequisite: spike outcome from Sprint 9. If the grammars can't embed in the compiled binary, document that Go/Rust coverage needs the npm install, not the standalone binary.
+
+#### Parked (not scheduled)
+- `preflight canary <url>`: a daily header/HSTS/CSP/TLS-expiry probe that reuses pentest safety, plus a scheduled Action template. This is a reasonable Sprint 14 if retention matters. The hosted version and the vendor DPA-change watcher need a server.
+- `CLIENT-03` Godot/Unity multiplayer authority + asset licences: high false-positive risk, niche.
+- Still-open Sprint 5 items: Extension Development Host smoke test (quirk 26), LICENSE, repository URL.
 
 ---
 

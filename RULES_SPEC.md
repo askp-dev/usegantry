@@ -8,6 +8,8 @@
 | **`HIGH`**     | `-10 pts`     | `false` (Default) / `true` (`--strict`) | Secondary vulnerability, missing GDPR erasure cascade, unverified clickwrap consent, sub-processor drift, or payment race condition.                  |
 | **`MEDIUM`**   | `-4 pts`      | `false`                                 | Defense-in-depth hardening, missing security headers, unencrypted non-critical tokens, accessibility/SEO launch gate.                                 |
 
+**Partial scans** (`scan --changed-only`, agent hooks, IDE incremental `BuildOptions.only`): findings are reported only on changed files, SEC-06 skips git history, and rules tagged `scope: "repo"` (whole-repo absence checks) are skipped: `OPS-01`, `OPS-04`, `SEO-01`, `LEG-03`, `LEG-04`, `LEG-05`, `LEG-06`, `PRIV-02`, `PRIV-06`, `PRIV-07`. New rules default to `scope: "file"`; tag a rule `"repo"` when an unchanged file elsewhere could make it fire or clear.
+
 ---
 
 ## Pillar 1: Security & Tenant Isolation (`SEC-01` to `SEC-12`)

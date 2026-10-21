@@ -4,7 +4,7 @@ const ROOT_LAYOUT =
   /^(src\/)?app\/layout\.[tj]sx?$|^src\/routes\/\+layout\.svelte$|^src\/app\.html$|^(public\/)?index\.html$|^pages\/_(app|document)\.[tj]sx?$|^app\/root\.tsx$/;
 
 export const seo01LaunchMeta = defineRule(
-  { id: "SEO-01", pillar: "FINOPS_OPS", severity: "MEDIUM", title: "Missing Launch Metadata (robots.txt, sitemap, OpenGraph)" },
+  { id: "SEO-01", pillar: "FINOPS_OPS", severity: "MEDIUM", title: "Missing Launch Metadata (robots.txt, sitemap, OpenGraph)", scope: "repo" },
   (ctx, emit) => {
     const layouts = ctx.files.all.filter((f) => ROOT_LAYOUT.test(f));
     if (!layouts.length) return;

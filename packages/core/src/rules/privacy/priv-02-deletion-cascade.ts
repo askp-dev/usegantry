@@ -5,7 +5,7 @@ const DELETE_ACCOUNT_CODE =
   /auth\.admin\.deleteUser|clerkClient\.users\.deleteUser|users\.deleteUser|deleteUser\s*\(|\b(?:prisma|db|tx)\.(?:user|users|profile|account)\.delete\s*\(|\.from\s*\(\s*["'](?:users|profiles|accounts)["']\s*\)\s*\.delete\s*\(/;
 
 export const priv02DeletionCascade = defineRule(
-  { id: "PRIV-02", pillar: "PRIVACY", severity: "HIGH", title: "Missing Right-to-Erasure Cascade (GDPR Art. 17)" },
+  { id: "PRIV-02", pillar: "PRIVACY", severity: "HIGH", title: "Missing Right-to-Erasure Cascade (GDPR Art. 17)", scope: "repo" },
   (ctx, emit) => {
     const tables = [...ctx.dbTables.values()];
     const userTables = tables.filter((t) => USER_TABLE_RE.test(t.name));

@@ -16,6 +16,8 @@ export interface AuditOptions {
   /** Restrict to these rule ids (IDE incremental scans / MCP). */
   ruleIds?: string[];
   rules?: readonly RuleDefinition[];
+  /** Partial scan: report findings on these files only and skip `scope: "repo"` rules (they'd fire on every subset). */
+  changedFiles?: string[];
 }
 
 export const scoreOf = (fs: Finding[]) => Math.max(0, 100 - fs.reduce((s, f) => s + PENALTY[f.severity], 0));
@@ -28,7 +30,8 @@ export function statusOf(score: number, blockers: number): AuditReport["status"]
 export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promise<AuditReport> {
   const t0 = performance.now();
   const strict = opts.strict ?? ctx.config.strict;
-  const rules = (opts.rules ?? ALL_STATIC_RULES).filter((r) => !opts.ruleIds || opts.ruleIds.includes(r.id));
+  const changed = opts.changedFiles && new Set(opts.changedFiles);
+  const rules = (opts.rules ?? ALL_STATIC_RULES).filter((r) => (!opts.ruleIds || opts.ruleIds.includes(r.id)) && !(changed && r.scope === "repo"));
   const timings: Record<string, number> = { ...ctx.timings };
   const errors: NonNullable<AuditReport["errors"]> = [];
   const results = await Promise.all(
@@ -48,6 +51,7 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
   let suppressed = 0;
   const findings: Finding[] = [];
   for (const f of results.flat()) {
+    if (changed && !changed.has(f.file)) continue;
     if (f.fingerprint && seen.has(f.fingerprint)) continue;
     if (f.fingerprint) seen.add(f.fingerprint);
     if (isSuppressed(ctx, f)) {

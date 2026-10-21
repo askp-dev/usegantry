@@ -5,13 +5,21 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { CONFIG_FILES } from "./context/config";
+import { audit } from "./engine";
 import { requireFeature } from "./entitlements";
+import { BASELINE, writeBaseline } from "./hooks";
 
 export type InitAction = { path: string; action: "created" | "updated" | "unchanged" | "skipped"; reason?: string };
 
 const BEGIN = "<!-- PREFLIGHT:BEGIN -->";
 const END = "<!-- PREFLIGHT:END -->";
 export const MCP_SERVER = { command: "preflight", args: ["mcp"] };
+// Claude Code runs hooks via the shell; $CLAUDE_PROJECT_DIR keeps the scan rooted even after the agent `cd`s.
+export const CLAUDE_HOOKS = {
+  stop: 'preflight hook stop --agent claude "$CLAUDE_PROJECT_DIR"',
+  preCommit: 'preflight hook pre-commit --agent claude "$CLAUDE_PROJECT_DIR"',
+};
+export const CURSOR_HOOKS = { stop: "preflight hook stop --agent cursor", preCommit: "preflight hook pre-commit --agent cursor" };
 
 const AGENT_GUIDE = `## Preflight launch-readiness checks
 - Before declaring a feature done, run \`preflight scan\` (or the \`run_readiness_audit\` MCP tool) and fix every CRITICAL finding.
@@ -56,7 +64,22 @@ export function upsertBlock(existing: string, body: string): string {
   return existing.trim() ? `${existing.trimEnd()}\n\n${block}\n` : `${block}\n`;
 }
 
-export function initProject(root: string, opts: { ci?: boolean } = {}): InitAction[] {
+/**
+ * Append `entry` to `json.hooks[event]` unless a hook already runs `command` (idempotent, keeps the user's own hooks).
+ * A malformed `hooks` / event value is left as-is rather than overwritten.
+ */
+function addHook(json: Record<string, any>, event: string, entry: Record<string, unknown>, command: string): boolean {
+  if (json.hooks === undefined) json.hooks = {};
+  const hooks = json.hooks;
+  if (!hooks || typeof hooks !== "object" || Array.isArray(hooks)) return false;
+  if (hooks[event] === undefined) hooks[event] = [];
+  const list = hooks[event];
+  if (!Array.isArray(list) || JSON.stringify(list).includes(JSON.stringify(command))) return false;
+  list.push(entry);
+  return true;
+}
+
+export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean; preCommit?: boolean } = {}): InitAction[] {
   requireFeature("init");
   const out: InitAction[] = [];
   const put = (rel: string, next: string, prev: string | null) => {
@@ -83,7 +106,8 @@ export function initProject(root: string, opts: { ci?: boolean } = {}): InitActi
       null,
     );
 
-  for (const rel of [".mcp.json", ".cursor/mcp.json"]) {
+  /** Merge into a JSON config; `apply` returns false when Preflight is already wired (nothing to write). */
+  const mergeJson = (rel: string, apply: (json: any) => boolean) => {
     const prev = read(rel);
     let json: any = {};
     if (prev !== null) {
@@ -91,15 +115,39 @@ export function initProject(root: string, opts: { ci?: boolean } = {}): InitActi
         json = JSON.parse(prev);
       } catch {
         out.push({ path: rel, action: "skipped", reason: "existing file is not valid JSON; left untouched" });
-        continue;
+        return;
       }
     }
-    if (json.mcpServers?.preflight) {
-      out.push({ path: rel, action: "unchanged" });
-      continue;
+    if (!json || typeof json !== "object" || Array.isArray(json)) {
+      out.push({ path: rel, action: "skipped", reason: "existing file is not a JSON object; left untouched" });
+      return;
     }
-    json.mcpServers = { ...(json.mcpServers ?? {}), preflight: MCP_SERVER };
+    if (!apply(json)) return void out.push({ path: rel, action: "unchanged" });
     put(rel, `${JSON.stringify(json, null, 2)}\n`, prev);
+  };
+
+  for (const rel of [".mcp.json", ".cursor/mcp.json"])
+    mergeJson(rel, (json) => {
+      if (json.mcpServers?.preflight) return false;
+      json.mcpServers = { ...(json.mcpServers ?? {}), preflight: MCP_SERVER };
+      return true;
+    });
+
+  if (opts.hooks !== false) {
+    mergeJson(".claude/settings.json", (json) => {
+      let changed = addHook(json, "Stop", { hooks: [{ type: "command", command: CLAUDE_HOOKS.stop }] }, CLAUDE_HOOKS.stop);
+      if (opts.preCommit)
+        changed =
+          addHook(json, "PreToolUse", { matcher: "Bash", hooks: [{ type: "command", command: CLAUDE_HOOKS.preCommit }] }, CLAUDE_HOOKS.preCommit) || changed;
+      return changed;
+    });
+    mergeJson(".cursor/hooks.json", (json) => {
+      json.version ??= 1;
+      let changed = addHook(json, "stop", { command: CURSOR_HOOKS.stop }, CURSOR_HOOKS.stop);
+      if (opts.preCommit)
+        changed = addHook(json, "beforeShellExecution", { command: CURSOR_HOOKS.preCommit, matcher: "git.*commit" }, CURSOR_HOOKS.preCommit) || changed;
+      return changed;
+    });
   }
 
   if (opts.ci) {
@@ -110,7 +158,17 @@ export function initProject(root: string, opts: { ci?: boolean } = {}): InitActi
   return out;
 }
 
+/** Snapshot today's blocking findings so agent hooks only block on new ones. Never overwrites an existing baseline. */
+export async function initBaseline(root: string): Promise<InitAction> {
+  if (existsSync(join(root, BASELINE))) return { path: BASELINE, action: "unchanged" };
+  writeBaseline(root, await audit(root, { config: { offline: true } }));
+  return { path: BASELINE, action: "created" };
+}
+
 export async function main({ path, flags }: { path: string; flags: Record<string, string | boolean> }): Promise<number> {
-  for (const a of initProject(path, { ci: flags.ci === true })) console.log(`${a.action.padEnd(9)} ${a.path}${a.reason ? `  (${a.reason})` : ""}`);
+  const hooks = flags["no-hooks"] !== true;
+  const actions = initProject(path, { ci: flags.ci === true, hooks, preCommit: flags["pre-commit"] === true });
+  if (hooks) actions.push(await initBaseline(path));
+  for (const a of actions) console.log(`${a.action.padEnd(9)} ${a.path}${a.reason ? `  (${a.reason})` : ""}`);
   return 0;
 }

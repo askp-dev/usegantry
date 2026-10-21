@@ -4,7 +4,7 @@ import { defineRule, lineAt } from "../helpers";
 const LEGAL_SUFFIX = /,?\s*(Inc\.?|LLC|Ltd\.?|Limited|GmbH|S\.?A\.?S?|B\.V\.|AB|Corp(oration)?\.?|PBC|Co\.|Pty|plc|AG|ApS|Oy|SE)\.?$/i;
 
 export const leg04SubprocessorDrift = defineRule(
-  { id: "LEG-04", pillar: "LEGAL", severity: "HIGH", title: "Sub-Processor Drift (Code SDKs vs. Privacy Policy)" },
+  { id: "LEG-04", pillar: "LEGAL", severity: "HIGH", title: "Sub-Processor Drift (Code SDKs vs. Privacy Policy)", scope: "repo" },
   (ctx, emit) => {
     const manifest = buildLegalManifest(ctx);
     if (!manifest.subprocessors.length) return;

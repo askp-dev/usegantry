@@ -33,12 +33,13 @@ bun run build:bin
 
 | Command | What it does |
 |---|---|
-| `preflight scan [path] [--json\|--sarif] [--strict] [--offline] [--write-checklist]` | Static audit. Exits 1 when there are launch blockers. |
+| `preflight scan [path] [--json\|--sarif\|--compact] [--changed-only] [--strict] [--offline] [--write-checklist]` | Static audit. Exits 1 when there are launch blockers. `--compact` prints one token-lean line per finding; `--changed-only` scans uncommitted files only and skips repo-wide absence rules. |
 | `preflight legal [path] [--apply]` | Compiles `legal/*.md` from the vendors, PII and clauses it detects. Shows a diff unless you pass `--apply`. |
 | `preflight cert [path] [--allow-blocked]` | Signed readiness certificate (Ed25519) plus a vendor pack (SBOM, `DATA_FLOW.mermaid`). |
 | `preflight attack --target http://localhost:3000 [path]` | Live probes PT-01..06 against routes the static scan found. Non-loopback targets need `--allow-remote`. |
 | `preflight ui [path] [--port 4400] [--online]` | Mission Control at `http://127.0.0.1:4400`, with Readiness Matrix, Live Pentest, Legal Studio and Burn Simulator tabs. |
-| `preflight init [path]` | Adds the MCP config, `CLAUDE.md`/Cursor rules and `preflight.config.json`. It's non-destructive and safe to re-run. |
+| `preflight init [path] [--ci] [--pre-commit] [--no-hooks]` | Adds the MCP config, `CLAUDE.md`/Cursor rules, `preflight.config.json`, Claude Code/Cursor stop hooks (opt-in `git commit` gate) and a `.preflight/baseline.json`, so the hooks block only on blockers introduced after init. It's non-destructive and safe to re-run. |
+| `preflight hook <stop\|pre-commit> [path] --agent claude\|cursor` | The agent hook entry point (reads the hook event JSON on stdin). |
 | `preflight mcp` | Stdio MCP server with the tools `run_readiness_audit`, `sync_stack_legal_docs` and `run_active_pentest`. |
 
 Exit codes: `0` ok · `1` launch blockers · `2` usage or runtime error.

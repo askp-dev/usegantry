@@ -14,7 +14,7 @@ const EXAMPLE = /(^|\/)\.env\.(example|sample|template|dist|defaults)$/;
 const SCHEMA_FILE = /(^|\/)(src\/)?(lib\/)?env(\/index)?\.(m?[tj]s)$|(^|\/)env\.mjs$/;
 
 export const ops04EnvValidator = defineRule(
-  { id: "OPS-04", pillar: "FINOPS_OPS", severity: "MEDIUM", title: "Unvalidated Runtime Environment Variables (Startup Drift)" },
+  { id: "OPS-04", pillar: "FINOPS_OPS", severity: "MEDIUM", title: "Unvalidated Runtime Environment Variables (Startup Drift)", scope: "repo" },
   (ctx, emit) => {
     const used = new Map<string, string>(); // key -> first "file:line"
     for (const f of ctx.files.all) {

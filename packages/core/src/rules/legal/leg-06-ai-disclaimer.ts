@@ -5,7 +5,7 @@ const DISCLOSURE =
   /AI[- ]generated|generated (?:by|with) AI|AI can make mistakes|may (?:be inaccurate|contain (?:errors|mistakes)|make mistakes)|verify important information|AI-powered|powered by AI/i;
 
 export const leg06AiDisclaimer = defineRule(
-  { id: "LEG-06", pillar: "LEGAL", severity: "MEDIUM", title: "Missing AI Output Disclaimer & Acceptable Use Clause" },
+  { id: "LEG-06", pillar: "LEGAL", severity: "MEDIUM", title: "Missing AI Output Disclaimer & Acceptable Use Clause", scope: "repo" },
   (ctx, emit) => {
     if (!ctx.stack.genAi) return;
     const eula = `${ctx.config.legalDir}/eula.md`;

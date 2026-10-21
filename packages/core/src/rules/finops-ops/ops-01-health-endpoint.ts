@@ -4,7 +4,7 @@ const HEALTH_URL = /\/(?:api\/)?(?:health|healthz|healthcheck|readyz|livez|ready
 const DB_PING = /SELECT\s+1|\$queryRaw|\.ping\s*\(|\bdb\.execute\s*\(|\.from\s*\(|\.rpc\s*\(|\bcount\s*\(|\$executeRaw|\.raw\s*\(|\bsql`/i;
 
 export const ops01HealthEndpoint = defineRule(
-  { id: "OPS-01", pillar: "FINOPS_OPS", severity: "MEDIUM", title: "Missing /api/health Readiness & DB Liveness Probe" },
+  { id: "OPS-01", pillar: "FINOPS_OPS", severity: "MEDIUM", title: "Missing /api/health Readiness & DB Liveness Probe", scope: "repo" },
   (ctx, emit) => {
     if (!ctx.routes.length) return;
     const health = ctx.routes.find((r) => r.method === "GET" && HEALTH_URL.test(r.urlPath));

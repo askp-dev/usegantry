@@ -4,7 +4,7 @@ import { defineRule, USER_TABLE_RE } from "../helpers";
 const EXPORT_ROUTE = /export|download[\w-]*data|data[-_]?export|portability|takeout|my[-_]?data/i;
 
 export const priv06DataExport = defineRule(
-  { id: "PRIV-06", pillar: "PRIVACY", severity: "MEDIUM", title: "Missing User Data Portability Export (GDPR Art. 20)" },
+  { id: "PRIV-06", pillar: "PRIVACY", severity: "MEDIUM", title: "Missing User Data Portability Export (GDPR Art. 20)", scope: "repo" },
   (ctx, emit) => {
     const userScoped = [...ctx.dbTables.values()].filter(
       (t) =>

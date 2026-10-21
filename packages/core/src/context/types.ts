@@ -230,6 +230,8 @@ export interface RepoContext {
   };
   config: PreflightConfig;
   timings: Record<string, number>;
+  /** Built from a file subset (`BuildOptions.only`): IDE saves, `scan --changed-only`, agent hooks. */
+  partial?: boolean;
 }
 
 export interface RuleDefinition {
@@ -237,6 +239,8 @@ export interface RuleDefinition {
   pillar: Pillar;
   severity: Severity;
   title: string;
+  /** "repo" = the finding depends on the whole repo (usually an absence check), so partial scans skip it. Default "file". */
+  scope?: "file" | "repo";
   /** Rules return findings; severity on a finding may be overridden per-finding. */
   run: (ctx: RepoContext) => Finding[] | Promise<Finding[]>;
 }

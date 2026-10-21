@@ -11,7 +11,7 @@ const ROUTES: Array<{ name: string; slug: string; re: RegExp }> = [
 ];
 
 export const leg05LegalRoutes = defineRule(
-  { id: "LEG-05", pillar: "LEGAL", severity: "MEDIUM", title: "Missing or Unpopulated Public Legal Routes (/terms, /privacy, /eula)" },
+  { id: "LEG-05", pillar: "LEGAL", severity: "MEDIUM", title: "Missing or Unpopulated Public Legal Routes (/terms, /privacy, /eula)", scope: "repo" },
   (ctx, emit) => {
     const web = ctx.framework === "nextjs" || ctx.framework === "sveltekit" || ctx.files.frontendComponents.length > 0;
     const pages: string[] = [];

@@ -6,20 +6,24 @@ import { compileLegalDocs } from "../compilers/legal-compiler";
 import { LEGAL_DISCLAIMER } from "../compilers/legal-templates";
 import { writeVendorPack } from "../compilers/vendor-pack";
 import { buildRepoContext } from "../context/builder";
+import { changedScope } from "../context/changed";
+import { loadConfig } from "../context/config";
 import { runAudit, VERSION } from "../engine";
 import { requireFeature } from "../entitlements";
+import { renderCompact } from "../reporters/compact";
 import { color, renderPretty } from "../reporters/pretty";
 import { toSarif } from "../reporters/sarif";
 
 const HELP = `preflight ${VERSION}: launch readiness for AI-generated repos
 
 Usage:
-  preflight scan [path] [--json] [--sarif] [--strict] [--offline] [--write-checklist] [--verbose]
+  preflight scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--write-checklist] [--verbose]
   preflight legal [path] [--apply]
   preflight cert [path] [--allow-blocked] [--strict] [--offline]
   preflight attack --target <url> [path]
   preflight ui [path] [--port 4400]
-  preflight init [path]
+  preflight init [path] [--ci] [--no-hooks] [--pre-commit]
+  preflight hook <stop|pre-commit> [path] [--agent claude|cursor]   (agent hooks; reads the event JSON on stdin)
   preflight mcp
 
 Exit codes: 0 ok · 1 launch blockers found · 2 usage/runtime error`;
@@ -32,7 +36,7 @@ export function parseArgs(argv: string[]): { cmd: string; path: string; flags: R
     const a = rest[i];
     if (!a.startsWith("--")) positional.push(a);
     else if (a.includes("=")) flags[a.slice(2, a.indexOf("="))] = a.slice(a.indexOf("=") + 1);
-    else if (["--target", "--port", "--out"].includes(a) && rest[i + 1] && !rest[i + 1].startsWith("--")) flags[a.slice(2)] = rest[++i];
+    else if (["--target", "--port", "--out", "--agent"].includes(a) && rest[i + 1] && !rest[i + 1].startsWith("--")) flags[a.slice(2)] = rest[++i];
     else flags[a.slice(2)] = true;
   }
   return { cmd, path: resolve(positional[0] ?? "."), flags };
@@ -44,10 +48,11 @@ const MODULES = {
   "pentest/runner": () => import("../pentest/runner"),
   "server/ui-server": () => import("../server/ui-server"),
   init: () => import("../init"),
+  hooks: () => import("../hooks"),
   "bin/mcp": () => import("./mcp"),
 } as const;
 
-async function delegate(mod: keyof typeof MODULES, args: { path: string; flags: Record<string, string | boolean> }): Promise<number> {
+async function delegate(mod: keyof typeof MODULES, args: { path: string; flags: Record<string, string | boolean>; event?: string }): Promise<number> {
   return (await MODULES[mod]()).main(args);
 }
 
@@ -56,14 +61,19 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   const config = { strict: flags.strict === true || undefined, offline: flags.offline === true || undefined };
   switch (cmd) {
     case "scan": {
-      const ctx = await buildRepoContext(path, { config });
-      const report = await runAudit(ctx);
-      if (flags.json) process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+      const scope = flags["changed-only"] ? changedScope(path, loadConfig(path, config)) : null;
+      if (flags["changed-only"] && !scope) console.error(color.dim("--changed-only: not a git work tree, scanning everything"));
+      const ctx = await buildRepoContext(path, { config, ...(scope ? { only: scope.only } : {}) });
+      const report = await runAudit(ctx, scope ? { changedFiles: scope.changed } : {});
+      if (flags.compact) process.stdout.write(renderCompact(report));
+      else if (flags.json) process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
       else if (flags.sarif) process.stdout.write(`${JSON.stringify(toSarif(report), null, 2)}\n`);
       else process.stdout.write(renderPretty(report, { verbose: flags.verbose === true }));
-      if (flags["write-checklist"]) {
+      // A partial scan would overwrite the checklist with a subset of the repo's findings.
+      if (flags["write-checklist"] && scope) console.error(color.dim("--write-checklist ignored with --changed-only"));
+      else if (flags["write-checklist"]) {
         writeChecklist(ctx, report);
-        if (!flags.json && !flags.sarif) console.log(color.dim("Updated READINESS_CHECKLIST.md"));
+        if (!flags.json && !flags.sarif && !flags.compact) console.log(color.dim("Updated READINESS_CHECKLIST.md"));
       }
       return report.blockers > 0 ? 1 : 0;
     }
@@ -109,6 +119,12 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       return delegate("server/ui-server", { path, flags });
     case "init":
       return delegate("init", { path, flags });
+    case "hook": {
+      // `hook <event> [path]`: the first positional is the event, not the path.
+      const event = argv[1] && !argv[1].startsWith("--") ? argv[1] : "";
+      const rest = parseArgs(["hook", ...argv.slice(event ? 2 : 1)]);
+      return delegate("hooks", { path: rest.path, flags: rest.flags, event });
+    }
     case "mcp":
       return delegate("bin/mcp", { path, flags });
     case "--version":

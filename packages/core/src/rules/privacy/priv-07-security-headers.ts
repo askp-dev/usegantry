@@ -9,7 +9,7 @@ const REQUIRED: Array<[string, RegExp]> = [
 ];
 
 export const priv07SecurityHeaders = defineRule(
-  { id: "PRIV-07", pillar: "PRIVACY", severity: "MEDIUM", title: "Missing HSTS, CSP, Frame & CORS Security Headers" },
+  { id: "PRIV-07", pillar: "PRIVACY", severity: "MEDIUM", title: "Missing HSTS, CSP, Frame & CORS Security Headers", scope: "repo" },
   (ctx, emit) => {
     if (ctx.framework === "unknown" && !ctx.files.frontendComponents.length) return;
     const files = ctx.files.all.filter((f) => CONFIG_FILES.test(f));

@@ -59,9 +59,26 @@ describe("MCP protocol basics", () => {
 });
 
 describe("MCP tools/call", () => {
-  test("run_readiness_audit returns findings and structuredContent", async () => {
+  test("run_readiness_audit defaults to compact lines without structuredContent", async () => {
     const r: any = await handle(
       { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "run_readiness_audit", arguments: { path: "fixtures/vulnerable-saas" } } },
+      ROOT,
+    );
+    expect(r.result.isError).toBe(false);
+    const text: string = r.result.content[0].text;
+    expect(text.startsWith("SCORE:")).toBe(true);
+    expect(text).toContain("|BLOCKED:true");
+    expect(text).toMatch(/^\[CRIT\]\[SEC-01\] \S+:\d+ \| .+ \| FIX:/m);
+    expect(r.result.structuredContent).toBeUndefined();
+  });
+  test("run_readiness_audit format=verbose returns findings and structuredContent", async () => {
+    const r: any = await handle(
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "run_readiness_audit", arguments: { path: "fixtures/vulnerable-saas", format: "verbose" } },
+      },
       ROOT,
     );
     expect(r.result.isError).toBe(false);
@@ -71,11 +88,16 @@ describe("MCP tools/call", () => {
   });
   test("run_readiness_audit on the clean fixture reports launch-ready", async () => {
     const r: any = await handle(
-      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "run_readiness_audit", arguments: { path: "fixtures/clean-saas" } } },
+      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "run_readiness_audit", arguments: { path: "fixtures/clean-saas", format: "verbose" } } },
       ROOT,
     );
     expect(r.result.content[0].text).toContain("LAUNCH_READY");
     expect(r.result.structuredContent.findings).toEqual([]);
+    const compact: any = await handle(
+      { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "run_readiness_audit", arguments: { path: "fixtures/clean-saas" } } },
+      ROOT,
+    );
+    expect(compact.result.content[0].text.split("\n")[0]).toBe("SCORE:100/100|BLOCKED:false");
   });
   test("sync_stack_legal_docs dry-run returns diffs and the lawyer disclaimer", async () => {
     const r: any = await handle(

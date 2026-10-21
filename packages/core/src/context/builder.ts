@@ -107,6 +107,11 @@ export function parseEnvFile(rel: string, text: string): EnvEntry[] {
 const SERVER_PATH_RE =
   /(^|\/)(app\/(.+\/)?route\.(m?[tj]sx?)$|pages\/api\/|src\/routes\/(.+\/)?\+(server|page\.server|layout\.server)\.(m?[tj]s)$|hooks\.server\.(m?[tj]s)$|(src\/)?lib\/server\/|server\/|api\/|actions?(\.|\/)|middleware\.(m?[tj]s)$|routers?\/|trpc\/|functions\/|supabase\/functions\/)/;
 
+/** Every scannable file, with the same skip dirs and `ignorePaths` as a full build. */
+export function listRepoFiles(rootDir: string, config = loadConfig(rootDir), maxFiles = 20000): string[] {
+  return walk(rootDir, config.ignorePaths.map((p) => new Bun.Glob(p)), maxFiles);
+}
+
 export async function buildRepoContext(rootDir: string, opts: BuildOptions = {}): Promise<RepoContext> {
   const t0 = performance.now();
   const timings: Record<string, number> = {};
@@ -352,6 +357,7 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
     stack,
     config,
     timings,
+    partial: !!opts.only,
   };
   (ctx as any).middleware = middleware as MiddlewareGuard | null;
   (ctx as any).prismaModels = prismaModels;

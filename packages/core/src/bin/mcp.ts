@@ -6,15 +6,18 @@
 import { resolve } from "node:path";
 import { compileLegalDocs } from "../compilers/legal-compiler";
 import { buildRepoContext } from "../context/builder";
+import { changedScope } from "../context/changed";
+import { loadConfig } from "../context/config";
 import type { Pillar } from "../context/types";
 import { runAudit, VERSION } from "../engine";
 import { type Feature, FeatureLockedError, requireFeature } from "../entitlements";
+import { renderCompact } from "../reporters/compact";
 
 export const LEGACY_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 export const MODERN_VERSIONS = ["2026-07-28"];
 const SERVER_INFO = { name: "preflight", version: VERSION };
 const INSTRUCTIONS =
-  "Preflight audits AI-generated repos for launch blockers. Call run_readiness_audit first; each finding has an agentRemediationPrompt you can apply directly. sync_stack_legal_docs previews (or applies) privacy/EULA updates. run_active_pentest probes a locally running dev server only.";
+  "Preflight audits AI-generated repos for launch blockers. Call run_readiness_audit first: it returns one compact line per finding with a FIX hint (pass format: verbose for full evidence and fix prompts, changedOnly=true after edits). sync_stack_legal_docs previews (or applies) privacy/EULA updates. run_active_pentest probes a locally running dev server only.";
 
 type Json = Record<string, any>;
 interface ToolDef {
@@ -40,13 +43,22 @@ export const TOOLS: ToolDef[] = [
         ...pathArg,
         strict: { type: "boolean", description: "Treat HIGH findings as blockers" },
         pillars: { type: "array", items: { enum: PILLARS } },
+        format: {
+          enum: ["compact", "verbose"],
+          description: "compact (default): one line per finding, no structuredContent. verbose: full prompts, evidence and impact.",
+        },
+        changedOnly: { type: "boolean", description: "Scan only files changed since HEAD (plus untracked); skips repo-wide absence rules" },
       },
       additionalProperties: false,
     },
     async run(args, root) {
-      const ctx = await buildRepoContext(root, { config: { strict: args.strict === true || undefined } });
-      const report = await runAudit(ctx);
+      const config = { strict: args.strict === true || undefined };
+      const scope = args.changedOnly === true ? changedScope(root, loadConfig(root, config)) : null;
+      const ctx = await buildRepoContext(root, { config, ...(scope ? { only: scope.only } : {}) });
+      const report = await runAudit(ctx, scope ? { changedFiles: scope.changed } : {});
       const findings = args.pillars?.length ? report.findings.filter((f) => args.pillars.includes(f.pillar)) : report.findings;
+      // Compact is the agent default (~70% fewer bytes per finding); structuredContent would undo the saving.
+      if (args.format !== "verbose") return { text: `${renderCompact(report, findings, 50)}(format: "verbose" for full evidence, impact and fix prompts)` };
       const lines = findings
         .slice(0, 50)
         .map((f) => `- [${f.severity}${f.blocking ? " BLOCKER" : ""}] ${f.ruleId} ${f.file}:${f.line}: ${f.title}\n  fix: ${f.agentRemediationPrompt}`);

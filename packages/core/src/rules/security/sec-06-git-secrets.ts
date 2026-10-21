@@ -92,7 +92,8 @@ function scanTree(ctx: RepoContext, emit: Emit, found: Set<string>) {
 export const sec06GitSecrets = defineRule(
   { id: "SEC-06", pillar: "SECURITY", severity: "CRITICAL", title: "Leaked Secrets in Working Tree or Git Commit History" },
   async (ctx, emit) => {
-    const history = gitHistory(ctx.rootDir); // starts the worker while we scan the tree
+    // Partial scans cover uncommitted edits only; history is a full-scan job. Starts the worker while we scan the tree.
+    const history = ctx.partial ? Promise.resolve([]) : gitHistory(ctx.rootDir);
     const found = new Set<string>();
     scanTree(ctx, emit, found);
     for (const h of await history) {

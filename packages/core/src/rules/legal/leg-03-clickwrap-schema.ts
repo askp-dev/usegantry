@@ -4,7 +4,7 @@ const SIGNUP_FILE = /sign-?up|register|onboard|join|create-account/i;
 const TERMS_INPUT = /terms|agree|tos|consent|legal|eula|accept/i;
 
 export const leg03ClickwrapSchema = defineRule(
-  { id: "LEG-03", pillar: "LEGAL", severity: "HIGH", title: "Missing Database-Bound Clickwrap Consent Trail" },
+  { id: "LEG-03", pillar: "LEGAL", severity: "HIGH", title: "Missing Database-Bound Clickwrap Consent Trail", scope: "repo" },
   (ctx, emit) => {
     const users = [...ctx.dbTables.values()].filter((t) => USER_TABLE_RE.test(t.name) && !t.name.startsWith("auth."));
     if (users.length && !users.some((t) => ["accepted_terms_at", "accepted_terms_version"].every((c) => t.columns.some((x) => snake(x.name) === c)))) {
