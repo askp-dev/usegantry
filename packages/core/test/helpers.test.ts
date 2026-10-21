@@ -10,7 +10,7 @@ import { isCopyleft } from "../src/rules/legal/leg-02-copyleft-eula";
 import { sec06GitSecrets } from "../src/rules/security/sec-06-git-secrets";
 import { scanDiff } from "../src/workers/git-history";
 
-const tmp = () => mkdtempSync(join(tmpdir(), "preflight-test-"));
+const tmp = () => mkdtempSync(join(tmpdir(), "gantry-test-"));
 const write = (root: string, files: Record<string, string>) => {
   for (const [p, c] of Object.entries(files)) {
     mkdirSync(join(root, p, ".."), { recursive: true });
@@ -38,7 +38,7 @@ describe("makeFinding", () => {
 describe("suppression", () => {
   test("inline comment on same/previous line and config.ignoreRules", async () => {
     const root = tmp();
-    write(root, { "a.ts": "const a = 1;\n// preflight-ignore SEC-03, SEC-07\nconst b = 2; // preflight-ignore FIN-03\nconst c = 3;\n" });
+    write(root, { "a.ts": "const a = 1;\n// gantry-ignore SEC-03, SEC-07\nconst b = 2; // gantry-ignore FIN-03\nconst c = 3;\n" });
     const ctx = await buildRepoContext(root, { config: { offline: true, ignoreRules: ["OPS-04"] } });
     const f = (ruleId: string, line: number) => ({
       ...makeFinding(
@@ -54,6 +54,18 @@ describe("suppression", () => {
     expect(isSuppressed(ctx, f("SEC-03", 4))).toBe(false); // …but not SEC-03
     expect(isSuppressed(ctx, f("SEC-03", 1))).toBe(false);
     expect(isSuppressed(ctx, f("OPS-04", 1))).toBe(true);
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  test("legacy preflight-ignore still suppresses (one-release compat)", async () => {
+    const root = tmp();
+    write(root, { "a.ts": "const a = 1; // preflight-ignore SEC-03\n" });
+    const ctx = await buildRepoContext(root, { config: { offline: true } });
+    const f = makeFinding(
+      { id: "SEC-03", pillar: "SECURITY", severity: "HIGH", title: "" },
+      { file: "a.ts", line: 1, evidence: "e", impact: "", agentRemediationPrompt: "" },
+    );
+    expect(isSuppressed(ctx, f)).toBe(true);
     rmSync(root, { recursive: true, force: true });
   });
 });

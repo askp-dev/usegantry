@@ -50,7 +50,7 @@
       <FindingList {findings} filterLabel={node?.label ?? null} onclear={() => (audit.nodeFilter = null)} />
     </div>
   {:else if inVsCode && (tab === "pentest" || tab === "legal")}
-    <p class="card text-secondary">Run <code class="code-ref">preflight ui</code> in a terminal for the live pentest console and legal studio.</p>
+    <p class="card text-secondary">Run <code class="code-ref">gantry ui</code> in a terminal for the live pentest console and legal studio.</p>
   {:else if tab === "pentest"}
     <LivePentestConsole />
   {:else if tab === "legal"}

@@ -6,10 +6,10 @@ import type { AuditReport, PentestEvent } from "../src/context/types";
 import { isTrustedRequest, startUiServer } from "../src/server/ui-server";
 import { startTargetServer } from "./fixtures/pentest-target";
 
-process.env.PREFLIGHT_CERT_SECRET ??= "ui-server-test";
+process.env.GANTRY_CERT_SECRET ??= "ui-server-test";
 
 function copyFixture(name: string) {
-  const d = mkdtempSync(join(tmpdir(), "preflight-ui-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-ui-"));
   cpSync(`fixtures/${name}`, d, { recursive: true });
   return d;
 }
@@ -83,7 +83,7 @@ describe("ui-server on the vulnerable fixture", () => {
     expect(existsSync(join(root, "legal/eula.md"))).toBe(false);
     const applied = (await (await post("/api/legal/apply")).json()) as { changes: Array<{ path: string }> };
     expect(applied.changes.length).toBe(preview.changes.length);
-    expect(readFileSync(join(root, "legal/eula.md"), "utf8")).toContain("PREFLIGHT:AUTO");
+    expect(readFileSync(join(root, "legal/eula.md"), "utf8")).toContain("GANTRY:AUTO");
     const again = (await (await post("/api/legal/preview")).json()) as { changes: unknown[] };
     expect(again.changes).toEqual([]);
   });
@@ -130,7 +130,7 @@ describe("ui-server on the vulnerable fixture", () => {
 
 describe("ui-server with a compiled UI build", () => {
   test("serves built assets, SPA-falls back to index.html, and blocks traversal", async () => {
-    const assets = mkdtempSync(join(tmpdir(), "preflight-assets-"));
+    const assets = mkdtempSync(join(tmpdir(), "gantry-assets-"));
     mkdirSync(join(assets, "assets"));
     writeFileSync(join(assets, "index.html"), "<!doctype html><title>spa</title>");
     writeFileSync(join(assets, "assets/app.js"), "console.log(1)");

@@ -1,7 +1,7 @@
 node_modules/
 dist/
 *.bin
-.preflight/
+.gantry/
 packages/core/dist/
 packages/vscode-ext/out/
 packages/vscode-ext/*.vsix

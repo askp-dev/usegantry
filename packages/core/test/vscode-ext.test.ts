@@ -17,6 +17,6 @@ describe("vscode-ext scan bridge", () => {
     expect(report.status).toBe("LAUNCH_READY");
   });
   test("surfaces a missing binary as an error instead of hanging", async () => {
-    await expect(runScan(["preflight-does-not-exist-xyz"], resolve("fixtures/clean-saas"))).rejects.toThrow();
+    await expect(runScan(["gantry-does-not-exist-xyz"], resolve("fixtures/clean-saas"))).rejects.toThrow();
   });
 });

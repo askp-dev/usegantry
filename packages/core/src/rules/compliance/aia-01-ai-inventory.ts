@@ -15,7 +15,7 @@ export const aia01AiInventory = defineRule(
       impact: missing
         ? "This app uses AI models but keeps no inventory of them. Under the EU AI Act, deployers need to know which AI systems they run, from which provider, and where a human can intervene, to classify risk and meet transparency and AI-literacy duties."
         : "The AI inventory is out of date: a model, prompt, provider or AI route changed since it was generated, so your compliance record no longer describes the system you ship.",
-      agentRemediationPrompt: `Run \`preflight legal --apply --profile eu-ai-act\` to ${missing ? "generate" : "regenerate"} ${AI_INVENTORY_PATH}, then fill in the risk classification and human-oversight notes below its end marker.`,
+      agentRemediationPrompt: `Run \`gantry legal --sync --profile eu-ai-act\` to ${missing ? "generate" : "regenerate"} ${AI_INVENTORY_PATH}, then fill in the risk classification and human-oversight notes below its end marker.`,
     });
   },
 );

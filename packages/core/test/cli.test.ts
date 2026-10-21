@@ -7,7 +7,7 @@ import { parseArgs } from "../src/bin/cli";
 
 const CLI = join(import.meta.dir, "../src/bin/cli.ts");
 const run = (...args: string[]) => {
-  const p = Bun.spawnSync(["bun", CLI, ...args], { env: { ...process.env, NO_COLOR: "1", PREFLIGHT_CERT_SECRET: "cli-test-secret" } });
+  const p = Bun.spawnSync(["bun", CLI, ...args], { env: { ...process.env, NO_COLOR: "1", GANTRY_CERT_SECRET: "cli-test-secret" } });
   return { code: p.exitCode, out: p.stdout.toString(), err: p.stderr.toString() };
 };
 const dirs: string[] = [];
@@ -38,25 +38,25 @@ test("--json and --sarif emit machine output", () => {
   expect(s.version).toBe("2.1.0");
 });
 
-test("cert, legal, checklist write their files", () => {
-  const root = mkdtempSync(join(tmpdir(), "preflight-cli-"));
+test("clear, legal, checklist write their files", () => {
+  const root = mkdtempSync(join(tmpdir(), "gantry-cli-"));
   dirs.push(root);
   cpSync("fixtures/clean-saas", root, { recursive: true });
-  expect(run("cert", root, "--offline").code).toBe(0);
+  expect(run("clear", root, "--offline").code).toBe(0);
   for (const f of ["LAUNCH_CERTIFICATE.html", "LAUNCH_CERTIFICATE.pdf", "SBOM.json", "DATA_FLOW.mermaid"])
     expect(readFileSync(join(root, f)).length).toBeGreaterThan(100);
   const legal = run("legal", root);
   expect(legal.out).toContain("up to date");
   expect(legal.out).toContain("not legal advice");
   expect(run("scan", root, "--offline", "--write-checklist").code).toBe(0);
-  expect(readFileSync(join(root, "READINESS_CHECKLIST.md"), "utf8")).toContain("- [x] **SEC-01**");
+  expect(readFileSync(join(root, "GANTRY_CHECKLIST.md"), "utf8")).toContain("- [x] **SEC-01**");
 });
 
-test("cert refuses on blockers; usage errors exit 2", () => {
-  const root = mkdtempSync(join(tmpdir(), "preflight-cli-"));
+test("clear refuses on blockers; usage errors exit 2", () => {
+  const root = mkdtempSync(join(tmpdir(), "gantry-cli-"));
   dirs.push(root);
   cpSync("fixtures/vulnerable-saas", root, { recursive: true });
-  const r = run("cert", root, "--offline");
+  const r = run("clear", root, "--offline");
   expect(r.code).toBe(1);
   expect(r.err).toContain("Refusing");
   expect(run("attack").code).toBe(2);

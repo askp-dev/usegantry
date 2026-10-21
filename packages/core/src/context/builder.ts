@@ -30,7 +30,7 @@ import { extractRoutes, type MiddlewareGuard } from "./routes";
 import { parseCargoLock, parseCargoToml, parseGoMod, parseGoSum } from "./systems-deps";
 import { parseSys, type SysLang, sysLangOf, sysLangUnavailable } from "./systems-lang";
 import { extractSystemsRoutes } from "./systems-routes";
-import type { Dependency, DetectedSubprocessor, EnvEntry, PreflightConfig, RepoContext, SgRoot } from "./types";
+import type { Dependency, DetectedSubprocessor, EnvEntry, GantryConfig, RepoContext, SgRoot } from "./types";
 
 const SKIP_DIRS = new Set([
   "node_modules",
@@ -63,7 +63,8 @@ const SKIP_DIRS = new Set([
   ".expo",
   ".wrangler",
   "storybook-static",
-  ".preflight",
+  ".gantry",
+  ".preflight", // legacy name, kept for one release
   "Pods",
   ".gradle",
   ".terraform",
@@ -73,7 +74,7 @@ const BINARY_EXT =
 const MAX_FILE_BYTES = 1_500_000;
 
 export interface BuildOptions {
-  config?: Partial<PreflightConfig>;
+  config?: Partial<GantryConfig>;
   /** Restrict to these files (relative) — used by the IDE save watcher for incremental scans */
   only?: string[];
   maxFiles?: number;
@@ -344,7 +345,7 @@ export async function buildRepoContext(rootDir: string, opts: BuildOptions = {})
   else if (dependencies.get("cargo:axum")?.isDirect) framework = "axum";
   else if (dependencies.get("cargo:actix-web")?.isDirect) framework = "actix";
   const envKeys = new Set(env.map((e) => e.key));
-  let deployTarget: PreflightConfig["deployTarget"] = config.deployTarget;
+  let deployTarget: GantryConfig["deployTarget"] = config.deployTarget;
   if (!deployTarget) {
     if (hasFile("vercel.json") || all.some((f) => f.startsWith(".vercel/")) || hasDep(/^@vercel\//)) deployTarget = "vercel";
     else if (

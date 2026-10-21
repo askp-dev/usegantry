@@ -10,6 +10,6 @@
       "url": "https://mcp.supabase.com/mcp?project_ref=${SUPABASE_PROJECT_REF}",
       "headers": { "Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}" }
     },
-    "preflight": { "command": "preflight", "args": ["mcp"] }
+    "gantry": { "command": "gantry", "args": ["mcp"] }
   }
 }

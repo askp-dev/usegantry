@@ -17,7 +17,7 @@ afterAll(() => {
 });
 const AUTHED_PKG = JSON.stringify({ dependencies: { "next-auth": "4.24.0", "@qdrant/js-client-rest": "1.12.0", "@upstash/redis": "1.34.0" } });
 function repo(files: Record<string, string>): string {
-  const d = mkdtempSync(join(tmpdir(), "preflight-data-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-data-"));
   dirs.push(d);
   for (const [rel, text] of Object.entries({ "package.json": AUTHED_PKG, ...files })) {
     mkdirSync(dirname(join(d, rel)), { recursive: true });

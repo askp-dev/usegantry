@@ -1,74 +1,93 @@
 {
-  "name": "preflight-ai",
-  "displayName": "Preflight AI",
+  "name": "gantry-vscode",
+  "displayName": "Gantry — Pre-Flight Security, Privacy & EULA",
   "description": "Launch-readiness diagnostics, CodeLens fixes and Mission Control for AI-generated repos.",
-  "publisher": "preflight-ai",
+  "publisher": "usegantry",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
+  "repository": "github:askp-dev/usegantry",
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Linters", "Other"],
+  "categories": [
+    "Linters",
+    "Other"
+  ],
   "main": "./dist/extension.js",
-  "activationEvents": ["workspaceContains:package.json", "workspaceContains:pyproject.toml", "workspaceContains:requirements.txt"],
+  "activationEvents": [
+    "workspaceContains:package.json",
+    "workspaceContains:pyproject.toml",
+    "workspaceContains:requirements.txt"
+  ],
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": false,
-      "description": "Preflight runs a local scanner binary against the workspace."
+      "description": "Gantry runs a local scanner binary against the workspace."
     }
   },
   "contributes": {
     "commands": [
       {
-        "command": "preflight.scan",
-        "title": "Preflight: Scan Workspace"
+        "command": "gantry.scan",
+        "title": "Gantry: Scan Workspace"
       },
       {
-        "command": "preflight.fixWithAgent",
-        "title": "Preflight: Fix with AI Agent"
+        "command": "gantry.fixWithAgent",
+        "title": "Gantry: Fix with AI Agent"
       },
       {
-        "command": "preflight.openMissionControl",
-        "title": "Preflight: Open Mission Control"
+        "command": "gantry.openMissionControl",
+        "title": "Gantry: Open Mission Control"
       }
     ],
     "viewsContainers": {
-      "activitybar": [{
-        "id": "preflight",
-        "title": "Preflight",
-        "icon": "media/shield.svg"
-      }]
+      "activitybar": [
+        {
+          "id": "gantry",
+          "title": "Gantry",
+          "icon": "media/shield.svg"
+        }
+      ]
     },
     "views": {
-      "preflight": [{
-        "type": "webview",
-        "id": "preflight.sidebar",
-        "name": "Readiness"
-      }]
+      "gantry": [
+        {
+          "type": "webview",
+          "id": "gantry.sidebar",
+          "name": "Readiness"
+        }
+      ]
     },
     "configuration": {
-      "title": "Preflight",
+      "title": "Gantry",
       "properties": {
-        "preflight.command": {
+        "gantry.command": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "default": ["preflight"],
+          "default": [
+            "gantry"
+          ],
           "scope": "machine",
-          "markdownDescription": "Command (argv) that runs the Preflight CLI, e.g. `[\"bun\", \"/path/to/cli.ts\"]`. Machine-scoped so a workspace can't swap in another binary."
+          "markdownDescription": "Command (argv) that runs the Gantry CLI, e.g. `[\"bun\", \"/path/to/cli.ts\"]`. Machine-scoped so a workspace can't swap in another binary."
         },
-        "preflight.scanOnSave": {
+        "gantry.scanOnSave": {
           "type": "boolean",
           "default": true,
           "description": "Re-scan (debounced) after saving a file."
         },
-        "preflight.agentCommands": {
+        "gantry.agentCommands": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "default": ["composer.startComposerPrompt", "aichat.newchataction", "claude-vscode.editor.open"],
+          "default": [
+            "composer.startComposerPrompt",
+            "aichat.newchataction",
+            "claude-vscode.editor.open"
+          ],
           "scope": "machine",
           "description": "VS Code command IDs tried in order after the fix prompt is copied (Cursor, then Claude Code). The first one installed is run."
         }

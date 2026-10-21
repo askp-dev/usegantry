@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { buildRepoContext } from "../src/context/builder";
@@ -141,6 +141,11 @@ describe("--changed-only", () => {
     expect(JSON.parse(readFileSync(join(root, BASELINE), "utf8")).fingerprints).toContain(target.fingerprint);
     // The touched file's blocker is pre-existing → baselined → no block.
     expect((await runHook("stop", "claude", {}, root)).code).toBe(0);
+    // A baseline at the pre-rename path is still honoured (one-release compat).
+    mkdirSync(join(root, ".preflight"), { recursive: true });
+    renameSync(join(root, BASELINE), join(root, ".preflight/baseline.json"));
+    expect((await runHook("stop", "claude", {}, root)).code).toBe(0);
+    renameSync(join(root, ".preflight/baseline.json"), join(root, BASELINE));
 
     // Introduce a new blocker: copy the vulnerable file to a new untracked path.
     const copy = target.file.replace(/(\.\w+)$/, "-copy$1");

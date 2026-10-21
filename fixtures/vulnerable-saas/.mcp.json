@@ -18,8 +18,8 @@
         "."
       ]
     },
-    "preflight": {
-      "command": "preflight",
+    "gantry": {
+      "command": "gantry",
       "args": [
         "mcp"
       ]

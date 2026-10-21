@@ -10,7 +10,7 @@ export const leg04SubprocessorDrift = defineRule(
     if (!manifest.subprocessors.length) return;
     const policyPath = ctx.files.legalDocs.find((f) => /privacy/i.test(f));
     const fix =
-      "Run `preflight legal --apply` (compileLegalDocs) to regenerate the Sub-processor and PII tables in the privacy policy and bump CURRENT_LEGAL_VERSION, then review the diff.";
+      "Run `gantry legal --sync` (compileLegalDocs) to regenerate the Sub-processor and PII tables in the privacy policy and bump CURRENT_LEGAL_VERSION, then review the diff.";
     if (!policyPath) {
       emit({
         file: "package.json",
@@ -40,7 +40,7 @@ export const leg04SubprocessorDrift = defineRule(
     }
     const recorded = docStackHash(text);
     if (recorded && recorded !== manifest.stackHash) {
-      const at = text.indexOf("PREFLIGHT:AUTO:VERSION_META");
+      const at = text.indexOf("GANTRY:AUTO:VERSION_META");
       emit({
         file: policyPath,
         line: lineAt(text, at),

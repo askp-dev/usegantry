@@ -53,7 +53,7 @@
 ### Component 1: `<ReadinessHeaderBar/>`
 
 - **Layout:** Fixed top `56px` bar with `1px solid var(--border-subtle)` bottom border.
-- **Left Cluster:** Preflight Shield Logo + Repo Name (`font-mono bold`) + Framework Badge (`Next.js 15`, `Supabase`) + Git Commit Pill (`a8f3c21`).
+- **Left Cluster:** Gantry Shield Logo + Repo Name (`font-mono bold`) + Framework Badge (`Next.js 15`, `Supabase`) + Git Commit Pill (`a8f3c21`).
 - **Center Cluster:** Segmented 4-Tab Switcher:
 
 1. `Readiness Matrix`
@@ -95,7 +95,7 @@
 - Active Legal Clauses toggles (`AI Output Disclaimer`, `No-Training API Clause`, `PCI Billing Delegation`, `GDPR Right-to-Erasure`).
 - Jurisdiction selector (`Delaware, US`, `European Union (GDPR)`, `California (CCPA)`, `United Kingdom`).
 
-- **Main Pane:** Unified Monaco/Shiki Markdown Diff Viewer showing `legal/privacy-policy.md`, `legal/eula.md`, and `src/lib/legal-version.ts` changes highlighted inside `<!-- PREFLIGHT:AUTO -->` markers, with a **"Commit Legal Sync"** button.
+- **Main Pane:** Unified Monaco/Shiki Markdown Diff Viewer showing `legal/privacy-policy.md`, `legal/eula.md`, and `src/lib/legal-version.ts` changes highlighted inside `<!-- GANTRY:AUTO -->` markers, with a **"Commit Legal Sync"** button.
 
 ---
 
@@ -110,7 +110,7 @@ To build this repository cleanly using **Cursor**, **Claude Code**, or **Antigra
    Implement the Security (`SEC-01`–`12`), Privacy (`PRIV-01`–`07`), Legal (`LEG-01`–`06`), and FinOps/Payment (`FIN-01`–`03`, `PAY-01`–`03`) rules against `RepoContext`. Wire up `legal-compiler.ts`, `checklist-writer.ts`, and `cert-generator.ts`.
 
 3. **Wire the MCP Server & Active Pentest Runner:** Target: packages/core/src/bin/mcp.ts & pentest/.
-   Expose `run_readiness_audit`, `sync_stack_legal_docs`, and `run_active_pentest` over MCP Stdio transport. Implement `pentest/runner.ts` (`PT-01` to `PT-06`) and the `npx preflight init` bootstrapper that drops `.cursor/rules/preflight.mdc` and `CLAUDE.md`.
+   Expose `run_readiness_audit`, `sync_stack_legal_docs`, and `run_active_pentest` over MCP Stdio transport. Implement `pentest/runner.ts` (`PT-01` to `PT-06`) and the `npx gantry init` bootstrapper that drops `.cursor/rules/gantry.mdc` and `CLAUDE.md`.
 
 4. **Build the Svelte 5 Mission Control UI & VS Code/Cursor Extension:** Target: packages/ui/ & packages/vscode-ext/.
    Build the 4-tab Svelte 5 interface using the `DESIGN.md` tokens, bundle its static output into `packages/core/src/server/ui-server.ts`, and compile the VS Code/Cursor extension (`extension.ts`, `codelens-provider.ts`, `sidebar-provider.ts`).

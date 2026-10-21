@@ -1,5 +1,5 @@
 /**
- * `preflight init`: wires Preflight into the repo's agents and CI without clobbering anything.
+ * `gantry init`: wires Gantry into the repo's agents and CI without clobbering anything.
  * Marker blocks are replaced in place, JSON configs are merged, existing user files are never overwritten.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -13,25 +13,25 @@ import { BASELINE, writeBaseline } from "./hooks";
 
 export type InitAction = { path: string; action: "created" | "updated" | "unchanged" | "skipped"; reason?: string };
 
-const BEGIN = "<!-- PREFLIGHT:BEGIN -->";
-const END = "<!-- PREFLIGHT:END -->";
-export const MCP_SERVER = { command: "preflight", args: ["mcp"] };
+const BEGIN = "<!-- GANTRY:BEGIN -->";
+const END = "<!-- GANTRY:END -->";
+export const MCP_SERVER = { command: "gantry", args: ["mcp"] };
 // Claude Code runs hooks via the shell; $CLAUDE_PROJECT_DIR keeps the scan rooted even after the agent `cd`s.
 export const CLAUDE_HOOKS = {
-  stop: 'preflight hook stop --agent claude "$CLAUDE_PROJECT_DIR"',
-  preCommit: 'preflight hook pre-commit --agent claude "$CLAUDE_PROJECT_DIR"',
+  stop: 'gantry hook stop --agent claude "$CLAUDE_PROJECT_DIR"',
+  preCommit: 'gantry hook pre-commit --agent claude "$CLAUDE_PROJECT_DIR"',
 };
-export const CURSOR_HOOKS = { stop: "preflight hook stop --agent cursor", preCommit: "preflight hook pre-commit --agent cursor" };
+export const CURSOR_HOOKS = { stop: "gantry hook stop --agent cursor", preCommit: "gantry hook pre-commit --agent cursor" };
 
-const AGENT_GUIDE = `## Preflight launch-readiness checks
-- Before declaring a feature done, run \`preflight scan\` (or the \`run_readiness_audit\` MCP tool) and fix every CRITICAL finding.
+const AGENT_GUIDE = `## Gantry launch-readiness checks
+- Before declaring a feature done, run \`gantry scan\` (or the \`run_readiness_audit\` MCP tool) and fix every CRITICAL finding.
 - Apply each finding's \`agentRemediationPrompt\` surgically; don't weaken auth, RLS, validation or webhook signature checks to make a finding disappear.
-- Suppress a confirmed false positive only with \`// preflight-ignore <RULE-ID>\` plus a one-line justification.
-- After adding or removing a third-party SDK, run \`preflight legal\` and review the diff before \`--apply\` (templates are not legal advice).
-- Only run \`preflight attack\` against your local dev server.`;
+- Suppress a confirmed false positive only with \`// gantry-ignore <RULE-ID>\` plus a one-line justification.
+- After adding or removing a third-party SDK, run \`gantry legal\` and review the diff before \`--sync\` (templates are not legal advice).
+- Only run \`gantry attack\` against your local dev server.`;
 
 const CURSOR_RULE = `---
-description: Preflight launch-readiness guardrails
+description: Gantry launch-readiness guardrails
 alwaysApply: true
 ---
 ${BEGIN}
@@ -39,7 +39,7 @@ ${AGENT_GUIDE}
 ${END}
 `;
 
-const WORKFLOW = `name: preflight
+const WORKFLOW = `name: gantry
 on: [pull_request]
 permissions:
   contents: read
@@ -51,10 +51,10 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 50 }
       - uses: oven-sh/setup-bun@v2
-      - run: bunx preflight scan --sarif > preflight.sarif || true
+      - run: bunx gantry scan --sarif > gantry.sarif || true
       - uses: github/codeql-action/upload-sarif@v3
-        with: { sarif_file: preflight.sarif }
-      - run: bunx preflight scan
+        with: { sarif_file: gantry.sarif }
+      - run: bunx gantry scan
 `;
 
 /** Replace the marker block in place, or append it (an unchanged result means nothing to write). */
@@ -92,7 +92,7 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
   };
   const read = (rel: string) => (existsSync(join(root, rel)) ? readFileSync(join(root, rel), "utf8") : null);
 
-  const rule = ".cursor/rules/preflight.mdc";
+  const rule = ".cursor/rules/gantry.mdc";
   const prevRule = read(rule);
   put(rule, prevRule === null ? CURSOR_RULE : upsertBlock(prevRule, AGENT_GUIDE), prevRule);
 
@@ -103,12 +103,12 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
     out.push({ path: CONFIG_FILES.find((f) => existsSync(join(root, f)))!, action: "skipped", reason: "config already exists" });
   else
     put(
-      "preflight.config.json",
+      "gantry.config.json",
       `${JSON.stringify({ mode: "commercial", companyName: "", contactEmail: "", securityContact: "", siteUrl: "", jurisdiction: "US-DE", legalDir: "legal", ignoreRules: [], ignorePaths: [] }, null, 2)}\n`,
       null,
     );
 
-  /** Merge into a JSON config; `apply` returns false when Preflight is already wired (nothing to write). */
+  /** Merge into a JSON config; `apply` returns false when Gantry is already wired (nothing to write). */
   const mergeJson = (rel: string, apply: (json: any) => boolean) => {
     const prev = read(rel);
     let json: any = {};
@@ -130,8 +130,8 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
 
   for (const rel of [".mcp.json", ".cursor/mcp.json"])
     mergeJson(rel, (json) => {
-      if (json.mcpServers?.preflight) return false;
-      json.mcpServers = { ...(json.mcpServers ?? {}), preflight: MCP_SERVER };
+      if (json.mcpServers?.gantry) return false;
+      json.mcpServers = { ...(json.mcpServers ?? {}), gantry: MCP_SERVER };
       return true;
     });
 
@@ -153,7 +153,7 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
   }
 
   if (opts.ci) {
-    const wf = ".github/workflows/preflight.yml";
+    const wf = ".github/workflows/gantry.yml";
     if (read(wf) !== null) out.push({ path: wf, action: "skipped", reason: "workflow already exists" });
     else put(wf, WORKFLOW, null);
   }
@@ -167,7 +167,7 @@ export async function initBaseline(root: string): Promise<InitAction> {
   return { path: BASELINE, action: "created" };
 }
 
-/** SECURITY.md, security.txt, robots.txt and ai.txt. Creates or refreshes only files Preflight generated. */
+/** SECURITY.md, security.txt, robots.txt and ai.txt. Creates or refreshes only files Gantry generated. */
 export async function initSafeHarbor(root: string): Promise<InitAction[]> {
   const { changes, skipped } = compileSafeHarbor(await buildRepoContext(root, { config: { offline: true } }), { apply: true });
   return [

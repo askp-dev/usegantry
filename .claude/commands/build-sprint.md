@@ -1,8 +1,8 @@
 ---
-description: Build one Preflight sprint end-to-end (usage: /build-sprint 2)
+description: Build one Gantry sprint end-to-end (usage: /build-sprint 2)
 argument-hint: <sprint number 2-5>
 ---
-Build **Sprint $ARGUMENTS** of Preflight AI.
+Build **Sprint $ARGUMENTS** of Gantry.
 
 1. Read `handoff.md` lines 25–38 (status) and 217–274 (known quirks), then only the "Sprint $ARGUMENTS" subsection of §5 (lines 275–372). Don't read the rest.
 2. Use the spec line map in CLAUDE.md to read **only** the spec ranges this sprint needs.

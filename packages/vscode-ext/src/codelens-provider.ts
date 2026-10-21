@@ -23,7 +23,7 @@ export class FindingCodeLensProvider implements vscode.CodeLensProvider {
       const range = doc.lineAt(Math.min(Math.max(f.line - 1, 0), doc.lineCount - 1)).range;
       return [
         new vscode.CodeLens(range, { title: `${f.severity === "CRITICAL" ? "⛔" : "⚠"} ${f.ruleId}: ${f.title}`, command: "" }),
-        new vscode.CodeLens(range, { title: "✨ Fix with AI Agent", command: "preflight.fixWithAgent", arguments: [f] }),
+        new vscode.CodeLens(range, { title: "✨ Fix with AI Agent", command: "gantry.fixWithAgent", arguments: [f] }),
       ];
     });
   }

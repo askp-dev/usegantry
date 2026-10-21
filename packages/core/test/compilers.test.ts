@@ -14,7 +14,7 @@ import { toSarif } from "../src/reporters/sarif";
 
 const dirs: string[] = [];
 const copy = (fixture: string) => {
-  const d = mkdtempSync(join(tmpdir(), "preflight-comp-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-comp-"));
   dirs.push(d);
   cpSync(fixture, d, { recursive: true });
   return d;
@@ -42,7 +42,7 @@ describe("legal compiler", () => {
     expect(changes.map((c) => c.path).sort()).toEqual(["legal/eula.md", "legal/privacy-policy.md", "legal/terms.md", "lib/legal-version.ts"]);
     const policy = readFileSync(join(root, "legal/privacy-policy.md"), "utf8");
     expect(policy).toContain("We use Stripe to process payments."); // user content preserved
-    expect(policy).toContain("<!-- PREFLIGHT:AUTO:SUBPROCESSORS -->");
+    expect(policy).toContain("<!-- GANTRY:AUTO:SUBPROCESSORS -->");
     expect(policy).toContain("OpenAI");
     expect(docStackHash(policy)).toBe(manifest.stackHash);
     expect(readFileSync(join(root, "lib/legal-version.ts"), "utf8")).toContain(`LEGAL_STACK_HASH = "${manifest.stackHash}"`);
@@ -80,7 +80,7 @@ describe("checklist", () => {
     const r = await audit("fixtures/vulnerable-saas", { config: { offline: true } });
     const first = buildChecklist("", r);
     expect(first).toContain("- [ ] **SEC-01**");
-    const edited = `# Mine\n\nMy notes stay.\n\n${first.slice(first.indexOf("<!-- PREFLIGHT"))}\nFooter note.\n`;
+    const edited = `# Mine\n\nMy notes stay.\n\n${first.slice(first.indexOf("<!-- GANTRY"))}\nFooter note.\n`;
     const clean = await audit("fixtures/clean-saas", { config: { offline: true } });
     const next = buildChecklist(edited, clean);
     expect(next).toContain("My notes stay.");

@@ -18,7 +18,7 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 function repo(files: Record<string, string>): string {
-  const d = mkdtempSync(join(tmpdir(), "preflight-sys-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-sys-"));
   dirs.push(d);
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(d, rel)), { recursive: true });
@@ -128,10 +128,10 @@ describe("skipped rules", () => {
   });
 });
 
-test("without the grammars (PREFLIGHT_NO_NAPI=1) a Go repo gets a notice, never a false clean", () => {
+test("without the grammars (GANTRY_NO_NAPI=1) a Go repo gets a notice, never a false clean", () => {
   const p = Bun.spawnSync(["bun", "run", "src/bin/cli.ts", "scan", "../../fixtures/vulnerable-go", "--json", "--offline"], {
     cwd: join(import.meta.dir, ".."),
-    env: { ...process.env, PREFLIGHT_NO_NAPI: "1" },
+    env: { ...process.env, GANTRY_NO_NAPI: "1" },
   });
   const report = JSON.parse(p.stdout.toString());
   expect(report.notices).toHaveLength(1);

@@ -173,7 +173,7 @@ export interface EnvEntry {
   line: number;
 }
 
-export interface PreflightConfig {
+export interface GantryConfig {
   /** commercial (default) | open-source — affects LEG-02 */
   mode: "commercial" | "open-source";
   companyName: string;
@@ -236,10 +236,10 @@ export interface RepoContext {
     sqlalchemy: boolean;
     stripe: boolean;
     genAi: boolean;
-    deployTarget: PreflightConfig["deployTarget"];
+    deployTarget: GantryConfig["deployTarget"];
     frameworkVersion?: string;
   };
-  config: PreflightConfig;
+  config: GantryConfig;
   timings: Record<string, number>;
   /** Built from a file subset (`BuildOptions.only`): IDE saves, `scan --changed-only`, agent hooks. */
   partial?: boolean;
@@ -285,7 +285,7 @@ export interface PillarScore {
 }
 
 export interface AuditReport {
-  tool: { name: "preflight"; version: string; rulesetVersion: string };
+  tool: { name: "gantry"; version: string; rulesetVersion: string };
   /** Rule ids that actually ran (profile-only and partial-scan-skipped rules are absent). */
   rulesRun?: string[];
   repo: { name: string; rootDir: string; framework: RepoContext["framework"]; frameworkVersion?: string; gitCommitSha: string; stack: string[] };
@@ -331,7 +331,7 @@ export interface LegalManifest {
   version: string;
   stackHash: string;
   generatedAt: string;
-  jurisdiction: PreflightConfig["jurisdiction"];
+  jurisdiction: GantryConfig["jurisdiction"];
   companyName: string;
   productName: string;
   contactEmail: string;

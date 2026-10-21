@@ -10,15 +10,15 @@ export const leg06AiDisclaimer = defineRule(
     if (!ctx.stack.genAi) return;
     const eula = `${ctx.config.legalDir}/eula.md`;
     const text = ctx.getText(eula);
-    if (!text.includes("PREFLIGHT:AUTO:AI_SCHEDULE")) {
+    if (!text.includes("GANTRY:AUTO:AI_SCHEDULE")) {
       emit({
         file: text ? eula : "package.json",
         line: 1,
-        evidence: text ? `${eula} has no PREFLIGHT:AUTO:AI_SCHEDULE block` : `${eula} not found; GenAI SDK in dependencies`,
+        evidence: text ? `${eula} has no GANTRY:AUTO:AI_SCHEDULE block` : `${eula} not found; GenAI SDK in dependencies`,
         impact:
           "Your product ships generative AI with no output-accuracy disclaimer, IP-ownership terms or AI acceptable-use clause, leaving you exposed to liability for hallucinated or infringing outputs.",
         agentRemediationPrompt:
-          "Run `preflight legal --apply` to create or patch `legal/eula.md` with the AI Output Liability & IP schedule (PREFLIGHT:AUTO:AI_SCHEDULE), then link /eula from the footer.",
+          "Run `gantry legal --sync` to create or patch `legal/eula.md` with the AI Output Liability & IP schedule (GANTRY:AUTO:AI_SCHEDULE), then link /eula from the footer.",
       });
     }
     for (const f of ctx.files.frontendComponents) {

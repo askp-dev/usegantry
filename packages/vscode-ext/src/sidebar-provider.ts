@@ -24,7 +24,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   update(report: AuditReport) {
     this.report = report;
     if (!this.view) return;
-    if (this.view.webview.html.includes('data-preflight="inline"')) this.render(vscode.Uri.joinPath(this.extensionUri, "media", "ui"));
+    if (this.view.webview.html.includes('data-gantry="inline"')) this.render(vscode.Uri.joinPath(this.extensionUri, "media", "ui"));
     else this.post();
   }
 
@@ -48,7 +48,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const rows = (r?.findings ?? [])
       .map((f) => `<li><b>${esc(f.severity)}</b> <code>${esc(f.ruleId)}</code> ${esc(f.title)}<br><small>${esc(f.file)}:${esc(f.line)}</small></li>`)
       .join("");
-    webview.html = `<!doctype html><html data-preflight="inline"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+    webview.html = `<!doctype html><html data-gantry="inline"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
 <style>body{font-family:var(--vscode-font-family);color:var(--vscode-foreground)}li{margin:6px 0}code{font-family:var(--vscode-editor-font-family)}</style></head>
 <body><h3>${r ? `${esc(r.status.replace("_", " "))} • ${esc(r.score)}/100` : "Scanning…"}</h3><ul>${rows}</ul></body></html>`;
   }

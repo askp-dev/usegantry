@@ -53,7 +53,7 @@ export const leg05LegalRoutes = defineRule(
         line: lineAt(text, m.index),
         evidence: text.split("\n")[lineAt(text, m.index) - 1].trim(),
         impact: `Published legal text still contains the placeholder "${m[0]}". That makes the document unenforceable and looks unprofessional to customers and reviewers.`,
-        agentRemediationPrompt: `In ${f}, replace every placeholder ([COMPANY NAME], TODO, TBD, lorem ipsum) with real values. Set \`companyName\`/\`contactEmail\` in preflight.config.json and run \`preflight legal --apply\` to fill the generated sections.`,
+        agentRemediationPrompt: `In ${f}, replace every placeholder ([COMPANY NAME], TODO, TBD, lorem ipsum) with real values. Set \`companyName\`/\`contactEmail\` in gantry.config.json and run \`gantry legal --sync\` to fill the generated sections.`,
       });
     }
   },

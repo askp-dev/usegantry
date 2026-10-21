@@ -1,7 +1,7 @@
 /**
  * Launch Certificate: HTML (DESIGN tokens) + PDF, signed with Ed25519 over canonical JSON so the static
  * `/verify#<payload>.<sig>` page can check it in-browser with WebCrypto (WEBSITE_SPEC §3).
- * Key: PREFLIGHT_CERT_SECRET (deterministic seed = sha256(secret)) or a generated ~/.preflight/cert.key.
+ * Key: GANTRY_CERT_SECRET (deterministic seed = sha256(secret)) or a generated ~/.gantry/cert.key.
  */
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, type KeyObject, sign, verify } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -12,7 +12,7 @@ import { requireFeature } from "../entitlements";
 import { ALL_STATIC_RULES } from "../rules/index";
 import { hex, type PdfOp, renderPdf } from "./pdf";
 
-export const DEFAULT_VERIFY_BASE = process.env.PREFLIGHT_VERIFY_BASE ?? "https://preflight-ai.dev";
+export const DEFAULT_VERIFY_BASE = process.env.GANTRY_VERIFY_BASE ?? "https://usegantry.app";
 const PKCS8_ED25519_PREFIX = Buffer.from("302e020100300506032b657004220420", "hex");
 
 export interface CertPayload {
@@ -42,11 +42,14 @@ export function canonicalJson(v: unknown): string {
 }
 
 export function loadSigningKey(opts: { secret?: string; keyPath?: string } = {}): KeyObject {
-  const secret = opts.secret ?? process.env.PREFLIGHT_CERT_SECRET;
+  const secret = opts.secret ?? process.env.GANTRY_CERT_SECRET;
   if (secret)
     return createPrivateKey({ key: Buffer.concat([PKCS8_ED25519_PREFIX, createHash("sha256").update(secret).digest()]), format: "der", type: "pkcs8" });
-  const path = opts.keyPath ?? join(homedir(), ".preflight", "cert.key");
+  const path = opts.keyPath ?? join(homedir(), ".gantry", "cert.key");
   if (existsSync(path)) return createPrivateKey(readFileSync(path, "utf8"));
+  // Pre-rename key (~/.preflight/cert.key), reused for one release so existing certs keep their key.
+  const legacy = join(homedir(), ".preflight", "cert.key");
+  if (!opts.keyPath && existsSync(legacy)) return createPrivateKey(readFileSync(legacy, "utf8"));
   const { privateKey } = generateKeyPairSync("ed25519");
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, privateKey.export({ type: "pkcs8", format: "pem" }) as string, { mode: 0o600 });
@@ -123,7 +126,7 @@ h1{margin:8px 0 4px;font-size:28px}.score{font-family:var(--font-mono);font-size
 .rule.ok{color:${T.ready}}.rule.bad{color:${T.block}}a{color:${T.agent};word-break:break-all;font-family:var(--font-mono);font-size:12px}
 footer{margin-top:28px;border-top:1px solid var(--border-subtle);padding-top:16px;color:var(--text-muted);font-size:12px}
 </style></head><body><main class="cert">
-<div class="eyebrow">Preflight AI · Launch Certificate</div>
+<div class="eyebrow">Gantry · Launch Certificate</div>
 <h1>${escHtml(p.projectName)}</h1>
 <span class="stamp">${blocked ? "BLOCKED — NOT LAUNCH READY" : p.status.replace("_", " ")}</span>
 <div class="row"><div><div class="eyebrow">Readiness score</div><div class="score">${p.overallScore}/100</div></div>
@@ -144,7 +147,7 @@ export function renderCertPdf(p: CertPayload, sig: { url: string }, publicKey: s
     { kind: "rect", x: 0, y: 0, w: 612, h: 792, color: hex(T.canvas) },
     { kind: "rect", x: 48, y: 120, w: 516, h: 624, color: hex(T.s1) },
     { kind: "rect", x: 48, y: 740, w: 516, h: 4, color: accent },
-    { kind: "text", x: 72, y: 708, size: 9, text: "PREFLIGHT AI - LAUNCH CERTIFICATE", font: "bold", color: hex(T.text2) },
+    { kind: "text", x: 72, y: 708, size: 9, text: "GANTRY AI - LAUNCH CERTIFICATE", font: "bold", color: hex(T.text2) },
     { kind: "text", x: 72, y: 676, size: 24, text: p.projectName, font: "bold", color: hex(T.text) },
     { kind: "text", x: 72, y: 648, size: 11, text: blocked ? "BLOCKED - NOT LAUNCH READY" : p.status.replace("_", " "), font: "bold", color: accent },
     { kind: "text", x: 72, y: 596, size: 36, text: `${p.overallScore}/100`, font: "mono", color: accent },

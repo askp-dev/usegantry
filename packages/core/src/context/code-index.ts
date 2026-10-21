@@ -12,7 +12,7 @@
  *
  * On top of the views it provides bracket matching, function extraction (declarations,
  * arrows, methods, Python defs), call-site discovery, object-literal key parsing and import
- * extraction — the subset of AST queries the Preflight rule-set needs, at lexer speed.
+ * extraction — the subset of AST queries the Gantry rule-set needs, at lexer speed.
  */
 
 export type Lang = "js" | "py" | "svelte" | "vue" | "html" | "sql" | "other";

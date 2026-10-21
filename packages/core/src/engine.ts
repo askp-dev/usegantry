@@ -85,7 +85,7 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
   timings.rules = Math.round((performance.now() - t0) * 100) / 100;
   const s = ctx.stack;
   return {
-    tool: { name: "preflight", version: VERSION, rulesetVersion: RULESET_VERSION },
+    tool: { name: "gantry", version: VERSION, rulesetVersion: RULESET_VERSION },
     rulesRun: rules.map((r) => r.id).filter((id) => ![...skipped.values()].some((ids) => ids.includes(id))),
     repo: {
       name: (ctx.packageJson?.name as string | undefined) ?? basename(ctx.rootDir),

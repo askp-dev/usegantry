@@ -1,8 +1,8 @@
 ## 1. Product Vision & System Boundaries
 
-- **Product Name:** Preflight AI (`preflight`)
+- **Product Name:** Gantry (`gantry`)
 - **Core Mission:** A sub-3-second static readiness scanner, dynamic legal/EULA compiler, FinOps burn guard, and AST-guided active pentester for AI-generated software repositories.
-- **Runtime & Distribution:** Single-process **Bun (`>= 1.2`)** TypeScript workspace compiled to a standalone binary (`bun build --compile`) and distributed via `npx preflight` / `bunx preflight` + a lightweight VS Code / Cursor Extension wrapper.
+- **Runtime & Distribution:** Single-process **Bun (`>= 1.2`)** TypeScript workspace compiled to a standalone binary (`bun build --compile`) and distributed via `npx gantry` / `bunx gantry` + a lightweight VS Code / Cursor Extension wrapper.
 - **Hard Performance SLA:** Cold-start full static scan across 500 files must complete in **less than 3,000ms** (Target: **850ms–1,400ms**). Zero external Python, Java, or Go binary dependencies required.
 
 ---
@@ -10,7 +10,7 @@
 ## 2. Monorepo Directory Topology
 
 ```text
-preflight-ai/
+usegantry/
 ├── package.json                        # Bun workspace root
 ├── tsconfig.json
 ├── bunfig.toml
@@ -23,8 +23,8 @@ preflight-ai/
 │   ├── core/                           # CLI, MCP Server, AST Engine, Pentester, Legal Compiler
 │   │   ├── src/
 │   │   │   ├── bin/
-│   │   │   │   ├── cli.ts              # Entrypoint: `preflight scan | attack | legal | cert | ui | init`
-│   │   │   │   └── mcp.ts              # Entrypoint: `preflight mcp` (Stdio MCP Server)
+│   │   │   │   ├── cli.ts              # Entrypoint: `gantry scan | attack | legal | cert | ui | init`
+│   │   │   │   └── mcp.ts              # Entrypoint: `gantry mcp` (Stdio MCP Server)
 │   │   │   ├── context/
 │   │   │   │   ├── types.ts            # RepoContext, Finding, AuditReport, LegalManifest types
 │   │   │   │   ├── builder.ts          # Single-pass Bun.Glob + lazy @ast-grep/napi cache
@@ -40,8 +40,8 @@ preflight-ai/
 │   │   │   ├── pentest/
 │   │   │   │   └── runner.ts           # Active probes PT-01 to PT-06 with WebSocket event emitter
 │   │   │   ├── compilers/
-│   │   │   │   ├── legal-compiler.ts   # Non-destructive <!-- PREFLIGHT:AUTO --> markdown patcher
-│   │   │   │   ├── checklist-writer.ts # Living READINESS_CHECKLIST.md updater
+│   │   │   │   ├── legal-compiler.ts   # Non-destructive <!-- GANTRY:AUTO --> markdown patcher
+│   │   │   │   ├── checklist-writer.ts # Living GANTRY_CHECKLIST.md updater
 │   │   │   │   ├── cert-generator.ts   # HMAC-SHA256 signed HTML/PDF Launch Certificate
 │   │   │   │   └── vendor-pack.ts      # CycloneDX SBOM.json + Mermaid RoPA Data-Flow generator
 │   │   │   ├── server/
@@ -221,7 +221,7 @@ When implementing `packages/core/src/rules/`, use these exact deterministic patt
 
 ## 5. Embedded Mission Control Server & WebSocket Protocol (`ui-server.ts`)
 
-When the user runs `npx preflight ui`, `Bun.serve()` mounts the compiled Svelte 5 SPA and exposes a local REST + WebSocket API on `[http://127.0.0.1:4400](http://127.0.0.1:4400)`:
+When the user runs `npx gantry ui`, `Bun.serve()` mounts the compiled Svelte 5 SPA and exposes a local REST + WebSocket API on `[http://127.0.0.1:4400](http://127.0.0.1:4400)`:
 
 | Endpoint / Channel               | Method | Payload / Behavior                                                                                                                                          |
 | -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |

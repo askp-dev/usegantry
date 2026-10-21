@@ -14,7 +14,7 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 function repo(files: Record<string, string>): string {
-  const d = mkdtempSync(join(tmpdir(), "preflight-mcp-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-mcp-"));
   dirs.push(d);
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(d, rel)), { recursive: true });
@@ -57,7 +57,7 @@ describe("parsing", () => {
     expect(serverPackage("uvx", ["--from", "pkg[cli]==1.0", "cmd"])?.version).toBe("1.0");
     expect(serverPackage("uv", ["tool", "run", "pkg"])?.name).toBe("pkg");
     expect(serverPackage("node", ["server.js"])).toBeNull();
-    expect(serverPackage("preflight", ["mcp"])).toBeNull();
+    expect(serverPackage("gantry", ["mcp"])).toBeNull();
   });
 });
 

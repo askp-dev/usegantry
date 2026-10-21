@@ -20,7 +20,7 @@ export const leg02CopyleftEula = defineRule(
         nodeRef: `dep:${d.name}`,
         evidence: `${d.name}@${d.version}: ${d.spdxLicense}${d.isDirect ? "" : " (transitive)"}`,
         impact: `\`${d.name}\` is licensed ${d.spdxLicense}. Shipping it in a closed-source commercial product can oblige you to release your source code (AGPL/SSPL even for network use), or block commercial use outright.`,
-        agentRemediationPrompt: `Replace \`${d.name}\` with a permissively licensed (MIT / Apache-2.0 / BSD / ISC) alternative${d.isDirect ? "" : ` by upgrading or replacing the direct dependency that pulls it in (run \`npm ls ${d.name}\`)`}, or move it to devDependencies if it's build-time only. If it must stay, get a commercial license or set \`"preflight": { "mode": "open-source" }\`.`,
+        agentRemediationPrompt: `Replace \`${d.name}\` with a permissively licensed (MIT / Apache-2.0 / BSD / ISC) alternative${d.isDirect ? "" : ` by upgrading or replacing the direct dependency that pulls it in (run \`npm ls ${d.name}\`)`}, or move it to devDependencies if it's build-time only. If it must stay, get a commercial license or set \`"gantry": { "mode": "open-source" }\`.`,
       });
     }
   },

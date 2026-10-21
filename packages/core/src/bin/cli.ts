@@ -16,17 +16,17 @@ import { renderCompact } from "../reporters/compact";
 import { color, renderPretty } from "../reporters/pretty";
 import { toSarif } from "../reporters/sarif";
 
-const HELP = `preflight ${VERSION}: launch readiness for AI-generated repos
+const HELP = `gantry ${VERSION}: launch readiness for AI-generated repos
 
 Usage:
-  preflight scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--profile hipaa,fintech-pci,legal-privilege,eu-ai-act,airgap] [--write-checklist] [--verbose]
-  preflight legal [path] [--apply] [--profile eu-ai-act]
-  preflight cert [path] [--allow-blocked] [--strict] [--offline]
-  preflight attack --target <url> [path]
-  preflight ui [path] [--port 4400]
-  preflight init [path] [--ci] [--no-hooks] [--pre-commit]
-  preflight hook <stop|pre-commit> [path] [--agent claude|cursor]   (agent hooks; reads the event JSON on stdin)
-  preflight mcp
+  gantry scan [path] [--json] [--sarif] [--compact] [--changed-only] [--strict] [--offline] [--profile hipaa,fintech-pci,legal-privilege,eu-ai-act,airgap] [--write-checklist] [--verbose]
+  gantry legal [path] [--sync] [--profile eu-ai-act]
+  gantry clear [path] [--allow-blocked] [--strict] [--offline]
+  gantry attack --target <url> [path]
+  gantry ui [path] [--port 4400]
+  gantry init [path] [--ci] [--no-hooks] [--pre-commit]
+  gantry hook <stop|pre-commit> [path] [--agent claude|cursor]   (agent hooks; reads the event JSON on stdin)
+  gantry mcp
 
 Exit codes: 0 ok · 1 launch blockers found · 2 usage/runtime error`;
 
@@ -79,31 +79,31 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       if (flags["write-checklist"] && scope) console.error(color.dim("--write-checklist ignored with --changed-only"));
       else if (flags["write-checklist"]) {
         writeChecklist(ctx, report);
-        if (!flags.json && !flags.sarif && !flags.compact) console.log(color.dim("Updated READINESS_CHECKLIST.md"));
+        if (!flags.json && !flags.sarif && !flags.compact) console.log(color.dim("Updated GANTRY_CHECKLIST.md"));
       }
       return report.blockers > 0 ? 1 : 0;
     }
     case "legal": {
       const ctx = await buildRepoContext(path, { config });
-      const { manifest, changes: legalChanges } = compileLegalDocs(ctx, { apply: flags.apply === true });
-      const harbor = compileSafeHarbor(ctx, { apply: flags.apply === true });
+      const { manifest, changes: legalChanges } = compileLegalDocs(ctx, { apply: flags.sync === true });
+      const harbor = compileSafeHarbor(ctx, { apply: flags.sync === true });
       // eu-ai-act also compiles AI_INVENTORY.md (agency tier, like every profile).
       const aiAct = ctx.config.profiles?.includes("eu-ai-act");
       if (aiAct) requireFeature("profiles");
-      const inventory = aiAct ? writeChanges(ctx, compileAiInventory(ctx), flags.apply === true) : [];
+      const inventory = aiAct ? writeChanges(ctx, compileAiInventory(ctx), flags.sync === true) : [];
       const changes = [...legalChanges, ...harbor.changes, ...inventory];
       console.log(`${color.bold("Legal manifest")} v${manifest.version} · stack hash ${manifest.stackHash} · ${manifest.subprocessors.length} sub-processors`);
       if (!changes.length) console.log(color.green("Legal docs are up to date."));
       for (const c of changes) {
-        if (flags.apply) console.log(`${color.green("✔ wrote")} ${c.path}`);
+        if (flags.sync) console.log(`${color.green("✔ wrote")} ${c.path}`);
         else process.stdout.write(c.diff);
       }
       for (const s of harbor.skipped) console.log(color.amber(`skipped ${s.path}: ${s.reason}`));
-      if (!flags.apply && changes.length) console.log(color.dim("Dry run. Re-run with --apply to write these changes."));
+      if (!flags.sync && changes.length) console.log(color.dim("Dry run. Re-run with --sync to write these changes."));
       console.log(color.amber(`⚠ ${LEGAL_DISCLAIMER}`));
       return 0;
     }
-    case "cert": {
+    case "clear": {
       const ctx = await buildRepoContext(path, { config });
       const report = await runAudit(ctx);
       try {
@@ -154,7 +154,7 @@ if (import.meta.main) {
   main().then(
     (code) => process.exit(code),
     (e) => {
-      console.error(color.red(`preflight: ${e instanceof Error ? e.message : e}`));
+      console.error(color.red(`gantry: ${e instanceof Error ? e.message : e}`));
       process.exit(2);
     },
   );

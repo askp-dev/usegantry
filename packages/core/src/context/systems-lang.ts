@@ -33,8 +33,8 @@ export function sysLangUnavailable(lang: SysLang): string | null {
     const grammars: Record<string, unknown> = {};
     let napiErr = "";
     try {
-      // PREFLIGHT_NO_NAPI=1 forces the no-grammar path (CI's without-napi job, debugging).
-      if (process.env.PREFLIGHT_NO_NAPI === "1") throw new Error("disabled by PREFLIGHT_NO_NAPI=1");
+      // GANTRY_NO_NAPI=1 forces the no-grammar path (CI's without-napi job, debugging).
+      if (process.env.GANTRY_NO_NAPI === "1") throw new Error("disabled by GANTRY_NO_NAPI=1");
       napi = require("@ast-grep/napi");
       if (typeof napi.registerDynamicLanguage !== "function") napiErr = "@ast-grep/napi < 0.51 has no registerDynamicLanguage";
     } catch (e) {

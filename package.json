@@ -1,7 +1,9 @@
 {
-  "name": "preflight-ai",
+  "name": "usegantry",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
+  "repository": "github:askp-dev/usegantry",
   "description": "Sub-3-second static readiness scanner, legal/EULA compiler, FinOps burn guard, and AST-guided active pentester for AI-generated repositories.",
   "type": "module",
   "workspaces": [
@@ -12,7 +14,7 @@
   },
   "scripts": {
     "scan": "bun run packages/core/src/bin/cli.ts scan",
-    "preflight": "bun run packages/core/src/bin/cli.ts",
+    "gantry": "bun run packages/core/src/bin/cli.ts",
     "test": "bun test packages/core/test",
     "bench": "bun run scripts/bench.ts",
     "seed:packages": "bun run scripts/build-known-packages.ts",

@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: { default: "Clean SaaS", template: "%s · Clean SaaS" },
-  description: "A well-built SaaS used as Preflight's false-positive guard.",
+  description: "A well-built SaaS used as Gantry's false-positive guard.",
   openGraph: { images: ["/og.png"] },
   twitter: { card: "summary_large_image" },
 };

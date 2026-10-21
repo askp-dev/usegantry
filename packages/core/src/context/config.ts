@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import type { PreflightConfig } from "./types";
+import type { GantryConfig } from "./types";
 
-export const DEFAULT_CONFIG: PreflightConfig = {
+export const DEFAULT_CONFIG: GantryConfig = {
   mode: "commercial",
   companyName: "",
   productName: "",
@@ -17,10 +17,10 @@ export const DEFAULT_CONFIG: PreflightConfig = {
   clauses: { aiOutputDisclaimer: true, noTrainingApi: true, pciBillingDelegation: true, gdprErasure: true },
 };
 
-export const CONFIG_FILES = ["preflight.config.json", ".preflightrc.json", ".preflightrc"];
+export const CONFIG_FILES = ["gantry.config.json", ".gantryrc.json", ".gantryrc"];
 
-export function loadConfig(rootDir: string, overrides: Partial<PreflightConfig> = {}): PreflightConfig {
-  let fileCfg: Partial<PreflightConfig> = {};
+export function loadConfig(rootDir: string, overrides: Partial<GantryConfig> = {}): GantryConfig {
+  let fileCfg: Partial<GantryConfig> = {};
   for (const f of CONFIG_FILES) {
     const p = join(rootDir, f);
     if (existsSync(p)) {
@@ -36,8 +36,8 @@ export function loadConfig(rootDir: string, overrides: Partial<PreflightConfig> 
   try {
     pkg = JSON.parse(readFileSync(join(rootDir, "package.json"), "utf8"));
   } catch {}
-  const pkgCfg: Partial<PreflightConfig> = pkg?.preflight ?? {};
-  const cfg: PreflightConfig = {
+  const pkgCfg: Partial<GantryConfig> = pkg?.gantry ?? {};
+  const cfg: GantryConfig = {
     ...DEFAULT_CONFIG,
     ...pkgCfg,
     ...fileCfg,

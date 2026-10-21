@@ -174,7 +174,7 @@ export function startUiServer(opts: UiServerOptions): Server<WsData> {
     maxRequestBodySize: MAX_BODY,
     async fetch(req, srv) {
       const { pathname } = new URL(req.url);
-      if (!isTrustedRequest(req, srv.port ?? 0)) return fail(403, "Preflight UI only accepts same-origin requests on 127.0.0.1/localhost");
+      if (!isTrustedRequest(req, srv.port ?? 0)) return fail(403, "Gantry UI only accepts same-origin requests on 127.0.0.1/localhost");
       if (pathname === "/ws/pentest") {
         return srv.upgrade(req, { data: { running: false } }) ? undefined : fail(426, "WebSocket upgrade required");
       }
@@ -198,7 +198,7 @@ export async function main({ path, flags }: { path: string; flags: Record<string
     return 2;
   }
   const server = startUiServer({ root: path, port, offline: flags.online !== true });
-  console.log(`Preflight Mission Control → http://127.0.0.1:${server.port}  (Ctrl+C to stop)`);
+  console.log(`Gantry Mission Control → http://127.0.0.1:${server.port}  (Ctrl+C to stop)`);
   await new Promise(() => {});
   return 0;
 }

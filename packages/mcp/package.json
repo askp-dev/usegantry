@@ -1,0 +1,18 @@
+{
+  "name": "@usegantry/mcp",
+  "version": "0.1.0",
+  "description": "Gantry MCP server: runs `gantry mcp` (stdio JSON-RPC) for Claude Code, Cursor and other MCP clients.",
+  "type": "module",
+  "license": "MIT",
+  "repository": "github:askp-dev/usegantry",
+  "homepage": "https://usegantry.app",
+  "bin": {
+    "gantry-mcp": "./src/bin.ts"
+  },
+  "engines": {
+    "bun": ">=1.2"
+  },
+  "dependencies": {
+    "@usegantry/cli": "workspace:*"
+  }
+}

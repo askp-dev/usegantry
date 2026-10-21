@@ -23,7 +23,7 @@ export function buildSbom(ctx: RepoContext, now = new Date()): Record<string, un
     version: 1,
     metadata: {
       timestamp: now.toISOString(),
-      tools: { components: [{ type: "application", name: "preflight", version: VERSION }] },
+      tools: { components: [{ type: "application", name: "gantry", version: VERSION }] },
       component: {
         type: "application",
         name: ctx.packageJson?.name ?? ctx.config.productName,

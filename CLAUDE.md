@@ -1,4 +1,4 @@
-# Preflight AI — Claude Code guide
+# Gantry — Claude Code guide
 
 Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinOps guard and active pentester for AI-generated repos. Build progress and next steps are in `handoff.md`.
 
@@ -32,7 +32,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Rule registry (`rules/index.ts`) | RULES_SPEC.md 152–329 |
 | Design tokens / typography | DESIGN.md 9–50 |
 | UI components (header, data-flow graph, pentest console, legal studio) | DESIGN.md 51–101 |
-| Handoff: status / quirks / remaining work | handoff.md 25–44 / 307–420 / 423–473 |
+| Handoff: status / quirks / remaining work | handoff.md 25–44 / 307–420 / 423–530 |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.

@@ -15,7 +15,7 @@ jobs:
   # Standalone-binary conditions: SYS-* tests skip and Go/Rust repos get a notice instead of a clean pass.
   without-napi:
     runs-on: ubuntu-latest
-    env: { PREFLIGHT_NO_NAPI: "1" }
+    env: { GANTRY_NO_NAPI: "1" }
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

@@ -1,4 +1,4 @@
-/** SARIF 2.1.0 for GitHub code scanning (`preflight scan --sarif > preflight.sarif`). */
+/** SARIF 2.1.0 for GitHub code scanning (`gantry scan --sarif > gantry.sarif`). */
 import type { AuditReport, Severity } from "../context/types";
 import { ALL_STATIC_RULES } from "../rules/index";
 
@@ -13,10 +13,10 @@ export function toSarif(report: AuditReport): Record<string, unknown> {
       {
         tool: {
           driver: {
-            name: "Preflight",
+            name: "Gantry",
             version: report.tool.version,
             semanticVersion: report.tool.version,
-            informationUri: "https://github.com/askthestoryteller/preflight",
+            informationUri: "https://github.com/askp-dev/usegantry",
             rules: ALL_STATIC_RULES.map((r) => ({
               id: r.id,
               name: r.id.replace("-", ""),
@@ -31,7 +31,7 @@ export function toSarif(report: AuditReport): Record<string, unknown> {
           level: LEVEL[f.severity],
           message: { text: `${f.title}: ${f.impact}` },
           locations: [{ physicalLocation: { artifactLocation: { uri: f.file }, region: { startLine: f.line } } }],
-          partialFingerprints: { "preflight/v1": f.fingerprint ?? "" },
+          partialFingerprints: { "gantry/v1": f.fingerprint ?? "" },
           properties: { severity: f.severity, blocking: f.blocking, evidence: f.evidence, remediation: f.agentRemediationPrompt },
         })),
       },

@@ -6,8 +6,8 @@ import { join } from "node:path";
 
 // `bun build --compile` smoke test (quirk 11): every subcommand is bundled, embedded data loads,
 // and SEC-06 still scans git history without the worker file on disk.
-const dir = mkdtempSync(join(tmpdir(), "preflight-bin-"));
-const BIN = join(dir, "preflight");
+const dir = mkdtempSync(join(tmpdir(), "gantry-bin-"));
+const BIN = join(dir, "gantry");
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 const run = (...args: string[]) => {

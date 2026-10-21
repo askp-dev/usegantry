@@ -1,5 +1,5 @@
 /**
- * `preflight mcp`: hand-rolled MCP server over stdio (newline-delimited JSON-RPC 2.0, no deps).
+ * `gantry mcp`: hand-rolled MCP server over stdio (newline-delimited JSON-RPC 2.0, no deps).
  * Supports legacy `initialize` clients (2024-11-05 … 2025-11-25) and modern per-request clients
  * (2026-07-28, `server/discover`). Logs go to stderr only; stdout carries protocol frames.
  */
@@ -15,9 +15,9 @@ import { renderCompact } from "../reporters/compact";
 
 export const LEGACY_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 export const MODERN_VERSIONS = ["2026-07-28"];
-const SERVER_INFO = { name: "preflight", version: VERSION };
+const SERVER_INFO = { name: "gantry", version: VERSION };
 const INSTRUCTIONS =
-  "Preflight audits AI-generated repos for launch blockers. Call run_readiness_audit first: it returns one compact line per finding with a FIX hint (pass format: verbose for full evidence and fix prompts, changedOnly=true after edits). sync_stack_legal_docs previews (or applies) privacy/EULA updates. run_active_pentest probes a locally running dev server only.";
+  "Gantry audits AI-generated repos for launch blockers. Call run_readiness_audit first: it returns one compact line per finding with a FIX hint (pass format: verbose for full evidence and fix prompts, changedOnly=true after edits). sync_stack_legal_docs previews (or applies) privacy/EULA updates. run_active_pentest probes a locally running dev server only.";
 
 type Json = Record<string, any>;
 interface ToolDef {
@@ -35,7 +35,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: "run_readiness_audit",
     description:
-      "Run Preflight's 37 static launch-readiness rules (security, privacy, legal, FinOps) and return the score, blockers and findings with agent fix prompts.",
+      "Run Gantry's 37 static launch-readiness rules (security, privacy, legal, FinOps) and return the score, blockers and findings with agent fix prompts.",
     feature: "scan",
     inputSchema: {
       type: "object",
@@ -70,22 +70,22 @@ export const TOOLS: ToolDef[] = [
   {
     name: "sync_stack_legal_docs",
     description:
-      "Compile privacy policy / EULA / terms from the detected stack. Dry-run by default (returns unified diffs); pass apply=true to write. Templates are not legal advice.",
+      "Compile privacy policy / EULA / terms from the detected stack. Dry-run by default (returns unified diffs); pass sync=true to write. Templates are not legal advice.",
     feature: "legal",
-    inputSchema: { type: "object", properties: { ...pathArg, apply: { type: "boolean" } }, additionalProperties: false },
+    inputSchema: { type: "object", properties: { ...pathArg, sync: { type: "boolean" } }, additionalProperties: false },
     async run(args, root) {
       const ctx = await buildRepoContext(root, { config: { offline: true } });
-      const { manifest, changes } = compileLegalDocs(ctx, { apply: args.apply === true });
-      const head = `Legal manifest v${manifest.version} (stack ${manifest.stackHash}), ${manifest.subprocessors.length} sub-processors. ${changes.length ? (args.apply ? "Wrote" : "Would change") : "No changes"}: ${changes.map((c) => c.path).join(", ")}`;
+      const { manifest, changes } = compileLegalDocs(ctx, { apply: args.sync === true });
+      const head = `Legal manifest v${manifest.version} (stack ${manifest.stackHash}), ${manifest.subprocessors.length} sub-processors. ${changes.length ? (args.sync ? "Wrote" : "Would change") : "No changes"}: ${changes.map((c) => c.path).join(", ")}`;
       return {
-        text: `${head}\n\n${args.apply ? "" : changes.map((c) => c.diff).join("\n")}\nNot legal advice: have a lawyer review.`,
+        text: `${head}\n\n${args.sync ? "" : changes.map((c) => c.diff).join("\n")}\nNot legal advice: have a lawyer review.`,
         structured: { manifest: { ...manifest, documents: undefined }, changes: changes.map(({ path, diff }) => ({ path, diff })) },
       };
     },
   },
   {
     name: "run_active_pentest",
-    description: "Run Preflight's non-destructive live probes (PT-01..PT-06) against a locally running dev server (localhost only).",
+    description: "Run Gantry's non-destructive live probes (PT-01..PT-06) against a locally running dev server (localhost only).",
     feature: "attack",
     inputSchema: {
       type: "object",
@@ -176,7 +176,7 @@ export async function handle(msg: Json, root: string): Promise<Json | undefined>
 
 export async function main({ path }: { path: string; flags?: Json }): Promise<number> {
   requireFeature("mcp");
-  const log = (...a: unknown[]) => console.error("[preflight-mcp]", ...a);
+  const log = (...a: unknown[]) => console.error("[gantry-mcp]", ...a);
   log(`ready (root ${path})`);
   const write = (o: Json | undefined) => o && process.stdout.write(`${JSON.stringify(o)}\n`);
   let buf = "";

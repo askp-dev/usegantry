@@ -1,13 +1,13 @@
 /**
  * Starter legal templates. NOT LEGAL ADVICE: they're scaffolding for a lawyer to review.
- * `{{key}}` placeholders are filled from LegalManifest; PREFLIGHT:AUTO blocks are regenerated on every compile.
+ * `{{key}}` placeholders are filled from LegalManifest; GANTRY:AUTO blocks are regenerated on every compile.
  */
 export const AUTO_BLOCKS = ["SUBPROCESSORS", "PII_TABLE", "AI_SCHEDULE", "NO_TRAINING", "PCI", "ERASURE", "VERSION_META"] as const;
 export type AutoBlock = (typeof AUTO_BLOCKS)[number];
 
-const block = (b: AutoBlock) => `<!-- PREFLIGHT:AUTO:${b} -->\n<!-- /PREFLIGHT:AUTO:${b} -->`;
+const block = (b: AutoBlock) => `<!-- GANTRY:AUTO:${b} -->\n<!-- /GANTRY:AUTO:${b} -->`;
 
-export const LEGAL_DISCLAIMER = "Preflight legal templates are starting points, not legal advice. Have a qualified lawyer review them before you publish.";
+export const LEGAL_DISCLAIMER = "Gantry legal templates are starting points, not legal advice. Have a qualified lawyer review them before you publish.";
 
 export const TEMPLATES: Record<"privacy-policy.md" | "eula.md" | "terms.md", string> = {
   "privacy-policy.md": `# Privacy Policy

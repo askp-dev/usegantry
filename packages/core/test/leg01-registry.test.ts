@@ -19,7 +19,7 @@ const NPM: Record<string, { created: string; weekly: number } | 404> = {
 };
 const PYPI: Record<string, string | 404> = { "pyghost-qqx": 404, "pyfresh-qqx": iso(5), "pyold-qqx": iso(900) };
 
-const root = mkdtempSync(join(tmpdir(), "preflight-leg01-"));
+const root = mkdtempSync(join(tmpdir(), "gantry-leg01-"));
 writeFileSync(
   join(root, "package.json"),
   JSON.stringify({ name: "t", dependencies: Object.fromEntries([...Object.keys(NPM), "flaky-netlibqq"].map((n) => [n, "^1.0.0"])) }),

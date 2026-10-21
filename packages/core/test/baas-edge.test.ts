@@ -18,7 +18,7 @@ afterAll(() => {
 });
 const PKG = JSON.stringify({ dependencies: { convex: "1.17.0", mongoose: "8.8.0", "@libsql/client": "0.14.0", "better-sqlite3": "11.5.0" } });
 function repo(files: Record<string, string>): string {
-  const d = mkdtempSync(join(tmpdir(), "preflight-baas-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-baas-"));
   dirs.push(d);
   for (const [rel, text] of Object.entries({ "package.json": PKG, ...files })) {
     mkdirSync(dirname(join(d, rel)), { recursive: true });

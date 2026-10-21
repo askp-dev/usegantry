@@ -17,7 +17,7 @@ export function hex(h: string): Rgb {
 }
 
 /** Page is US Letter (612×792 pt); y grows upward from the bottom. */
-export function renderPdf(ops: PdfOp[], meta: { title: string; subject?: string } = { title: "Preflight" }): Uint8Array {
+export function renderPdf(ops: PdfOp[], meta: { title: string; subject?: string } = { title: "Gantry" }): Uint8Array {
   const content = ops
     .map((o) =>
       o.kind === "rect"
@@ -33,7 +33,7 @@ export function renderPdf(ops: PdfOp[], meta: { title: string; subject?: string 
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>",
     `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
-    `<< /Title (${esc(meta.title)}) /Subject (${esc(meta.subject ?? "")}) /Producer (Preflight AI) >>`,
+    `<< /Title (${esc(meta.title)}) /Subject (${esc(meta.subject ?? "")}) /Producer (Gantry) >>`,
   ];
   let out = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
   const offsets: number[] = [];

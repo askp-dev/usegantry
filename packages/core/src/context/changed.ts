@@ -6,7 +6,7 @@
 
 import { listRepoFiles } from "./builder";
 import { loadConfig } from "./config";
-import type { PreflightConfig } from "./types";
+import type { GantryConfig } from "./types";
 
 const CODE_EXT = /\.(m|c)?(t|j)sx?$|\.svelte$|\.vue$|\.py$/;
 /** Code files that hold cross-file facts: auth middleware, ORM schemas/models, framework configs. */
@@ -37,7 +37,7 @@ export interface ChangedScope {
 }
 
 /** null when `root` isn't in a git work tree (callers fall back to a full scan). */
-export function changedScope(root: string, config: PreflightConfig = loadConfig(root)): ChangedScope | null {
+export function changedScope(root: string, config: GantryConfig = loadConfig(root)): ChangedScope | null {
   const changed = gitChangedFiles(root);
   if (!changed) return null;
   const all = listRepoFiles(root, config);

@@ -9,7 +9,7 @@ describe("MCP handshake", () => {
     const r: any = await req("initialize", { protocolVersion: "2025-06-18" });
     expect(r.result.protocolVersion).toBe("2025-06-18");
     expect(r.result.capabilities.tools).toBeDefined();
-    expect(r.result.serverInfo.name).toBe("preflight");
+    expect(r.result.serverInfo.name).toBe("gantry");
   });
   test("initialize with an unknown version falls back to a supported one", async () => {
     const r: any = await req("initialize", { protocolVersion: "1999-01-01" });
@@ -18,7 +18,7 @@ describe("MCP handshake", () => {
   test("server/discover lists modern + legacy versions", async () => {
     const r: any = await req("server/discover");
     expect(r.result.supportedVersions).toEqual([...MODERN_VERSIONS, ...LEGACY_VERSIONS]);
-    expect(r.result._meta["io.modelcontextprotocol/serverInfo"].name).toBe("preflight");
+    expect(r.result._meta["io.modelcontextprotocol/serverInfo"].name).toBe("gantry");
   });
   test("modern per-request protocolVersion yields resultType:complete", async () => {
     const r: any = await handle(

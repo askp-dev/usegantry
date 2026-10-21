@@ -12,7 +12,7 @@ const CLI = join(REPO, "packages/core/src/bin/cli.ts");
 
 /** Copies the vulnerable fixture and adds 160 × (route, page, action) so the repo has 500+ files, then commits it. */
 export function makeSlaRepo(): string {
-  const root = mkdtempSync(join(tmpdir(), "preflight-sla-"));
+  const root = mkdtempSync(join(tmpdir(), "gantry-sla-"));
   cpSync(FIXTURE, root, { recursive: true });
   const route = readFileSync(join(FIXTURE, "app/api/posts/route.ts"), "utf8");
   const page = readFileSync(join(FIXTURE, "app/page.tsx"), "utf8");

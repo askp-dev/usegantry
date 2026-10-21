@@ -1,6 +1,6 @@
 /**
- * `preflight hook <stop|pre-commit> --agent <claude|cursor>`: agent lifecycle hooks installed by `preflight init`.
- * Runs a changed-only scan and blocks only on **new** blocking findings (not in `.preflight/baseline.json`),
+ * `gantry hook <stop|pre-commit> --agent <claude|cursor>`: agent lifecycle hooks installed by `gantry init`.
+ * Runs a changed-only scan and blocks only on **new** blocking findings (not in `.gantry/baseline.json`),
  * so pre-existing debt never traps the agent. Fails open on internal errors: a crashing scanner must not brick the agent.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -12,7 +12,9 @@ import type { AuditReport, Finding } from "./context/types";
 import { runAudit } from "./engine";
 import { renderCompact } from "./reporters/compact";
 
-export const BASELINE = ".preflight/baseline.json";
+export const BASELINE = ".gantry/baseline.json";
+/** Pre-rename location, still read for one release. */
+const LEGACY_BASELINE = ".preflight/baseline.json";
 /** Cursor's stop hook has no `stop_hook_active`; cap our own auto follow-ups (Cursor's default cap is 5). */
 const CURSOR_MAX_FOLLOWUPS = 3;
 /** `git commit`, also with global options (`git -C dir commit`, `git -c k=v commit`). */
@@ -21,11 +23,12 @@ const COMMIT_RE = /(^|[;&|(]\s*|\s)git\s+(-\S+(\s+[^-\s]\S*)?\s+)*commit\b/;
 type Json = Record<string, any>;
 
 function readBaseline(root: string): Set<string> {
-  try {
-    return new Set(JSON.parse(readFileSync(join(root, BASELINE), "utf8")).fingerprints ?? []);
-  } catch {
-    return new Set();
+  for (const rel of [BASELINE, LEGACY_BASELINE]) {
+    try {
+      return new Set(JSON.parse(readFileSync(join(root, rel), "utf8")).fingerprints ?? []);
+    } catch {}
   }
+  return new Set();
 }
 
 export function writeBaseline(root: string, report: Pick<AuditReport, "findings">): void {
@@ -33,7 +36,7 @@ export function writeBaseline(root: string, report: Pick<AuditReport, "findings"
   mkdirSync(dirname(join(root, BASELINE)), { recursive: true });
   writeFileSync(
     join(root, BASELINE),
-    `${JSON.stringify({ note: "Blocking findings accepted when `preflight init` ran. Agent hooks only block on findings not listed here.", fingerprints }, null, 2)}\n`,
+    `${JSON.stringify({ note: "Blocking findings accepted when `gantry init` ran. Agent hooks only block on findings not listed here.", fingerprints }, null, 2)}\n`,
   );
 }
 
@@ -48,7 +51,7 @@ async function newBlockers(root: string): Promise<{ report: AuditReport; finding
 }
 
 const message = (report: AuditReport, fs: Finding[]) =>
-  `Preflight found ${fs.length} new launch blocker(s) in your changes. Fix them before finishing (don't weaken auth/RLS/validation; suppress a confirmed false positive with \`// preflight-ignore <RULE-ID>\`):\n${renderCompact(report, fs)}`;
+  `Gantry found ${fs.length} new launch blocker(s) in your changes. Fix them before finishing (don't weaken auth/RLS/validation; suppress a confirmed false positive with \`// gantry-ignore <RULE-ID>\`):\n${renderCompact(report, fs)}`;
 
 /** Cursor treats invalid or schema-mismatched JSON as a block, so every Cursor exit prints a valid "go ahead". */
 const cursorAllow = (event: string) => JSON.stringify(event === "stop" ? {} : { permission: "allow" });
@@ -80,7 +83,7 @@ export async function runHook(event: string, agent: string, input: Json, root: s
     stdout: JSON.stringify(
       event === "stop"
         ? { followup_message: msg }
-        : { permission: "deny", user_message: `Preflight blocked the commit: ${findings.length} new launch blocker(s).`, agent_message: msg },
+        : { permission: "deny", user_message: `Gantry blocked the commit: ${findings.length} new launch blocker(s).`, agent_message: msg },
     ),
   };
 }
@@ -101,7 +104,7 @@ export async function main({ path, flags, event = "" }: { path: string; flags: R
   } catch (e) {
     res = {
       code: 0,
-      stderr: `preflight hook skipped: ${e instanceof Error ? e.message : String(e)}`,
+      stderr: `gantry hook skipped: ${e instanceof Error ? e.message : String(e)}`,
       stdout: agent === "cursor" ? cursorAllow(event) : undefined,
     };
   }

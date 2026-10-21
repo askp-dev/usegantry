@@ -8,7 +8,7 @@ const SEV: Record<Severity, (s: string) => string> = { CRITICAL: color.red, HIGH
 export function renderPretty(r: AuditReport, opts: { verbose?: boolean } = {}): string {
   const out: string[] = [];
   const statusColor = r.status === "LAUNCH_READY" ? color.green : r.status === "LAUNCH_BLOCKED" ? color.red : color.amber;
-  out.push("", `${color.bold("Preflight")} ${color.dim(`v${r.tool.version}`)}  ${r.repo.name} ${color.dim(`(${r.repo.stack.join(" · ")})`)}`);
+  out.push("", `${color.bold("Gantry")} ${color.dim(`v${r.tool.version}`)}  ${r.repo.name} ${color.dim(`(${r.repo.stack.join(" · ")})`)}`);
   out.push(
     color.dim(
       `${r.stats.files} files · ${r.stats.routes} routes · ${r.stats.tables} tables · ${r.stats.dependencies} deps · ${r.stats.subprocessors} vendors · ${r.durationMs} ms`,

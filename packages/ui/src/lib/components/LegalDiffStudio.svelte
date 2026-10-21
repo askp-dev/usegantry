@@ -48,7 +48,7 @@
     {/each}
     <div class="label">Jurisdiction</div>
     <div class="text-secondary">{data?.manifest.jurisdiction ?? "—"}</div>
-    <p class="text-muted text-xs">Clauses and jurisdiction come from the detected stack and <code>preflight.config</code>.</p>
+    <p class="text-muted text-xs">Clauses and jurisdiction come from the detected stack and <code>gantry.config</code>.</p>
   </aside>
   <div class="card">
     <div class="mb-3 flex flex-wrap items-center gap-2">

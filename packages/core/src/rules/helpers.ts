@@ -47,11 +47,12 @@ export function defineRule(meta: Meta, body: (ctx: RepoContext, emit: Emit) => v
   };
 }
 
-/** `// preflight-ignore SEC-03` (any comment syntax) on the finding's line or the line above, or config.ignoreRules. */
+/** `// gantry-ignore SEC-03` (or legacy `preflight-ignore`) (any comment syntax) on the finding's line or the line above, or config.ignoreRules. */
 export function isSuppressed(ctx: RepoContext, f: Finding): boolean {
   if (ctx.config.ignoreRules.includes(f.ruleId)) return true;
   const lines = ctx.getText(f.file).split("\n");
-  const re = new RegExp(`preflight-ignore\\b[^\\n]*\\b${f.ruleId}\\b`);
+  // `preflight-ignore` is still honoured for one release after the rename.
+  const re = new RegExp(`(?:gantry|preflight)-ignore\\b[^\\n]*\\b${f.ruleId}\\b`);
   return [f.line - 1, f.line - 2].some((i) => i >= 0 && re.test(lines[i] ?? ""));
 }
 

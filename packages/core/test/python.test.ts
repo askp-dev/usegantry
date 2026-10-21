@@ -17,7 +17,7 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 function repo(files: Record<string, string>): string {
-  const d = mkdtempSync(join(tmpdir(), "preflight-py-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-py-"));
   dirs.push(d);
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(d, rel)), { recursive: true });

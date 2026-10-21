@@ -23,7 +23,7 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 function repo(files: Record<string, string>): string {
-  const d = mkdtempSync(join(tmpdir(), "preflight-comp-"));
+  const d = mkdtempSync(join(tmpdir(), "gantry-comp-"));
   dirs.push(d);
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(d, rel)), { recursive: true });
@@ -201,7 +201,7 @@ describe("eu-ai-act", () => {
     writeFileSync(join(root, "lib/ai.ts"), files["lib/ai.ts"].replace("gpt-4o", "gpt-4.1"));
     ctx = await ctxOf(root);
     expect((await aia01AiInventory.run(ctx)).map((f) => `${f.file}:${f.severity}`)).toEqual([`${AI_INVENTORY_PATH}:MEDIUM`]);
-    expect(AI_INVENTORY_END).toContain("preflight:end");
+    expect(AI_INVENTORY_END).toContain("gantry:end");
   });
 
   test("no AI in the repo → no inventory and no finding", async () => {

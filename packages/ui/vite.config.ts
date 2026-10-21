@@ -2,7 +2,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
-// Built into core so `preflight ui` (and the compiled binary) can serve it without the UI package.
+// Built into core so `gantry ui` (and the compiled binary) can serve it without the UI package.
 export default defineConfig({
   plugins: [tailwindcss(), svelte()],
   base: "./",
