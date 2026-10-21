@@ -5,5 +5,6 @@ export { buildDataFlowMermaid, buildSbom } from "./compilers/vendor-pack";
 export { buildRepoContext } from "./context/builder";
 export type * from "./context/types";
 export { audit, runAudit, VERSION } from "./engine";
+export { FEATURE_TIER, FeatureLockedError, hasFeature, requireFeature, resolveTier } from "./entitlements";
 export { toSarif } from "./reporters/sarif";
 export { ALL_STATIC_RULES } from "./rules/index";

@@ -8,6 +8,7 @@ import { LEGAL_DISCLAIMER } from "../compilers/legal-templates";
 import { writeVendorPack } from "../compilers/vendor-pack";
 import { buildRepoContext } from "../context/builder";
 import { runAudit, VERSION } from "../engine";
+import { requireFeature } from "../entitlements";
 import { color, renderPretty } from "../reporters/pretty";
 import { toSarif } from "../reporters/sarif";
 
@@ -97,6 +98,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       }
     }
     case "attack":
+      requireFeature("attack");
       if (typeof flags.target !== "string") {
         console.error("attack requires --target <url>");
         return 2;

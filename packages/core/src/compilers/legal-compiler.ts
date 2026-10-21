@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { SUBPROCESSOR_MAP_VERSION } from "../context/knowledge";
 import type { DetectedSubprocessor, LegalClause, LegalManifest, RepoContext } from "../context/types";
+import { requireFeature } from "../entitlements";
 import { USER_TABLE_RE } from "../rules/helpers";
 import { unifiedDiff } from "./diff";
 import { AUTO_BLOCKS, type AutoBlock, TEMPLATES } from "./legal-templates";
@@ -192,6 +193,7 @@ export interface LegalChange {
 }
 
 export function compileLegalDocs(ctx: RepoContext, opts: { apply?: boolean; now?: Date } = {}): { manifest: LegalManifest; changes: LegalChange[] } {
+  requireFeature("legal");
   const manifest = buildLegalManifest(ctx, opts.now);
   const versionFile = legalVersionPath(ctx);
   const files: Record<string, string> = {

@@ -178,6 +178,10 @@ This is a Next 15 + Supabase + Prisma + Stripe + OpenAI app, seeded to trigger m
     - SEC-06 skips git-ignored `.env*` files, because that's where secrets belong.
 11. **`bun build --compile` (Sprint 5).** The git worker is loaded via `new URL("../../workers/git-entropy.worker.ts", import.meta.url)`, and the CLI's `delegate()` uses dynamic paths. Both need to be passed as extra entrypoints (or switched to static imports) for the compiled binary. If the worker fails to start, SEC-06 just skips history.
 12. **Biome.** Sprint 1's `context/*.ts` files carry ~20 pre-existing lint findings (useTemplate, noAssignInExpressions). `biome check --write packages/core` reformats all of them, so run biome only on the files you touch.
+14. **Feature tiers: everything is free at launch.** `src/entitlements.ts` maps features to the WEBSITE_SPEC §6 tiers. `resolveTier()` currently always returns `"agency"`, so nothing is locked.
+    - Already gated through `requireFeature()`: `compileLegalDocs` (pro), `generateCertificate` and `writeVendorPack` (agency), and `preflight attack` (pro).
+    - Sprint 3/4: call `requireFeature("attack")` in `pentest/runner.ts`, `"mcp"` in `bin/mcp.ts`, and `"ide"` in the VS Code extension.
+    - To turn on paid tiers later, replace only the body of `resolveTier()` with real license verification. Don't add an env-var override, because that becomes a free bypass.
 13. `/ponytail-review` wasn't available as a skill in the Sprint 2 session. I did the review by hand instead: removed dead helpers, reused `lineAt`, and dropped a redundant regex.
 
 ---

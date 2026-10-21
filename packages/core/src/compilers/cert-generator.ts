@@ -8,6 +8,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "n
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import type { AuditReport } from "../context/types";
+import { requireFeature } from "../entitlements";
 import { ALL_STATIC_RULES } from "../rules/index";
 import { hex, type PdfOp, renderPdf } from "./pdf";
 
@@ -193,6 +194,7 @@ export function generateCertificate(
   report: AuditReport,
   opts: { outDir: string; allowBlocked?: boolean; secret?: string; keyPath?: string },
 ): { html: string; pdf: string; url: string; payload: CertPayload; publicKey: string } {
+  requireFeature("cert");
   const blocked = report.blockers > 0;
   if (blocked && !opts.allowBlocked)
     throw new CertificateBlockedError(

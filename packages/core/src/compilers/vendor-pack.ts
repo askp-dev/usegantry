@@ -4,6 +4,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AuditReport, Dependency, RepoContext } from "../context/types";
 import { VERSION } from "../engine";
+import { requireFeature } from "../entitlements";
 
 const cleanVersion = (v: string) => v.replace(/^[\^~>=<v\s]+/, "").split(/\s/)[0] || "0.0.0";
 
@@ -77,6 +78,7 @@ export function buildDataFlowMermaid(report: AuditReport): string {
 }
 
 export function writeVendorPack(ctx: RepoContext, report: AuditReport, outDir = ctx.rootDir): string[] {
+  requireFeature("vendorPack");
   const files = [join(outDir, "SBOM.json"), join(outDir, "DATA_FLOW.mermaid")];
   writeFileSync(files[0], `${JSON.stringify(buildSbom(ctx), null, 2)}\n`);
   writeFileSync(files[1], buildDataFlowMermaid(report));
