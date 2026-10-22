@@ -4,6 +4,7 @@
   import CallBlock from "#lib/components/CallBlock.svelte";
   import CheckReport from "#lib/components/CheckReport.svelte";
   import CodeBlock from "#lib/components/CodeBlock.svelte";
+  import FlowSchematic from "#lib/components/FlowSchematic.svelte";
   import InstallSwitcher from "#lib/components/InstallSwitcher.svelte";
   import RoastCard from "#lib/components/RoastCard.svelte";
   import RuleExplorer from "#lib/components/RuleExplorer.svelte";
@@ -11,7 +12,7 @@
   import TitleBlock from "#lib/components/TitleBlock.svelte";
   import rules from "#lib/data/rules.json";
   import sample from "#lib/data/sample.json";
-  import { META, PILLARS, plural, STATION, statusCall } from "#lib/site.ts";
+  import { CONTACT, META, PILLARS, plural, STATION, statusCall } from "#lib/site.ts";
 
   let side = $state<"before" | "after">("before");
   const s = $derived(sample[side]);
@@ -56,8 +57,13 @@ jobs:
   <meta property="og:description" content="{META.ruleCount} checks, plain-English fixes, prompts for your AI agent. Runs locally in about 0.3 s." />
 </svelte:head>
 
+<!-- Data flow -->
+<section class="mx-auto max-w-[1200px] px-4 pt-8 sm:px-6 lg:pt-10">
+  <FlowSchematic />
+</section>
+
 <!-- Hero -->
-<section class="mx-auto grid max-w-[1200px] gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-20">
+<section class="mx-auto grid max-w-[1200px] gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-16">
   <div class="flex flex-col gap-7">
     <p class="label text-[11px] text-ink-2">Pre-launch checks for AI-built apps</p>
     <h1 class="display text-[44px] sm:text-[60px]">Clear your app for launch.</h1>
@@ -184,17 +190,17 @@ jobs:
       <h2 id="setup-h" class="display text-[30px] sm:text-[38px]">Checks where the code gets written.</h2>
     </div>
     <div class="grid gap-6 lg:grid-cols-3">
-      <div class="flex flex-col gap-3">
+      <div class="flex min-w-0 flex-col gap-3">
         <h3 class="label text-[12px]">1 · Your agent</h3>
         <p class="text-[14px] text-ink-2">Claude Code, Cursor and other MCP clients can run the audit, sync legal docs and fire probes themselves.</p>
         <CodeBlock code={mcp} label=".mcp.json" />
       </div>
-      <div class="flex flex-col gap-3">
+      <div class="flex min-w-0 flex-col gap-3">
         <h3 class="label text-[12px]">2 · The stop hook</h3>
         <p class="text-[14px] text-ink-2">One command sets everything up. Existing issues are baselined, so the hook only blocks what the agent just introduced.</p>
         <CodeBlock code={hook} label="terminal" />
       </div>
-      <div class="flex flex-col gap-3">
+      <div class="flex min-w-0 flex-col gap-3">
         <h3 class="label text-[12px]">3 · Every push</h3>
         <p class="text-[14px] text-ink-2">Findings land in GitHub code scanning; the badge and a signed certificate are a build artifact. Nothing is committed back.</p>
         <CodeBlock code={workflow} label="GitHub Actions" />
@@ -257,5 +263,26 @@ jobs:
       </p>
     </div>
     <a href="https://github.com/askp-dev/usegantry" class="label self-start border-2 border-ink px-4 py-3 text-[11px] hover:bg-ink hover:text-paper md:self-auto">Read the source</a>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="border-t-2 border-ink" aria-labelledby="contact-h">
+  <div class="mx-auto grid max-w-[1200px] gap-8 px-4 py-14 sm:px-6 md:grid-cols-[1fr_1fr] md:items-end">
+    <div class="flex max-w-[56ch] flex-col gap-3">
+      <p class="label text-[11px] text-ink-2">Contact</p>
+      <h2 id="contact-h" class="display text-[30px] sm:text-[38px]">Talk to the person who built it.</h2>
+      <p class="text-[15px] text-ink-2">A false positive, a rule you want, a stack Gantry doesn't read yet, or a launch it helped with. Email goes straight to me.</p>
+    </div>
+    <dl class="border-y-2 border-ink">
+      <div class="flex items-baseline justify-between gap-4 border-b border-rule py-3">
+        <dt class="label text-[11px] text-ink-3">Email</dt>
+        <dd><a class="font-mono text-[14px] text-signal-ink underline" href="mailto:{CONTACT.email}">{CONTACT.email}</a></dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-4 py-3">
+        <dt class="label text-[11px] text-ink-3">Web</dt>
+        <dd><a class="font-mono text-[14px] text-signal-ink underline" href={CONTACT.web}>{CONTACT.web.replace("https://", "")}</a></dd>
+      </div>
+    </dl>
   </div>
 </section>

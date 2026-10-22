@@ -42,6 +42,9 @@ The user's answers before the build started:
 | 12. Python rules: `uv.lock` + `Pipfile.lock`, PY-01..04, `fixtures/vulnerable-fastapi` + `clean-fastapi` | ✅ Done: 273 tests pass, typecheck + biome clean (touched files), bench 313 ms median, vuln fixtures fire all 58 rules, clean-saas 100/100 with 0 findings, clean-fastapi silent for the four PY rules |
 | 13. Compliance profiles: `hipaa` / `fintech-pci` / `legal-privilege` / `eu-ai-act` packs (HIPAA-01..03, PCI-01..03, LGL-01..03, AIA-01), profile severity raises, `profiles` agency gate, vendor `baa`/`zdr`/`trainsOnData`, `AI_INVENTORY.md` compiler, `fixtures/vulnerable-compliance` + `clean-compliance` | ✅ Done: 306 tests pass, typecheck + biome clean (touched files), bench 309 ms median (all five profiles on vulnerable-saas: 39 ms), vuln fixtures fire all 68 rules, clean-saas 100/100 with 0 findings, clean-compliance silent for the ten new rules |
 | 14. Go/Rust services: optional ast-grep grammars (napi ^0.51 + lang-go/lang-rust), `go.mod`/`go.sum`/`Cargo.toml`/`Cargo.lock`, Gin/Echo/Fiber/chi/net-http + Axum/Actix routes, SYS-01..03, `RuleSkipped` → `report.notices`, `fixtures/vulnerable-go`/`vulnerable-rust` + clean twins, CI workflow | ✅ Done: 320 tests pass (311 + 9 skipped with `GANTRY_NO_NAPI=1`), typecheck + biome clean (touched files), bench 319 ms median, synthetic 500-file Go repo ≈200 ms cold, vuln fixtures fire all 71 rules, clean-saas 100/100 with 0 findings, clean-go/clean-rust silent for SYS-01..03, standalone binary prints the skip notice (no crash) |
+| 15. Go/Rust route-body parity (SEC-07/08/09, PAY-01, PCI-03) | ⏳ Next (plan in §5) |
+| 16. Dependency risk: DEP-01 (OSV + KEV, reachability-ranked), DEP-02 (too-new releases), DEP-03 (install hygiene), daily re-check Action, `gantry sbom` | ⏳ Planned (§5) |
+| 17. Every agent IDE: Open VSX publish, VS Code/Cursor/Windsurf/Antigravity/Codex wiring, EDH smoke test | ⏳ Planned (§5) |
 
 ---
 
@@ -543,10 +546,56 @@ Closes the quirk 43 gap: those five rules skip Go/Rust routes via `scriptRoutes(
 - **No-grammar behaviour:** the five rules still run their TS/Python path everywhere. Only when the repo has Go/Rust routes to check and the grammars are missing do they report a notice (alongside SYS-*) and drop out of `rulesRun`, the stricter choice. A mixed TS + Go repo would rather show "SEC-07 not fully checked" than certify SEC-07 as passed. Implement it as "emit findings for TS routes, then throw `RuleSkipped`", and teach the engine to keep findings a rule emitted before throwing.
 - **Done when:** the five rules fire on the Go/Rust fixtures and stay silent on clean-go, clean-rust and clean-saas; vulnerable-saas output is byte-identical to before (snapshot the finding list first); bench and the 500-file Go synthetic stay under SLA.
 
+#### Sprint 16: dependency risk (DEP-01..03, daily re-check, `gantry sbom`)
+Added 2026-10-22 in response to the current flood of CVEs. Gantry already resolves exact versions from nine lockfile formats (`builder.ts` `lockOrder`, plus `go.sum`/`Cargo.lock`) and catches malicious, hallucinated or lookalike packages (LEG-01) and unpinned MCP servers (MCP-02). It never checks those versions against advisories. **The angle: name the few CVEs that matter, in plain English. A wall of every CVE is what's burying people.**
+- **First:** check the OSV.dev `querybatch` + `vulns/{id}` API, the CISA KEV JSON feed and CycloneDX 1.6 against current docs. Add DEP-01..03 to the RULES_SPEC registry and the scoring matrix before writing code (the usual sprint start).
+- **`context/advisories.ts`** (zero deps, one lazy `fetch` per scan, memoized like `ctx.dataQueries`):
+  - Send one OSV `querybatch` for every resolved `{ecosystem, name, version}` (npm, PyPI, Go, crates.io), then fetch details only for the IDs that come back. Join them with the KEV catalogue (known-exploited CVE IDs).
+  - Cache in `.gantry/advisories/` (git-ignored) with a 24 h TTL. Record `advisoriesAsOf` on the report.
+  - **Privacy:** only package names + versions leave the machine, never code. Never send names that look private: scoped packages not on the public registry (reuse LEG-01's registry knowledge), `workspace:`/`file:`/`link:`/git deps, and anything listed in `gantry.config.json` `privatePackages`.
+  - **Offline (`ctx.config.offline`) or network failure:** use the cache if it exists. Otherwise DEP-01 throws `RuleSkipped` with a notice, the same contract as SYS-*. A skipped advisory check is never shown as a pass.
+- **DEP-01, vulnerable dependency.**
+  - **CRITICAL (NO-GO):** the advisory is in KEV **and** the package is reachable, meaning `CodeIndex.imports()` (TS/JS/Python) or a Go/Rust `use`/import names it, or it's a direct runtime dependency.
+  - **HIGH (HOLD):** CVSS ≥7 with a fixed version available, or KEV but only reachable transitively.
+  - Everything else: no finding, just a count in `report.notices` ("14 lower-severity advisories, none exploited or imported").
+  - One finding per package, not per CVE. The evidence is the lockfile line plus the import site. The impact is the advisory summary in plain words. The fix is the first fixed version on the same major where one exists. `agentRemediationPrompt`: "bump X to ≥Y in <manifest>, reinstall, run the tests". No `autoFixPatch`, because lockfiles need a real install.
+  - `// gantry-ignore DEP-01 <GHSA/CVE id> <reason>` in the manifest, or a `gantry.config.json` `ignoreAdvisories` entry with a required reason and expiry date (an unreachable-code VEX note).
+- **DEP-02, too-new release.** A resolved version published less than `minReleaseAgeDays` ago (default 7). Severity is HIGH, or CRITICAL if that version has since been unpublished or deprecated as compromised. Publish dates come from the registry metadata LEG-01 already fetches (npm `time`, PyPI `upload_time`). The fix recommends the package manager's minimum-release-age setting (pnpm `minimumReleaseAge`, uv `exclude-newer`, others as documented: *confirm* bun/yarn/npm). Online only.
+- **DEP-03, install hygiene** (offline, `scope: "repo"`):
+  - a manifest with no lockfile, or a lockfile that's missing direct deps (out of sync)
+  - `*`, `latest`, `x`, or an empty range on a runtime dep
+  - git/tarball-URL deps without a commit hash
+  - a dependency with `preinstall`/`install`/`postinstall` scripts that isn't in the seed top-50k list (lockfile `hasInstallScript` where available)
+  - Severity is HIGH, except a missing lockfile on a deployable app, which is CRITICAL.
+- **Daily re-check:** add `gantry scan --only DEP-01,DEP-02` (or a generic `--only` filter) and a scheduled GitHub Action template (`.github/workflows/gantry-advisories.yml`, cron daily, opens or updates one issue; never commits). Certificates and `check --json` carry `advisoriesAsOf`, and the verify page shows "advisories as of <date>". Document the contract in `docs/check-json.md`.
+- **`gantry sbom [path] [--out sbom.cdx.json]`:** a CycloneDX 1.6 JSON export of `ctx.dependencies` (purl per component, direct vs. transitive, licences where known), plus the known advisories as a `vulnerabilities` section when online. Support the EU CRA in the README; don't claim compliance.
+- **Fixtures:**
+  - **vulnerable-saas:** pin one real old package with a KEV-listed advisory that is imported (*pick at sprint start*); add one with a non-KEV high CVE, a `"latest"` dep and a `postinstall` dep. Add `fixtures/vulnerable-nolock` (manifest only).
+  - **Tests:** stub `fetch` with recorded OSV/KEV/registry responses (same pattern as the LEG-01 stubbed-fetch test), so tests never hit the network.
+  - **clean-saas:** stays silent with the stubs returning no advisories.
+- **SLA:** the network call is one batch with a 1.5 s timeout running in parallel with the rules, and cache hits are free. `bun run bench` runs offline, so it's unaffected. Measure an online cold scan separately.
+- **Site, after it lands:** a "When the next CVE drops" section: known-exploited and imported first, too-new releases held back, a daily re-check, an SBOM. It also highlights the features that already exist: LEG-01, MCP-02, the stop hook, SARIF, `security.txt`. Update the "0 B code uploaded" wording to "0 B code uploaded · package names only for advisory lookups (`--offline` to disable)".
+- **Done when:** DEP-01..03 fire on the vuln fixtures and stay silent on clean-saas/clean-fastapi/clean-go/clean-rust. Offline without a cache gives a DEP-01 notice, not a pass. No private package name is ever sent (asserted on the stubbed request bodies). `gantry sbom` validates against the CycloneDX 1.6 schema. The scheduled workflow template passes `actionlint`, and bench stays under SLA.
+
+#### Sprint 17: every agent IDE (VS Code, Cursor, Windsurf, Antigravity, Codex)
+Added 2026-10-22 at the user's request. Today only VS Code/Cursor are wired (`init` writes `.mcp.json`, `.cursor/*`, `CLAUDE.md`), and the extension has never run in an Extension Development Host (quirks 23, 24, 26).
+- **First, check every path and command ID against current docs (Context7 / vendor docs). Don't guess.** The items marked *(confirm)* below come from memory.
+- **One `.vsix`, two registries.** Cursor, Windsurf and Antigravity are VS Code forks that install from **Open VSX**, so publish `usegantry.gantry-vscode` to both the VS Code Marketplace and Open VSX (`ovsx publish`) from the release workflow. Check each fork's bundled VS Code version still satisfies `engines.vscode ^1.90`.
+- **"Fix with AI Agent" per IDE.** Add a hidden `gantry.debugAgentCommands` command that lists the `getCommands()` IDs matching `chat|agent|cascade|composer|codex`. Run it in each IDE and add the real IDs to the `gantry.agentCommands` defaults (Windsurf Cascade, Antigravity agent, the Codex extension). The clipboard-first fallback stays. Detect the host with `vscode.env.appName` so the toast names the right agent.
+- **`gantry init --agent <claude|cursor|windsurf|antigravity|codex|all>`** (default: detect from existing dirs, else claude + cursor):
+  - Windsurf: rules in `.windsurf/rules/gantry.md`; MCP is user-level (`~/.codeium/windsurf/mcp_config.json` *(confirm)*), so print the snippet instead of writing to `$HOME`; Cascade hooks *(confirm the file and event names)* → `gantry hook stop --agent windsurf`.
+  - Antigravity: rules in `.agent/rules/gantry.md` *(confirm)*; MCP through its MCP config *(confirm path; print if user-level)*.
+  - Codex (CLI + IDE extension): upsert the `GANTRY:BEGIN` block in `AGENTS.md`; `[mcp_servers.gantry]` with `command = "bunx"`, `args = ["@usegantry/mcp"]` in `.codex/config.toml` if project-scoped config is supported *(confirm)*, else print it; hooks only if Codex supports them *(confirm)*.
+  - Each new `--agent` value for `gantry hook` gets the output contract that agent expects, tested like the Claude/Cursor ones in `hooks.test.ts`.
+- **MCP-01/MCP-02 coverage.** Extend `AGENT_CONFIG_RE` to `.windsurf/`, `.agent/` and `.codex/config.toml`. TOML needs a small subset reader (tables + string/array values), the same approach as the YAML subset reader. Add positives to `fixtures/vulnerable-saas` and ref-based versions to `clean-saas`.
+- **Smoke test (closes quirk 26).** `@vscode/test-electron` runs the extension in VS Code in CI (activate → scan the vuln fixture → diagnostics > 0). For the forks, keep a manual checklist in `packages/vscode-ext/README.md`: install the `.vsix`, scan, CodeLens, sidebar, Fix with AI Agent. Record results here.
+- **Site, after it lands:** add an "Editors" row to the site's setup section (`site/src/routes/+page.svelte`, "Wire it in"), plus per-IDE install steps in `/docs`, listing **only** the IDEs that passed the smoke test.
+- **Done when:** the `.vsix` installs and scans in all four IDEs, Codex picks up the MCP server and `AGENTS.md`, `init --agent all` is idempotent on a git copy of the vuln fixture, MCP-01 fires on the new config paths and stays silent on clean-saas, and the site lists the verified IDEs.
+
 #### Parked (not scheduled)
 - `gantry canary <url>`: a daily header/HSTS/CSP/TLS-expiry probe that reuses pentest safety, plus a scheduled Action template. This is a reasonable next sprint if retention matters. The hosted version and the vendor DPA-change watcher need a server.
 - `CLIENT-03` Godot/Unity multiplayer authority + asset licences: high false-positive risk, niche.
-- Still-open Sprint 5 items: Extension Development Host smoke test (quirk 26), LICENSE, repository URL.
+- (The Sprint 5 Extension Development Host smoke test moved into Sprint 17. LICENSE and the repository URL landed in 8a.)
 
 ---
 

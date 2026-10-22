@@ -4,6 +4,7 @@ export const REPO = "askp-dev/usegantry";
 export const REPO_URL = `https://github.com/${REPO}`;
 export const SITE = "https://usegantry.app";
 export const META = meta;
+export const CONTACT = { email: "ask@askp.one", web: "https://askp.one" };
 
 export type PillarKey = "SECURITY" | "PRIVACY" | "LEGAL" | "FINOPS_OPS";
 export const STATION: Record<PillarKey, string> = { SECURITY: "Security", PRIVACY: "Privacy", LEGAL: "Legal", FINOPS_OPS: "Cost" };

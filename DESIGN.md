@@ -115,6 +115,8 @@ Scale (1.25 ratio, 15px base): 11 / 12 / 15 / 19 / 24 / 30 / 38 / 60. Station la
 
 Motion is for state changes only: 120 ms (hover, press) and 200 ms (panel, tag pull), `cubic-bezier(0.2, 0, 0, 1)`. There are no idle animations, no parallax and no looping loaders; progress is a determinate bar or a count. Honour `prefers-reduced-motion`, which removes all transforms.
 
+One sanctioned sequence: the data-flow schematic at the top of the site (`site/src/lib/components/FlowSchematic.svelte`). It plays a real scan once (inputs → context → tower → stations → outputs), then stops on its final frame, with a Replay button. It never loops. Its CSS base state is the final frame, so with reduced motion it renders static and the packets are hidden.
+
 ## 4. Brand
 
 - **Wordmark:** `GANTRY` in Archivo 800, `wdth` 125, `+0.04em` tracking, in `--ink`. The only orange element is a 4px-tall bar under the wordmark, the same width as the letters, standing in for the pad.

@@ -18,6 +18,7 @@
         <a class="label text-[11px] text-ink-2 hover:text-ink" href={resolve("/roast")}>Roast</a>
         <a class="label text-[11px] text-ink-2 hover:text-ink" href={REPO_URL}>Source</a>
         <a class="label text-[11px] text-ink-2 hover:text-ink" href="{REPO_URL}/blob/main/LICENSE">MIT licence</a>
+        <a class="label text-[11px] text-ink-2 hover:text-ink" href="{resolve('/')}#contact">Contact</a>
       </nav>
     </div>
     <TitleBlock
