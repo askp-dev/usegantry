@@ -22,11 +22,16 @@ export function sysHandlers(ctx: RepoContext, lang: SysLang): Array<{ route: Rou
     const key = `${route.file}:${route.bodyStart}`;
     if (route.language !== lang || seen.has(key)) continue;
     seen.add(key);
-    const root = ctx.getAst(route.file).root();
-    const fn = HANDLER_KINDS[lang].flatMap((kind) => root.findAll({ rule: { kind } })).find((n) => n.range().start.index === route.bodyStart);
+    const fn = handlerNode(ctx, route, lang);
     if (fn) out.push({ route, fn });
   }
   return out;
+}
+
+/** The handler function node of a Go/Rust route (callers must have checked the grammar). */
+export function handlerNode(ctx: RepoContext, route: RouteNode, lang: SysLang): SgNode | undefined {
+  const root = ctx.getAst(route.file).root();
+  return HANDLER_KINDS[lang].flatMap((kind) => root.findAll({ rule: { kind } })).find((n) => n.range().start.index === route.bodyStart);
 }
 
 export const lineOf = (n: SgNode) => n.range().start.line + 1;

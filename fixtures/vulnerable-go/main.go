@@ -15,6 +15,11 @@ func main() {
 	api := r.Group("/api")
 	api.POST("/orders", handlers.CreateOrder)
 	api.POST("/notify", handlers.NotifyAll)
+	api.PATCH("/projects/:id", handlers.RenameProject)
+	api.DELETE("/projects/:id", handlers.ArchiveProject)
+	api.POST("/summarize", handlers.Summarize)
+	api.POST("/transfers", handlers.CreateTransfer)
+	r.POST("/webhooks/stripe", handlers.StripeWebhook)
 
 	go internal.ServeAdmin()
 	r.Run(":8080")

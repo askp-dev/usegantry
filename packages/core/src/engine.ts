@@ -51,7 +51,7 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
       } catch (e) {
         if (e instanceof RuleSkipped) {
           skipped.set(e.message, [...(skipped.get(e.message) ?? []), r.id]);
-          return [];
+          return e.findings;
         }
         errors.push({ ruleId: r.id, message: e instanceof Error ? e.message : String(e) });
         return [];

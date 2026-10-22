@@ -24,6 +24,9 @@ const ON_COMP = new Set(["HIPAA-01", "HIPAA-02", "HIPAA-03", "PCI-01", "PCI-02",
 /** Go/Rust rules: positives across the Go and Rust fixtures, silent on both clean twins. Skipped (not failed) without the optional ast-grep grammars. */
 const ON_SYS = new Set(["SYS-01", "SYS-02", "SYS-03"]);
 const HAS_SYS = !sysLangUnavailable("go") && !sysLangUnavailable("rust");
+/** Route rules with Go/Rust parity (Sprint 15): their usual fixture plus the Go/Rust fixtures and clean twins (when the grammars load). */
+const SYS_PARITY = new Set(["SEC-07", "SEC-08", "SEC-09", "PAY-01", "PCI-03"]);
+const isSysFile = (file: string) => /\.(?:go|rs)$/.test(file);
 const vulnRoot = (id: string) =>
   ON_BAAS.has(id)
     ? BAAS
@@ -81,9 +84,21 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     ["app/actions.ts", "renamePost(): the auth result is never checked"],
     ["app/api/posts/route.ts", "POST /api/posts"],
     ["app/api/chat/route.ts", "POST /api/chat"],
+    ["handlers/orders.go", "POST /api/orders: no auth assertion"],
+    ["handlers/projects.go", "PATCH /api/projects/:id: the auth check runs after the first mutation"],
+    ["handlers/projects.go", "DELETE /api/projects/:id: the auth result is never checked"],
+    ["src/billing.rs", "POST /notes: no auth assertion"],
   ],
-  "SEC-08": [["app/api/webhook/route.ts", "req.json()"]],
-  "SEC-09": [["app/api/chat/route.ts", "rate limiting"]],
+  "SEC-08": [
+    ["app/api/webhook/route.ts", "req.json()"],
+    ["handlers/webhooks.go", "POST /webhooks/stripe: no signature verification"],
+    ["src/billing.rs", "POST /webhooks/stripe: no signature verification"],
+  ],
+  "SEC-09": [
+    ["app/api/chat/route.ts", "rate limiting"],
+    ["handlers/ai.go", "POST /api/summarize → openai (missing rate limiting and input-length / max_tokens caps)"],
+    ["src/ai.rs", "POST /chat → openai (missing rate limiting"],
+  ],
   "SEC-10": [
     ["app/actions.ts", "data });"],
     ["app/api/posts/route.ts", "data: body"],
@@ -151,7 +166,11 @@ const EXPECT: Record<string, Array<[string, string]>> = {
   "FIN-01": [["app/page.tsx", "useEffect"]],
   "FIN-02": [["app/api/chat/route.ts", "streamText"]],
   "FIN-03": [["app/api/posts/route.ts", "findMany"]],
-  "PAY-01": [["app/api/webhook/route.ts", "increment"]],
+  "PAY-01": [
+    ["app/api/webhook/route.ts", "increment"],
+    ["handlers/webhooks.go", "UPDATE accounts SET plan = 'pro', credits"],
+    ["src/billing.rs", "UPDATE accounts SET plan = 'pro'"],
+  ],
   "PAY-02": [["app/api/credits/route.ts", "user.credits - 1"]],
   "PAY-03": [["app/api/webhook/route.ts", "customer.subscription.deleted"]],
   "OPS-01": [["app/actions.ts", "no GET /api/health"]],
@@ -244,7 +263,12 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     ["app/api/ledger/[id]/route.ts", "prisma.ledgerEntry.update"],
     ["app/api/ledger/[id]/route.ts", "prisma.ledgerEntry.delete"],
   ],
-  "PCI-03": [["app/api/transfers/route.ts", "export async function POST"]],
+  "PCI-03": [
+    ["app/api/transfers/route.ts", "export async function POST"],
+    ["handlers/transfers.go", "POST /api/transfers → `transfers` table"],
+    ["handlers/orders.go", "POST /api/orders → `orders` table"],
+    ["src/billing.rs", "POST /payouts → `payouts` table"],
+  ],
   "LGL-01": [["lib/rag.ts", "index.query"]],
   "LGL-02": [
     ["prisma/schema.prisma", "Document.matterId → Matter ON DELETE CASCADE (and Document.legalHold exists)"],
@@ -279,6 +303,7 @@ let fastapi: RepoContext;
 let cleanFastapi: RepoContext;
 let compliance: RepoContext;
 let cleanCompliance: RepoContext;
+let sysCtx: Record<"goV" | "rsV" | "goC" | "rsC", RepoContext> | undefined;
 const vulnOut = new Map<string, Finding[]>();
 const cleanOut = new Map<string, Finding[]>();
 
@@ -296,6 +321,7 @@ beforeAll(async () => {
     const [goV, rsV, goC, rsC] = await Promise.all(
       ["vulnerable-go", "vulnerable-rust", "clean-go", "clean-rust"].map((f) => buildRepoContext(`fixtures/${f}`, { config: { offline: true } })),
     );
+    sysCtx = { goV, rsV, goC, rsC };
     for (const r of ALL_STATIC_RULES.filter((r) => ON_SYS.has(r.id))) {
       vulnOut.set(r.id, [...(await r.run(goV)), ...(await r.run(rsV))]);
       cleanOut.set(r.id, [...(await r.run(clean)), ...(await r.run(goC)), ...(await r.run(rsC))]);
@@ -309,6 +335,11 @@ beforeAll(async () => {
   await Promise.all([...ON_INFRA].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanInfra)))));
   await Promise.all([...ON_PY].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanFastapi)))));
   await Promise.all([...ON_COMP].map(async (id) => cleanOut.get(id)!.push(...(await ALL_STATIC_RULES.find((r) => r.id === id)!.run(cleanCompliance)))));
+  if (sysCtx)
+    for (const r of ALL_STATIC_RULES.filter((r) => SYS_PARITY.has(r.id))) {
+      vulnOut.get(r.id)!.push(...(await r.run(sysCtx.goV)), ...(await r.run(sysCtx.rsV)));
+      cleanOut.get(r.id)!.push(...(await r.run(sysCtx.goC)), ...(await r.run(sysCtx.rsC)));
+    }
 });
 
 test("registry has 71 unique rules covering every expectation", () => {
@@ -320,9 +351,10 @@ test("registry has 71 unique rules covering every expectation", () => {
 
 for (const rule of ALL_STATIC_RULES) {
   describe.skipIf(ON_SYS.has(rule.id) && !HAS_SYS)(rule.id, () => {
-    test(`fires on ${vulnRoot(rule.id)}`, () => {
+    const sysLabel = SYS_PARITY.has(rule.id) && HAS_SYS ? " + Go/Rust fixtures" : "";
+    test(`fires on ${vulnRoot(rule.id)}${sysLabel}`, () => {
       const fs = vulnOut.get(rule.id)!;
-      for (const [file, needle] of EXPECT[rule.id]) {
+      for (const [file, needle] of EXPECT[rule.id].filter(([file]) => HAS_SYS || !isSysFile(file))) {
         const hit = fs.find((f) => f.file === file && (f.evidence.includes(needle) || f.impact.includes(needle)));
         expect(
           hit,
@@ -339,7 +371,7 @@ for (const rule of ALL_STATIC_RULES) {
         expect(f.blocking).toBe(f.severity === "CRITICAL");
       }
     });
-    test(`is silent on ${[CLEAN, cleanTwin(rule.id)].filter(Boolean).join(" + ")}`, () => {
+    test(`is silent on ${[CLEAN, cleanTwin(rule.id)].filter(Boolean).join(" + ")}${sysLabel && " + clean-go + clean-rust"}`, () => {
       const fs = cleanOut.get(rule.id)!;
       expect(fs.map((f) => `${f.file}:${f.line} ${f.evidence}`)).toEqual([]);
     });

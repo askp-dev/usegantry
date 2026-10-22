@@ -100,7 +100,44 @@ for (const v of VENDORS) {
   for (const p of v.packages.pypi) byPkg.set(`pypi:${p.toLowerCase()}`, v);
 }
 
+/** Go modules (path prefixes, any `/vN` or sub-package below) and crates → vendor ids. The sub-processor map lists npm + PyPI only. */
+const SYS_VENDOR_PKGS: Record<string, string> = {
+  "go:github.com/stripe/stripe-go": "stripe",
+  "go:github.com/sashabaranov/go-openai": "openai",
+  "go:github.com/openai/openai-go": "openai",
+  "go:github.com/anthropics/anthropic-sdk-go": "anthropic",
+  "go:github.com/liushuangls/go-anthropic": "anthropic",
+  "go:github.com/google/generative-ai-go": "google-ai",
+  "go:google.golang.org/genai": "google-ai",
+  "go:github.com/cohere-ai/cohere-go": "cohere",
+  "go:github.com/twilio/twilio-go": "twilio",
+  "go:github.com/sendgrid/sendgrid-go": "sendgrid",
+  "go:github.com/resend/resend-go": "resend",
+  "go:github.com/mailgun/mailgun-go": "mailgun",
+  "go:github.com/plaid/plaid-go": "plaid",
+  "go:github.com/braintree-go/braintree-go": "braintree",
+  "cargo:async-stripe": "stripe",
+  "cargo:stripe": "stripe", // async-stripe's lib name (`use stripe::…`)
+  "cargo:stripe-rust": "stripe",
+  "cargo:async-openai": "openai",
+  "cargo:openai-api-rs": "openai",
+  "cargo:anthropic-sdk": "anthropic",
+  "cargo:misanthropic": "anthropic",
+  "cargo:mistralai-client": "mistral",
+  "cargo:twilio": "twilio",
+  "cargo:sendgrid": "sendgrid",
+  "cargo:resend-rs": "resend",
+};
+
 export function vendorForPackage(name: string, ecosystem: NonNullable<Dependency["ecosystem"]> = "npm"): VendorRecord | undefined {
+  if (ecosystem === "go") {
+    for (let p = name; p.includes("/"); p = p.slice(0, p.lastIndexOf("/"))) if (SYS_VENDOR_PKGS[`go:${p}`]) return vendorById(SYS_VENDOR_PKGS[`go:${p}`]);
+    return undefined;
+  }
+  if (ecosystem === "cargo") {
+    const id = SYS_VENDOR_PKGS[`cargo:${name.replace(/_/g, "-")}`];
+    return id ? vendorById(id) : undefined;
+  }
   return byPkg.get(`${ecosystem}:${ecosystem === "pypi" ? name.toLowerCase() : name}`);
 }
 

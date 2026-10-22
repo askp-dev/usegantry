@@ -8,20 +8,28 @@ use axum::{
 };
 use serde_json::Value;
 
+mod ai;
+mod billing;
 mod legacy;
 
 #[derive(Clone)]
 struct AppState {
     db: Arc<Mutex<Vec<String>>>,
+    pool: sqlx::PgPool,
 }
 
 #[tokio::main]
 async fn main() {
-    let state = AppState { db: Arc::new(Mutex::new(Vec::new())) };
+    let pool = sqlx::PgPool::connect_lazy(&std::env::var("DATABASE_URL").unwrap_or_default()).unwrap();
+    let state = AppState { db: Arc::new(Mutex::new(Vec::new())), pool };
     let app = Router::new()
         .route("/healthz", get(health))
         .route("/users/:id", get(get_user).post(update_user))
         .route("/jobs", post(create_job))
+        .route("/notes", post(billing::create_note))
+        .route("/payouts", post(billing::create_payout))
+        .route("/webhooks/stripe", post(billing::stripe_webhook))
+        .route("/chat", post(ai::chat))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();

@@ -3,6 +3,7 @@
  * `bodyStart`/`bodyEnd` span the whole handler function (params included) so rules can read the
  * request parameter, and `file`/`line` point at the handler, which may live in another file.
  */
+import { vendorForPackage } from "./knowledge";
 import type { SysLang } from "./systems-lang";
 import type { HttpMethod, RouteNode, SgNode, SgRoot } from "./types";
 
@@ -10,14 +11,20 @@ const GO_VERB = /^(GET|POST|PUT|PATCH|DELETE|Get|Post|Put|Patch|Delete|Any|All|H
 const RUST_VERB = /^(get|post|put|patch|delete|any)$/;
 /** Middleware / extractor names that suggest an auth or rate-limit guard on the route. */
 const AUTH_MW = /auth|jwt|session|protect|require_?user|guard|bearer|login/i;
-const RATE_MW = /rate|limit|throttle|governor/i;
+// Not bare "limit": `DefaultBodyLimit` / `ConcurrencyLimitLayer` cap size or concurrency, not request rate.
+const RATE_MW = /rate.?limit|throttl|governor|limiter|tollbooth|httprate/i;
+const SQL_RE = /^\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH|UPSERT|MERGE|REPLACE)\b/i;
+export const STRING_KINDS: Record<SysLang, string[]> = {
+  go: ["interpreted_string_literal", "raw_string_literal"],
+  rust: ["string_literal", "raw_string_literal"],
+};
 
 interface Handler {
   file: string;
   node: SgNode;
 }
 
-const unquote = (s: string) => s.replace(/^r?#*"|"#*$|^`|`$/g, "");
+export const unquote = (s: string) => s.replace(/^r?#*"|"#*$|^`|`$/g, "");
 const toMethod = (verb: string): HttpMethod => {
   const v = verb.toUpperCase();
   return v === "POST" || v === "PUT" || v === "PATCH" || v === "DELETE" || v === "GET" ? v : "GET";
@@ -27,6 +34,14 @@ const joinPath = (prefix: string, p: string) => (prefix + (p.startsWith("/") || 
 export function extractSystemsRoutes(files: Array<{ rel: string; lang: SysLang }>, getAst: (rel: string) => SgRoot): RouteNode[] {
   const routes: RouteNode[] = [];
   const roots = files.map((f) => ({ ...f, root: getAst(f.rel).root() }));
+  const vendorsOf = new Map<string, string[]>();
+  const fileVendors = (file: string) => {
+    if (!vendorsOf.has(file)) {
+      const f = roots.find((r) => r.rel === file);
+      vendorsOf.set(file, f ? importedVendors(f.lang, f.root) : []);
+    }
+    return vendorsOf.get(file) ?? [];
+  };
   // name → declarations across files of the same language (handlers are often in a `handlers/` package)
   const decls = new Map<string, Handler[]>();
   const declIndex = (lang: SysLang) => {
@@ -63,8 +78,8 @@ export function extractSystemsRoutes(files: Array<{ rel: string; lang: SysLang }
       hasAuthGuard: AUTH_MW.test(guards),
       hasRateLimit: RATE_MW.test(guards),
       hasWebhookVerification: false,
-      dbTablesAccessed: [],
-      externalSdksCalled: [],
+      dbTablesAccessed: tablesIn(lang, h.node),
+      externalSdksCalled: fileVendors(h.file),
       ...(name ? { handlerName: name } : {}),
       bodyStart: r.start.index,
       bodyEnd: r.end.index,
@@ -82,6 +97,32 @@ export function extractSystemsRoutes(files: Array<{ rel: string; lang: SysLang }
       );
   }
   return routes;
+}
+
+/** Vendors imported by a file: Go import paths, Rust `use` / `extern crate` roots (file-level, like the TS path). */
+function importedVendors(lang: SysLang, root: SgNode): string[] {
+  const pkgs =
+    lang === "go"
+      ? root.findAll({ rule: { kind: "import_spec" } }).map((s) => unquote(s.field("path")?.text() ?? ""))
+      : [...root.text().matchAll(/^\s*(?:pub\s+)?(?:use|extern\s+crate)\s+:{0,2}(\w+)/gm)].map((m) => m[1]);
+  const ids = pkgs.map((p) => vendorForPackage(p, lang === "go" ? "go" : "cargo")?.id).filter((id): id is string => !!id);
+  return [...new Set(ids)];
+}
+
+/** Tables a handler touches: SQL string literals, GORM `Model(&X{})` / `Create(&X{})` / `Table("x")`, diesel `x::table`, sea-orm `x::Entity`. */
+function tablesIn(lang: SysLang, fn: SgNode): string[] {
+  const out = new Set<string>();
+  for (const lit of STRING_KINDS[lang].flatMap((kind) => fn.findAll({ rule: { kind } }))) {
+    const sql = unquote(lit.text());
+    if (!SQL_RE.test(sql)) continue;
+    for (const m of sql.matchAll(/\b(?:INTO|UPDATE|FROM|JOIN)\s+["`]?([A-Za-z_][\w.]*)/gi)) out.add(m[1].split(".").pop() ?? m[1]);
+  }
+  const text = fn.text();
+  for (const m of text.matchAll(
+    /\.(?:Model|Create|Save|Delete|Find|First)\(\s*&\s*(?:\[\])?(?:\w+\.)?([A-Z]\w*)\s*\{|\.Table\(\s*"(\w+)"|\b(\w+)::(?:table|Entity|ActiveModel)\b/g,
+  ))
+    out.add(m[1] ?? m[2] ?? m[3]);
+  return [...out];
 }
 
 type Emit = (handlerRef: SgNode, method: HttpMethod, path: string, guards: string) => void;

@@ -31,15 +31,21 @@ func ReceiptWorker() {
 	}
 }
 
-// CreateOrder inserts an order and queues a receipt.
+// CreateOrder inserts an order for the signed-in user, once per Idempotency-Key, and queues a receipt.
 func CreateOrder(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	key := c.GetHeader("Idempotency-Key")
 	var req OrderReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil || key == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 	var id int64
-	err := DB.QueryRowContext(c.Request.Context(), "INSERT INTO orders (item) VALUES ($1) RETURNING id", req.Item).Scan(&id)
+	err := DB.QueryRowContext(c.Request.Context(), "INSERT INTO orders (owner, item, idempotency_key) VALUES ($1, $2, $3) ON CONFLICT (idempotency_key) DO NOTHING RETURNING id", user, req.Item, key).Scan(&id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db"})
 		return

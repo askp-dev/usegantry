@@ -41,7 +41,13 @@ export function defineRule(meta: Meta, body: (ctx: RepoContext, emit: Emit) => v
     ...meta,
     async run(ctx) {
       const out: Finding[] = [];
-      await body(ctx, (p) => out.push(makeFinding(meta, p, ctx.config.strict)));
+      try {
+        await body(ctx, (p) => out.push(makeFinding(meta, p, ctx.config.strict)));
+      } catch (e) {
+        // A rule that covers part of the repo and then skips the rest keeps what it found.
+        if (e instanceof RuleSkipped) e.findings = out;
+        throw e;
+      }
       return out;
     },
   };
@@ -65,11 +71,13 @@ export const redactUrl = (s: string) => s.replace(/(\/\/[^:/\s@]+:)[^@\s]+@/, "$
 // ── route / function helpers ─────────────────────────────────────────────────
 export const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE", "SERVER_ACTION"]);
 
-/** TS/JS + Python routes: the body-level rules use CodeIndex regexes that don't model Go/Rust (those have SYS-*). */
-export const scriptRoutes = (ctx: RepoContext) => ctx.routes.filter((r) => r.language !== "go" && r.language !== "rust");
-
-/** Thrown by a rule that can't analyse this repo here; the engine reports a notice and leaves it out of `rulesRun`. */
-export class RuleSkipped extends Error {}
+/**
+ * Thrown by a rule that can't analyse (all of) this repo; the engine reports a notice, leaves it out of
+ * `rulesRun`, and still reports the `findings` it emitted before skipping.
+ */
+export class RuleSkipped extends Error {
+  findings: Finding[] = [];
+}
 
 /** Handler body of a route as a [start,end) range in its CodeIndex. */
 export function routeBody(ctx: RepoContext, r: RouteNode): { ci: CodeIndex; a: number; b: number; fn?: FnInfo } {

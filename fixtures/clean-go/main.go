@@ -19,5 +19,10 @@ func main() {
 	api.POST("/orders", handlers.CreateOrder)
 	api.POST("/notify", handlers.NotifyAll)
 	api.POST("/audit", handlers.Audit)
+	api.PATCH("/projects/:id", handlers.RenameProject)
+	api.DELETE("/projects/:id", handlers.ArchiveProject)
+	api.POST("/summarize", handlers.Summarize)
+	api.POST("/transfers", handlers.CreateTransfer)
+	r.POST("/webhooks/stripe", handlers.StripeWebhook)
 	r.Run(":8080")
 }

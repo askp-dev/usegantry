@@ -10,6 +10,10 @@ actix-rt = "2"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }
+async-openai = "0.24"
+async-stripe = { version = "0.39", features = ["runtime-tokio-hyper", "webhook-events"] }
+tower_governor = "0.4"
 shared = { path = "../shared" }
 
 [dev-dependencies]
