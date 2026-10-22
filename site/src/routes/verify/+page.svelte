@@ -27,6 +27,8 @@
 <svelte:head>
   <title>Verify a certificate · Gantry</title>
   <meta name="description" content="Check a Gantry Launch Clearance certificate in your browser. Nothing is sent to a server." />
+  <meta property="og:title" content="Verify a certificate · Gantry" />
+  <meta property="og:description" content="Check a Gantry Launch Clearance certificate in your browser. Nothing is sent to a server." />
   <meta name="robots" content="noindex" />
 </svelte:head>
 

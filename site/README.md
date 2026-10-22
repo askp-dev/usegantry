@@ -9,7 +9,10 @@ cd site && bun install
 bun run dev        # regenerates data, then http://localhost:5173
 bun run build      # static output in build/
 bun run check      # svelte-check
+bun run og         # macOS only: re-renders static/og.png (social preview) from the real scan
 ```
+
+`static/og.png` is committed, because the WebKit renderer (`scripts/snapshot.swift`) only runs on macOS, not on the Cloudflare build. Re-run `bun run og` when the rule count or the sample board changes.
 
 `bun run data` (part of `dev` and `build`) scans the repo's own fixtures with the real scanner and writes `src/lib/data/*.json`. Every number, finding, prompt and rule example on the site is genuine Gantry output from that build; nothing is hand-written. It also copies `../install.sh` to `static/`.
 
@@ -48,6 +51,5 @@ Keep `api.usegantry.app` (the signer Worker) on its own route either way.
 
 ## Not done yet
 
-- No Open Graph image (social previews need a PNG; the card is SVG).
 - Console (dark) theme follows the OS setting; there's no toggle.
 - Fonts are self-hosted via `@fontsource`; consider subsetting to Latin only to shave weight.
