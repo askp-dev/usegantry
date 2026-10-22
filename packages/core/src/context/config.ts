@@ -41,6 +41,8 @@ export function loadConfig(rootDir: string, overrides: Partial<GantryConfig> = {
     ...DEFAULT_CONFIG,
     ...pkgCfg,
     ...fileCfg,
+    // GANTRY_OFFLINE=1 forces offline (air-gapped CI, tests) unless the caller passes `offline` explicitly.
+    ...(process.env.GANTRY_OFFLINE === "1" ? { offline: true } : {}),
     ...stripUndefined(overrides),
     clauses: { ...DEFAULT_CONFIG.clauses, ...(pkgCfg.clauses ?? {}), ...(fileCfg.clauses ?? {}), ...(overrides.clauses ?? {}) },
   };
@@ -49,7 +51,7 @@ export function loadConfig(rootDir: string, overrides: Partial<GantryConfig> = {
     if (/^(AGPL|GPL|LGPL|MPL|EUPL|OSL)/i.test(pkg.license)) cfg.mode = "open-source";
   }
   if (!cfg.productName) cfg.productName = prettyName(pkg?.name ?? basename(rootDir));
-  if (!cfg.companyName) cfg.companyName = typeof pkg?.author === "string" ? pkg.author.replace(/<.*>|\(.*\)/g, "").trim() : pkg?.author?.name ?? "";
+  if (!cfg.companyName) cfg.companyName = typeof pkg?.author === "string" ? pkg.author.replace(/<.*>|\(.*\)/g, "").trim() : (pkg?.author?.name ?? "");
   if (!cfg.contactEmail) cfg.contactEmail = (typeof pkg?.author === "string" ? pkg.author.match(/<([^>]+)>/)?.[1] : pkg?.author?.email) ?? "";
   return cfg;
 }

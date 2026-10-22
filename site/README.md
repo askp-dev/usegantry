@@ -17,7 +17,7 @@ bun run check      # svelte-check
 
 | Route | What it is |
 |---|---|
-| `/` | Hero with install switcher and a real go/no-go board (before/after fixes toggle), the four stations, a real `gantry check` report, all 71 rules with a real finding + agent prompt each, setup (MCP / stop hook / GitHub), clearance explainer, roast teaser, licence |
+| `/` | Hero with install switcher and a real go/no-go board (before/after fixes toggle), the four stations, a real `gantry check` report, "When the next CVE drops" (DEP-01..03, daily re-check, SBOM), every rule with a real finding + agent prompt each, setup (MCP / stop hook / GitHub), clearance explainer, roast teaser, licence |
 | `/verify/` | Client-side Ed25519 check of `#<payload>.<signature>` against the central key. States: verified (sig OK **and** `issuer: gantry-ci`), self-signed, invalid, malformed, unsupported browser |
 | `/roast/` | Builds the `gantry roast` command for a GitHub URL (same allowlist as the CLI) and renders a pasted/uploaded `roast --json` |
 | `/docs/` | Install, commands, config, suppression, profiles, CI, agents/MCP, certificates, JSON, what leaves your machine |

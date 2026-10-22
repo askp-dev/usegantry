@@ -83,6 +83,10 @@ export function parsePackageLock(text: string, into: DepMap) {
       const lic =
         typeof meta.license === "string" ? meta.license : Array.isArray(meta.licenses) ? meta.licenses.map((l: any) => l.type ?? l).join(" OR ") : undefined;
       upsertTransitive(into, name, meta.version ?? "", { spdxLicense: lic, isDev: !!meta.dev });
+      const d = into.get(name)!;
+      if (meta.hasInstallScript) d.hasInstallScript = true;
+      if (typeof meta.resolved === "string" && /^https?:/.test(meta.resolved) && !/^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)\//.test(meta.resolved))
+        d.privateRegistry = true;
     }
   } else if (lock.dependencies) {
     const walk = (deps: Record<string, any>) => {
@@ -122,6 +126,7 @@ export function parsePnpmLock(text: string, into: DepMap) {
   for (const m of section.matchAll(/^ {2}['"]?\/?((?:@[^/@\s]+\/)?[^@\s'"/(]+)@([^\s:'"(]+)[^\n]*:\s*$/gm)) {
     const block = section.slice(m.index! + m[0].length, section.indexOf("\n  ", m.index! + m[0].length + 1) + 1 || undefined);
     upsertTransitive(into, m[1], m[2], { isDev: /\n\s+dev:\s*true/.test(block.slice(0, 400)) });
+    if (/\n\s+requiresBuild:\s*true/.test(block.slice(0, 600))) into.get(m[1])!.hasInstallScript = true;
   }
 }
 

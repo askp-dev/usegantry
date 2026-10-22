@@ -28,7 +28,7 @@ export async function main({ cmd, target, flags }: { cmd: string; target: string
   }
   let scanned: Awaited<ReturnType<typeof scanTarget>>;
   try {
-    scanned = await scanTarget(target);
+    scanned = await scanTarget(target, { online: flags.online === true });
   } catch (e) {
     if (e instanceof CheckInputError) {
       console.error(color.red(e.message));

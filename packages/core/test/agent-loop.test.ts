@@ -29,6 +29,9 @@ const git = (root: string, ...args: string[]) =>
 
 const REPO_SCOPE = [
   "OPS-01",
+  "DEP-01",
+  "DEP-02",
+  "DEP-03",
   "OPS-04",
   "SEO-01",
   "LEG-03",

@@ -10,6 +10,7 @@ import { CONFIG_FILES } from "./context/config";
 import { audit } from "./engine";
 import { requireFeature } from "./entitlements";
 import { BASELINE, writeBaseline } from "./hooks";
+import ADVISORIES_WORKFLOW from "./templates/gantry-advisories.yml" with { type: "text" };
 
 export type InitAction = { path: string; action: "created" | "updated" | "unchanged" | "skipped"; reason?: string };
 
@@ -152,11 +153,15 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
     });
   }
 
-  if (opts.ci) {
-    const wf = ".github/workflows/gantry.yml";
-    if (read(wf) !== null) out.push({ path: wf, action: "skipped", reason: "workflow already exists" });
-    else put(wf, WORKFLOW, null);
-  }
+  if (opts.ci)
+    for (const [wf, body] of [
+      [".github/workflows/gantry.yml", WORKFLOW],
+      // Daily DEP-01/02 re-check: one issue, never a commit.
+      [".github/workflows/gantry-advisories.yml", ADVISORIES_WORKFLOW],
+    ] as const) {
+      if (read(wf) !== null) out.push({ path: wf, action: "skipped", reason: "workflow already exists" });
+      else put(wf, body, null);
+    }
   return out;
 }
 

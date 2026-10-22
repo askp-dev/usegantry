@@ -62,6 +62,7 @@
       }
     },
     "notices": { "type": "array", "items": { "type": "string" } },
+    "advisoriesAsOf": { "type": "string", "format": "date-time" },
     "generatedAt": { "type": "string", "format": "date-time" }
   }
 }

@@ -5,3 +5,5 @@ optional = true
 [test]
 root = "packages/core/test"
 timeout = 20000
+# GANTRY_OFFLINE + a temp advisory cache: no test (or CLI subprocess) ever reaches the network.
+preload = ["./packages/core/test/preload.ts"]

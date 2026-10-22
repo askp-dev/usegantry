@@ -6,7 +6,9 @@ Gantry owns these contracts. The site (`site/`, usegantry.app) renders them. The
 real output against both. `schemaVersion` is `1`. Additive changes keep `1`; anything else bumps it.
 
 Both commands accept `https://github.com/<owner>/<repo>[/tree/<ref>]` or a local path. They run the static rules
-offline: nothing is executed, installed or probed.
+offline: nothing is executed, installed or probed. `--online` additionally allows the name-only lookups
+(DEP-01/DEP-02 advisories via OSV.dev, CISA KEV, deps.dev and PyPI; LEG-01 registry checks). Only package names and
+versions are sent, never code, and private-looking names are withheld.
 
 ## `check`: for the repo owner
 
@@ -37,6 +39,7 @@ offline: nothing is executed, installed or probed.
     { "id": "nice-to-have", "label": "Nice to have", "count": 2 }
   ],
   "notices": ["Static analysis only: no code was run and nothing was probed. A clean result isn't a security guarantee."],
+  "advisoriesAsOf": "2026-10-22T06:17:03.000Z", // optional: when DEP-01's advisory data was fetched
   "generatedAt": "2026-10-21T12:00:00.000Z"
 }
 ```
@@ -44,6 +47,19 @@ offline: nothing is executed, installed or probed.
 - No evidence snippets. `title`, `plainWhy` and `agentPrompt` pass through a secret scrubber, so nothing shaped like a live key survives.
 - Group by `category` and show the `label` text exactly. Lead with the `headline`; don't put rule IDs in headlines.
 - `--md` renders the same data as a PR-comment table.
+- `advisoriesAsOf` is present only when DEP-01 actually ran: with `--online`, or on a local path that has a
+  `.gantry/advisories/` cache. Without it, `notices` carries "Dependency advisories not checked: …". Show
+  "advisories as of <date>" next to the score, and never present a missing date as "no known vulnerabilities".
+  Certificates carry the same field (signed), and the verify page shows "Advisories: as of <date>" or "not checked".
+
+## Daily re-check: `scan --only DEP-01,DEP-02`
+
+`gantry init --ci` also writes `.github/workflows/gantry-advisories.yml`: a daily cron job (plus manual dispatch)
+that runs `gantry scan . --only DEP-01,DEP-02 --json`, caches `.gantry/advisories/` between runs, and opens or
+updates **one** issue labelled `gantry-advisories` (closing it once clean, unless the check was skipped). It needs
+only `contents: read` + `issues: write` and never commits. The report JSON it reads is the regular `scan --json`
+`AuditReport`; the fields it relies on are `findings[]`, `notices[]` (`kind: "info"` = a count, otherwise a skip)
+and `advisoriesAsOf`.
 
 ## `roast`: public and shareable
 

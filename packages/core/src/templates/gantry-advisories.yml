@@ -1,0 +1,66 @@
+# Gantry daily dependency re-check (installed by `gantry init --ci`).
+# Runs only the advisory rules (DEP-01 known-exploited / high CVEs, DEP-02 too-new releases) against the committed
+# lockfiles, then opens or updates ONE issue labelled `gantry-advisories`, and closes it once clean. Never commits.
+# Only package names + versions leave the runner (OSV.dev, CISA KEV, deps.dev, PyPI); no code is uploaded.
+name: gantry-advisories
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gantry-advisories
+  cancel-in-progress: false
+
+jobs:
+  recheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GANTRY_VERSION: "0.1.2"
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.10 }
+      - uses: actions/cache@v4
+        with:
+          path: .gantry/advisories
+          key: gantry-advisories-${{ github.run_id }}
+          restore-keys: gantry-advisories-
+      - name: Re-check dependencies
+        run: |
+          bun add -g "@usegantry/cli@${GANTRY_VERSION}"
+          gantry scan . --only DEP-01,DEP-02 --json > gantry-advisories.json || true
+          jq -e '.findings' gantry-advisories.json > /dev/null
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          report=gantry-advisories.json
+          count=$(jq '.findings | length' "$report")
+          skipped=$(jq '[.notices[]? | select(.kind != "info")] | length' "$report")
+          asof=$(jq -r '.advisoriesAsOf // "not available"' "$report")
+          {
+            echo "Daily Gantry dependency re-check, advisories as of ${asof}."
+            echo
+            jq -r '.findings[] | "- **\(.severity)** `\(.ruleId)` \(.evidence)\n  - \(.impact)\n  - Fix: \(.agentRemediationPrompt)"' "$report"
+            jq -r '.notices[]? | "> \(.ruleIds | join(", ")): \(.message)"' "$report"
+          } > body.md
+          open=$(gh issue list --state open --label gantry-advisories --json number --jq '.[0].number // empty')
+          if [ "$count" -gt 0 ]; then
+            gh label create gantry-advisories --color B60205 --description "Gantry daily dependency re-check" --force
+            if [ -n "$open" ]; then gh issue edit "$open" --body-file body.md
+            else gh issue create --title "Gantry: dependencies need attention" --label gantry-advisories --body-file body.md
+            fi
+          elif [ -n "$open" ] && [ "$skipped" -eq 0 ]; then
+            gh issue close "$open" --comment "Resolved: no known-exploited, high-severity or too-new dependencies (advisories as of ${asof})."
+          fi
+          cat body.md >> "$GITHUB_STEP_SUMMARY"

@@ -38,6 +38,7 @@ export function sanitizePayload(p: any): Record<string, unknown> | null {
   if (typeof p.verificationHash !== "string" || !/^[0-9a-f]{64}$/.test(p.verificationHash)) return null;
   if (typeof p.rulesetVersion !== "string" || p.rulesetVersion.length > 40 || typeof p.timestamp !== "string" || p.timestamp.length > 40) return null;
   if (!isStrArr(p.passedRules, 500) || !isStrArr(p.failedRules, 500) || !isStrArr(p.subprocessors, 500)) return null;
+  const asOf = typeof p.advisoriesAsOf === "string" && /^\d{4}-\d\d-\d\dT[\d:.]+Z$/.test(p.advisoriesAsOf) ? p.advisoriesAsOf : undefined;
   return {
     overallScore: p.overallScore,
     status: p.status,
@@ -49,6 +50,7 @@ export function sanitizePayload(p: any): Record<string, unknown> | null {
     subprocessors: p.subprocessors,
     rulesetVersion: p.rulesetVersion,
     timestamp: p.timestamp,
+    ...(asOf ? { advisoriesAsOf: asOf } : {}),
   };
 }
 

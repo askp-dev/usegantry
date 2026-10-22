@@ -29,6 +29,6 @@ export function renderCompact(report: Pick<AuditReport, "score" | "blockers" | "
   const lines = findings.slice(0, max).map(compactLine);
   if (findings.length > max) lines.push(`…${findings.length - max} more`);
   // Skipped rules must never read as a clean pass.
-  for (const n of report.notices ?? []) lines.push(`[INFO][${n.ruleIds.join(",")}] SKIPPED | ${n.message.split(":")[0]}`);
+  for (const n of report.notices ?? []) lines.push(`[INFO][${n.ruleIds.join(",")}] ${n.kind === "info" ? "NOTE" : "SKIPPED"} | ${n.message.split(":")[0]}`);
   return `SCORE:${report.score}/100|BLOCKED:${report.blockers > 0}\n${lines.join("\n")}${lines.length ? "\n" : ""}`;
 }

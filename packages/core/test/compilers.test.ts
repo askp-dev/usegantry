@@ -104,7 +104,9 @@ describe("certificate", () => {
     const r = await audit(root, { config: { offline: true } });
     const res = generateCertificate(r, { outDir: root, ...SECRET });
     expect(res.payload.overallScore).toBe(100);
-    expect(res.payload.passedRules.length).toBe(60);
+    // DEP-01/02 are skipped offline (no advisory cache), so they're not certified as passed.
+    expect(res.payload.passedRules.length).toBe(61);
+    expect(res.payload.passedRules).not.toContain("DEP-01");
     const fragment = res.url.split("#")[1];
     expect(verifyCertificate(fragment, res.publicKey)?.overallScore).toBe(100);
     const [body, sig] = fragment.split(".");
@@ -126,7 +128,7 @@ describe("certificate", () => {
 
   test("payload lists failed rules", async () => {
     const r = await audit("fixtures/vulnerable-saas", { config: { offline: true } });
-    expect(buildPayload(r).failedRules.length).toBe(45);
+    expect(buildPayload(r).failedRules.length).toBe(46);
   });
 
   test("renderPdf escapes parentheses", () => {
@@ -135,11 +137,11 @@ describe("certificate", () => {
 });
 
 describe("vendor pack & SARIF", () => {
-  test("CycloneDX 1.5 SBOM with purls, licenses and services", async () => {
+  test("CycloneDX 1.6 SBOM with purls, licenses and services", async () => {
     const ctx = await buildRepoContext("fixtures/vulnerable-saas", { config: { offline: true } });
     const sbom = buildSbom(ctx) as any;
     expect(sbom.bomFormat).toBe("CycloneDX");
-    expect(sbom.specVersion).toBe("1.5");
+    expect(sbom.specVersion).toBe("1.6");
     const supa = sbom.components.find((c: any) => c.name === "@supabase/supabase-js");
     expect(supa.purl).toBe("pkg:npm/%40supabase/supabase-js@2.45.0");
     expect(supa.licenses).toEqual([{ license: { id: "MIT" } }]);
@@ -157,7 +159,7 @@ describe("vendor pack & SARIF", () => {
     expect(mm).toContain("-.->");
     const sarif = toSarif(r) as any;
     expect(sarif.version).toBe("2.1.0");
-    expect(sarif.runs[0].tool.driver.rules.length).toBe(71);
+    expect(sarif.runs[0].tool.driver.rules.length).toBe(74);
     expect(sarif.runs[0].results.length).toBe(r.findings.length);
     expect(sarif.runs[0].results[0]).toMatchObject({ level: "error", locations: [{ physicalLocation: { region: { startLine: expect.any(Number) } } }] });
   });

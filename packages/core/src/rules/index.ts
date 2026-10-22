@@ -25,6 +25,9 @@ import { cache02NoTtl } from "./data/cache-02-no-ttl";
 import { vec01TenantFilter } from "./data/vec-01-tenant-filter";
 import { vec02UnauthClient } from "./data/vec-02-unauth-client";
 import { vec03MetadataPii } from "./data/vec-03-metadata-pii";
+import { dep01VulnerableDependency } from "./deps/dep-01-vulnerable-dependency";
+import { dep02TooNewRelease } from "./deps/dep-02-too-new-release";
+import { dep03InstallHygiene } from "./deps/dep-03-install-hygiene";
 import { edge01UnencryptedReplica } from "./edge/edge-01-unencrypted-replica";
 import { edge02D1TenantPredicate } from "./edge/edge-02-d1-tenant-predicate";
 import { a11y01InteractiveDom } from "./finops-ops/a11y-01-interactive-dom";
@@ -125,6 +128,10 @@ export const ALL_STATIC_RULES: readonly RuleDefinition[] = [
   sys01UnboundedSpawn,
   sys02RequestUnwrap,
   sys03DetachedContext,
+  // Dependency risk (3; DEP-01/02 are the only network rules)
+  dep01VulnerableDependency,
+  dep02TooNewRelease,
+  dep03InstallHygiene,
   // Privacy (7)
   priv01PiiLogs,
   priv02DeletionCascade,

@@ -1,0 +1,40 @@
+{
+ "title": "CISA Catalog of Known Exploited Vulnerabilities",
+ "catalogVersion": "2026.10.21",
+ "dateReleased": "2026-10-21T14:04:39.8983Z",
+ "count": 4,
+ "vulnerabilities": [
+  {
+   "cveID": "CVE-2025-55182",
+   "vendorProject": "Meta",
+   "product": "React Server Components",
+   "vulnerabilityName": "Meta React Server Components Remote Code Execution Vulnerability",
+   "dateAdded": "2025-12-05",
+   "shortDescription": "Meta React Server Components contains a remote code execution vulnerability that could allow unauthenticated remote code execution by exploiting a flaw in how React decodes payloads sent to React Server Function endpoints. Please note CVE-2025-66478 has been rejected, but it is associated with CVE-2025- 55182."
+  },
+  {
+   "cveID": "CVE-2020-11023",
+   "vendorProject": "JQuery",
+   "product": "JQuery",
+   "vulnerabilityName": "JQuery Cross-Site Scripting (XSS) Vulnerability",
+   "dateAdded": "2025-01-23",
+   "shortDescription": "JQuery contains a persistent cross-site scripting (XSS) vulnerability. When passing maliciously formed, untrusted input enclosed in HTML tags, JQuery's DOM manipulators can execute untrusted code in the context of the user's browser."
+  },
+  {
+   "cveID": "CVE-2021-21315",
+   "vendorProject": "Npm package",
+   "product": "System Information Library for Node.JS",
+   "vulnerabilityName": "System Information Library for Node.JS Command Injection",
+   "dateAdded": "2022-01-18",
+   "shortDescription": "In this vulnerability, an attacker can send a malicious payload that will exploit the name parameter. After successful exploitation, attackers can execute remote."
+  },
+  {
+   "cveID": "CVE-2021-44228",
+   "vendorProject": "Apache",
+   "product": "Log4j2",
+   "vulnerabilityName": "Apache Log4j2 Remote Code Execution Vulnerability",
+   "dateAdded": "2021-12-10",
+   "shortDescription": "Apache Log4j2 contains a vulnerability where JNDI features do not protect against attacker-controlled JNDI-related endpoints, allowing for remote code execution."
+  }
+ ]
+}

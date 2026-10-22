@@ -2,6 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { VERSION } from "../src/engine";
 import { initProject, MCP_SERVER, upsertBlock } from "../src/init";
 
 const dirs: string[] = [];
@@ -46,6 +47,11 @@ describe("initProject", () => {
     expect(read(root, ".cursor/rules/gantry.mdc")).toContain("gantry scan");
     expect(JSON.parse(read(root, ".mcp.json")).mcpServers.gantry).toEqual(MCP_SERVER);
     expect(read(root, ".github/workflows/gantry.yml")).toContain("gantry scan --sarif");
+    // Daily advisory re-check: issue-only (no contents: write), pinned to this release.
+    const adv = read(root, ".github/workflows/gantry-advisories.yml");
+    expect(adv).toContain("gantry scan . --only DEP-01,DEP-02 --json");
+    expect(adv).toContain(`GANTRY_VERSION: "${VERSION}"`);
+    expect(adv).not.toMatch(/contents:\s*write|git push|git commit/);
   });
 
   test("idempotent: a second run changes nothing", () => {

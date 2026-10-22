@@ -77,6 +77,7 @@ jobs:
       <div><dt class="label text-[10px] text-ink-3">Cold scan, 500 files</dt><dd class="font-mono text-[22px] tabular">0.3 s</dd></div>
       <div><dt class="label text-[10px] text-ink-3">Code uploaded</dt><dd class="font-mono text-[22px] tabular">0 B</dd></div>
     </dl>
+    <p class="-mt-2 text-[12px] text-ink-3">0 B code uploaded · package names only for advisory lookups (<span class="font-mono">--offline</span> to disable)</p>
   </div>
 
   <div class="flex flex-col gap-4 self-start lg:mt-6">
@@ -165,6 +166,39 @@ jobs:
     </p>
   </div>
   <CheckReport check={sample.before.check} />
+</section>
+
+<!-- CVE triage -->
+<section class="border-t-2 border-ink" aria-labelledby="cve-h">
+  <div class="mx-auto grid max-w-[1200px] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.2fr]">
+    <div class="flex flex-col gap-4">
+      <p class="label text-[11px] text-ink-2">Dependencies</p>
+      <h2 id="cve-h" class="display text-[30px] sm:text-[38px]">When the next CVE drops.</h2>
+      <p class="text-[15px] text-ink-2">
+        A list of every CVE in your lockfile tells you nothing about which one to fix tonight. Gantry checks your exact versions against OSV.dev and the CISA list of
+        vulnerabilities attackers are already using, then asks one more question: does your code actually import it?
+      </p>
+      <p class="text-[15px] text-ink-2">
+        Only package names and versions leave your machine, never code. Private packages are never sent, and <span class="font-mono text-[13px]">--offline</span> turns the
+        lookup off.
+      </p>
+    </div>
+    <ol class="border-t-2 border-ink">
+      {#each [
+        ["DEP-01", "Exploited and imported first", "Known-exploited and imported is NO-GO. High severity with a fix is HOLD. The rest is one line, not a wall."],
+        ["DEP-02", "Too-new releases held back", "A version published in the last 7 days is where hijacked releases live. Gantry flags it and gives you your package manager's minimum-age setting."],
+        ["DEP-03", "Lockfile hygiene", "No lockfile, \"latest\" ranges, unpinned git deps and unvetted install scripts, checked offline."],
+        ["CI", "A daily re-check", "gantry init --ci adds a scheduled job that keeps one issue up to date. It never commits."],
+        ["SBOM", "gantry sbom", "CycloneDX 1.6 with the known advisories attached, for your EU Cyber Resilience Act paperwork."],
+        ["Already there", "LEG-01, MCP-02, hooks, SARIF", "Hallucinated and lookalike packages, unpinned MCP servers, the agent stop hook, code-scanning upload and security.txt."],
+      ] as [tag, title, body]}
+        <li class="grid grid-cols-[96px_1fr] gap-4 border-b border-rule py-4">
+          <span class="font-mono text-[12px] text-ink-2">{tag}</span>
+          <div><p class="text-[15px] font-semibold">{title}</p><p class="text-[14px] text-ink-2">{body}</p></div>
+        </li>
+      {/each}
+    </ol>
+  </div>
 </section>
 
 <!-- Rules -->

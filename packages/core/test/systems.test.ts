@@ -193,6 +193,8 @@ test("without the grammars (GANTRY_NO_NAPI=1) a Go repo gets a notice, never a f
     env: { ...process.env, GANTRY_NO_NAPI: "1" },
   });
   const report = JSON.parse(p.stdout.toString());
+  // DEP-01/02 add their own offline notices; the grammar notice stays one entry.
+  report.notices = report.notices.filter((n: { ruleIds: string[] }) => !n.ruleIds.some((id) => id.startsWith("DEP-")));
   expect(report.notices).toHaveLength(1);
   // The Go/Rust-parity route rules join the SYS-* notice rather than certifying a pass (PCI-03 is profile-only).
   expect([...report.notices[0].ruleIds].sort()).toEqual(["PAY-01", "SEC-07", "SEC-08", "SEC-09", "SYS-01", "SYS-03"]);

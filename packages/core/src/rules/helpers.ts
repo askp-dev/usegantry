@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import type { CodeIndex, FnInfo } from "../context/code-index";
 import { vendorById } from "../context/knowledge";
-import type { Finding, Pillar, RepoContext, RouteNode, RuleDefinition, Severity } from "../context/types";
+import type { Finding, Pillar, RepoContext, RouteNode, RuleDefinition, RuleOutput, Severity } from "../context/types";
 
 export type FindingInput = Omit<Finding, "ruleId" | "pillar" | "severity" | "blocking" | "title" | "fingerprint"> & {
   severity?: Severity;
@@ -35,15 +35,22 @@ export function makeFinding(rule: Meta, p: FindingInput, strict = false): Findin
   };
 }
 
+/** Side information a rule that ran can put on the report (`notices`, `advisoriesAsOf`). */
+export type RunInfo = { notices: string[]; advisoriesAsOf?: string };
+
 /** Define a rule whose body pushes findings through `emit`. */
-export function defineRule(meta: Meta, body: (ctx: RepoContext, emit: Emit) => void | Promise<void>): RuleDefinition {
+export function defineRule(meta: Meta, body: (ctx: RepoContext, emit: Emit, info: RunInfo) => void | Promise<void>): RuleDefinition {
   return {
     ...meta,
     async run(ctx) {
-      const out: Finding[] = [];
+      const out: RuleOutput = [];
+      const info: RunInfo = { notices: [] };
       try {
-        await body(ctx, (p) => out.push(makeFinding(meta, p, ctx.config.strict)));
+        await body(ctx, (p) => out.push(makeFinding(meta, p, ctx.config.strict)), info);
+        if (info.notices.length) out.notices = info.notices;
+        if (info.advisoriesAsOf) out.advisoriesAsOf = info.advisoriesAsOf;
       } catch (e) {
+        if (info.advisoriesAsOf) out.advisoriesAsOf = info.advisoriesAsOf;
         // A rule that covers part of the repo and then skips the rest keeps what it found.
         if (e instanceof RuleSkipped) e.findings = out;
         throw e;
@@ -56,6 +63,8 @@ export function defineRule(meta: Meta, body: (ctx: RepoContext, emit: Emit) => v
 /** `// gantry-ignore SEC-03` (or legacy `preflight-ignore`) (any comment syntax) on the finding's line or the line above, or config.ignoreRules. */
 export function isSuppressed(ctx: RepoContext, f: Finding): boolean {
   if (ctx.config.ignoreRules.includes(f.ruleId)) return true;
+  // DEP-01 ignores name one advisory id + a reason (handled in the rule), never a whole package.
+  if (f.ruleId === "DEP-01") return false;
   const lines = ctx.getText(f.file).split("\n");
   // `preflight-ignore` is still honoured for one release after the rename.
   const re = new RegExp(`(?:gantry|preflight)-ignore\\b[^\\n]*\\b${f.ruleId}\\b`);
@@ -76,7 +85,7 @@ export const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE", "SERV
  * `rulesRun`, and still reports the `findings` it emitted before skipping.
  */
 export class RuleSkipped extends Error {
-  findings: Finding[] = [];
+  findings: RuleOutput = [];
 }
 
 /** Handler body of a route as a [start,end) range in its CodeIndex. */

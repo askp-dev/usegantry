@@ -22,19 +22,19 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Data contracts (already implemented in `packages/core/src/context/types.ts`) | SPEC.md 68–172 |
 | Exact algorithms for SEC-01 / SEC-03 / SEC-07 / FIN-01 / PAY-02 | SPEC.md 173–221 |
 | UI server REST + WS protocol | SPEC.md 222–232 |
-| Scoring & blocking matrix (+ partial scans, profile-only rules) | RULES_SPEC.md 3–16 |
-| Security rules SEC-01..12 + MCP-01..02 + VEC-01..02 + CACHE-01 + BAAS-01..03 + EDGE-02 + IAC-01..02 + CLIENT-01..02 + PY-01/03/04 + SYS-02 | RULES_SPEC.md 19–52 |
-| Privacy rules PRIV-01..07 + VEC-03 + EDGE-01 + SOV-01 | RULES_SPEC.md 55–69 |
-| Legal rules LEG-01..06 | RULES_SPEC.md 72–82 |
-| FIN / PAY / OPS / A11Y / SEO / CACHE-02 / PY-02 / SYS-01 / SYS-03 rules | RULES_SPEC.md 85–105 |
-| Compliance profile packs HIPAA-01..03 + PCI-01..03 + LGL-01..03 + AIA-01 | RULES_SPEC.md 108–122 |
-| Pentest probes PT-01..06 | RULES_SPEC.md 125–149 |
-| Rule registry (`rules/index.ts`) | RULES_SPEC.md 152–329 |
+| Scoring & blocking matrix (+ partial scans, network rules, profile-only rules) | RULES_SPEC.md 3–18 |
+| Security rules SEC-01..12 + MCP-01..02 + VEC-01..02 + CACHE-01 + BAAS-01..03 + EDGE-02 + IAC-01..02 + CLIENT-01..02 + PY-01/03/04 + SYS-02 + DEP-01..03 | RULES_SPEC.md 21–57 |
+| Privacy rules PRIV-01..07 + VEC-03 + EDGE-01 + SOV-01 | RULES_SPEC.md 60–74 |
+| Legal rules LEG-01..06 | RULES_SPEC.md 77–87 |
+| FIN / PAY / OPS / A11Y / SEO / CACHE-02 / PY-02 / SYS-01 / SYS-03 rules | RULES_SPEC.md 90–110 |
+| Compliance profile packs HIPAA-01..03 + PCI-01..03 + LGL-01..03 + AIA-01 | RULES_SPEC.md 113–127 |
+| Pentest probes PT-01..06 | RULES_SPEC.md 130–154 |
+| Rule registry (`rules/index.ts`) | RULES_SPEC.md 157–342 |
 | Design principles + banned AI-look tropes | DESIGN.md 1–34 |
 | Design tokens / contrast / typography / motion | DESIGN.md 35–124 |
 | UI components (header, go/no-go board, tag, findings, schematic, Range, legal, budget, title block) | DESIGN.md 125–210 |
 | Certificate, roast card, badge, CLI, site, voice, implementation plan | DESIGN.md 211–262 |
-| Handoff: status / quirks / remaining work | handoff.md 25–50 / 339–472 / 473–601 (Sprint 15 / 16 / 17 plans: grep `^#### Sprint 1[567]`) |
+| Handoff: status / quirks / remaining work | handoff.md 25–50 / 360–514 / 515–604 (Sprint 17 plan: grep `^#### Sprint 17`) |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.
@@ -55,7 +55,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 - `bun run bench` runs the perf SLA check (Sprint 5).
 
 ## Conventions
-- Rule file names and export names must match the registry in RULES_SPEC.md 152–329 exactly.
+- Rule file names and export names must match the registry in RULES_SPEC.md 157–342 exactly.
 - Every finding needs `evidence` (a snippet), plain-English `impact`, and a surgical `agentRemediationPrompt`. Add `autoFixPatch` only when the fix is deterministic.
 - Each rule gets a test asserting it fires on `fixtures/vulnerable-saas`. Every rule must also pass on `fixtures/clean-saas` (create it in Sprint 2) with no findings.
 - Commit after each sprint with message `feat(sprint-N): …`.

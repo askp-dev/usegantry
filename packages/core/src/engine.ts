@@ -1,7 +1,18 @@
 /** Audit engine: runs static rules in parallel, applies suppression + scoring, builds the data-flow graph. */
 import { basename } from "node:path";
 import { type BuildOptions, buildRepoContext } from "./context/builder";
-import type { AuditReport, DataFlowGraph, DataFlowNode, Finding, Pillar, PillarScore, RepoContext, RuleDefinition, Severity } from "./context/types";
+import type {
+  AuditReport,
+  DataFlowGraph,
+  DataFlowNode,
+  Finding,
+  Pillar,
+  PillarScore,
+  RepoContext,
+  RuleDefinition,
+  RuleOutput,
+  Severity,
+} from "./context/types";
 import { requireFeature } from "./entitlements";
 import { isBlocking, isSuppressed, RuleSkipped } from "./rules/helpers";
 import { ALL_STATIC_RULES } from "./rules/index";
@@ -43,15 +54,22 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
   const timings: Record<string, number> = { ...ctx.timings };
   const errors: NonNullable<AuditReport["errors"]> = [];
   const skipped = new Map<string, string[]>(); // notice message → rule ids
+  const infos = new Map<string, string[]>(); // info lines from rules that ran
+  const asOf: string[] = [];
+  const collect = (r: RuleDefinition, out: RuleOutput) => {
+    for (const m of out.notices ?? []) infos.set(m, [...(infos.get(m) ?? []), r.id]);
+    if (out.advisoriesAsOf) asOf.push(out.advisoriesAsOf);
+    return out;
+  };
   const results = await Promise.all(
     rules.map(async (r) => {
       const t = performance.now();
       try {
-        return await r.run(ctx);
+        return collect(r, await r.run(ctx));
       } catch (e) {
         if (e instanceof RuleSkipped) {
           skipped.set(e.message, [...(skipped.get(e.message) ?? []), r.id]);
-          return e.findings;
+          return collect(r, e.findings);
         }
         errors.push({ ruleId: r.id, message: e instanceof Error ? e.message : String(e) });
         return [];
@@ -121,7 +139,15 @@ export async function runAudit(ctx: RepoContext, opts: AuditOptions = {}): Promi
       dependencies: ctx.dependencies.size,
       subprocessors: ctx.detectedSubprocessors.length,
     },
-    ...(skipped.size ? { notices: [...skipped].map(([message, ruleIds]) => ({ ruleIds, message })) } : {}),
+    ...(skipped.size || infos.size
+      ? {
+          notices: [
+            ...[...skipped].map(([message, ruleIds]) => ({ ruleIds, message })),
+            ...[...infos].map(([message, ruleIds]) => ({ ruleIds, message, kind: "info" as const })),
+          ],
+        }
+      : {}),
+    ...(asOf.length ? { advisoriesAsOf: asOf.sort()[0] } : {}),
     ...(errors.length ? { errors } : {}),
   };
 }

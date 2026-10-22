@@ -98,7 +98,7 @@
 
         <!-- Machine boundary: nothing leaves it. -->
         <rect x="8" y="8" width="1184" height="324" class="boundary" />
-        <text x="20" y="324" class="lbl muted">Your machine · 0 B uploaded</text>
+        <text x="20" y="324" class="lbl muted">Your machine · 0 B code uploaded</text>
 
         <!-- Callout balloons -->
         {#each balloons as b, i (b.n)}

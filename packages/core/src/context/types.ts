@@ -150,6 +150,10 @@ export interface Dependency {
   declaredLine?: number;
   /** True when the version is a workspace:/file:/link:/git reference. */
   isLocal?: boolean;
+  /** Lockfile resolved it from a registry other than the public npm one (never sent to advisory lookups). */
+  privateRegistry?: boolean;
+  /** Lockfile says the package runs install scripts (`hasInstallScript` / `requiresBuild`). */
+  hasInstallScript?: boolean;
 }
 
 export interface DetectedSubprocessor {
@@ -191,6 +195,12 @@ export interface GantryConfig {
   offline: boolean;
   /** Opt-in rule profiles, e.g. ["airgap"] (CLI `--profile airgap`). */
   profiles?: string[];
+  /** Package names (exact, or `@scope/*` / `prefix*` globs) never sent to advisory/registry lookups (DEP-01/02). */
+  privatePackages?: string[];
+  /** DEP-01 VEX-style exceptions: an advisory id (GHSA/CVE/OSV) with a required reason and expiry (YYYY-MM-DD). */
+  ignoreAdvisories?: Array<{ id: string; package?: string; reason: string; expires: string }>;
+  /** DEP-02: versions published fewer days ago than this are held back (default 7). */
+  minReleaseAgeDays?: number;
   deployTarget?: "vercel" | "cloudflare" | "aws-lambda" | "netlify" | "node" | "unknown";
   clauses: {
     aiOutputDisclaimer: boolean;
@@ -273,8 +283,11 @@ export interface RuleDefinition {
   /** Opt-in rule: runs only when one of these profiles is active (`--profile airgap`, config `profiles`). */
   profiles?: string[];
   /** Rules return findings; severity on a finding may be overridden per-finding. */
-  run: (ctx: RepoContext) => Finding[] | Promise<Finding[]>;
+  run: (ctx: RepoContext) => RuleOutput | Promise<RuleOutput>;
 }
+
+/** Findings plus optional side information a rule that ran wants on the report. */
+export type RuleOutput = Finding[] & { notices?: string[]; advisoriesAsOf?: string };
 
 export interface PillarScore {
   pillar: Pillar;
@@ -300,8 +313,10 @@ export interface AuditReport {
   suppressed: number;
   graph: DataFlowGraph;
   stats: { files: number; routes: number; tables: number; dependencies: number; subprocessors: number };
-  /** Rules that couldn't run here (e.g. Go/Rust without the optional ast-grep grammars). They're absent from `rulesRun`. */
-  notices?: Array<{ ruleIds: string[]; message: string }>;
+  /** Rules that couldn't run here (e.g. Go/Rust without the optional ast-grep grammars; they're absent from `rulesRun`), plus info lines from rules that ran (DEP-01's lower-severity count). */
+  notices?: Array<{ ruleIds: string[]; message: string; kind?: "skipped" | "info" }>;
+  /** Oldest fetch time of the advisory data DEP-01 used (ISO). Absent when DEP-01 didn't run or had no data. */
+  advisoriesAsOf?: string;
   /** Rules that threw; isolated so one bad rule never sinks the scan. */
   errors?: Array<{ ruleId: string; message: string }>;
 }

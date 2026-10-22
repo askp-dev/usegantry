@@ -42,6 +42,8 @@ export interface CheckJson {
   topFixes: TopFix[];
   categories: Array<{ id: CategoryId; label: string; count: number }>;
   notices: string[];
+  /** Age of the dependency-advisory data (DEP-01), when it ran: `--online`, or a local path with a cache. */
+  advisoriesAsOf?: string;
   generatedAt: string;
 }
 
@@ -119,6 +121,7 @@ export function toCheck(r: AuditReport, repo: RepoRef, opts: { maxFixes?: number
       ...(r.notices ?? []).map((n) => n.message),
       ...(r.suppressed ? [`${r.suppressed} finding(s) were suppressed by gantry-ignore comments or config.`] : []),
     ],
+    ...(r.advisoriesAsOf ? { advisoriesAsOf: r.advisoriesAsOf } : {}),
     generatedAt: r.generatedAt,
   };
 }

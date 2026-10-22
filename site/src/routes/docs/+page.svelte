@@ -144,7 +144,7 @@
 
     <section id="privacy" class="flex scroll-mt-24 flex-col gap-4">
       <h2 class="display text-[26px]">What leaves your machine</h2>
-      <p>Scans are local. <span class="font-mono text-[13px]">check</span> and <span class="font-mono text-[13px]">roast</span> on a URL download a snapshot from GitHub; your token goes only to api.github.com. The legal rule that checks for hallucinated packages queries the npm and PyPI registries unless you pass <span class="font-mono text-[13px]">--offline</span>. Only the official workflow sends anything to Gantry: the result summary to sign, never your code.</p>
+      <p>Scans are local. <span class="font-mono text-[13px]">check</span> and <span class="font-mono text-[13px]">roast</span> on a URL download a snapshot from GitHub; your token goes only to api.github.com. The legal rule that checks for hallucinated packages queries the npm and PyPI registries unless you pass <span class="font-mono text-[13px]">--offline</span>. The dependency rules (DEP-01, DEP-02) send package names and exact versions, never code, to OSV.dev, the CISA KEV feed, deps.dev and PyPI, and cache the answers for 24 hours in <span class="font-mono text-[13px]">.gantry/advisories/</span>. Local, git and private-registry packages, scoped names Gantry can't confirm as public, anything matching <span class="font-mono text-[13px]">privatePackages</span> and <span class="font-mono text-[13px]">GOPRIVATE</span> modules are never sent. <span class="font-mono text-[13px]">check</span> on a URL stays offline unless you add <span class="font-mono text-[13px]">--online</span>. Only the official workflow sends anything to Gantry: the result summary to sign, never your code.</p>
     </section>
   </article>
 </div>

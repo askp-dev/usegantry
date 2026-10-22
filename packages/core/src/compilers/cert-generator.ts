@@ -39,6 +39,8 @@ export interface CertPayload {
   rulesetVersion: string;
   /** Findings hidden by `gantry-ignore` comments or `ignoreRules`; shown on the cert so suppressions are never silent. */
   suppressed: number;
+  /** When DEP-01's advisory data was fetched; absent when advisories weren't checked (the verify page says so). */
+  advisoriesAsOf?: string;
   /** "self-signed" = a local per-machine key (never Verified); "gantry-ci" = the central signer after an OIDC check. */
   issuer: "self-signed" | "gantry-ci";
   /** Set by the central signer from the OIDC claims, never from the client. */
@@ -84,6 +86,7 @@ export function buildPayload(report: AuditReport): CertPayload {
     subprocessors: [...new Set(report.graph.nodes.filter((n) => n.column === "vendor").map((n) => n.label))].sort(),
     rulesetVersion: report.tool.rulesetVersion,
     suppressed: report.suppressed,
+    ...(report.advisoriesAsOf ? { advisoriesAsOf: report.advisoriesAsOf } : {}),
     issuer: "self-signed",
   };
 }

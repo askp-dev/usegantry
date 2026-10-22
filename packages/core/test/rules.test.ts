@@ -3,6 +3,7 @@ import { buildRepoContext } from "../src/context/builder";
 import { sysLangUnavailable } from "../src/context/systems-lang";
 import type { Finding, RepoContext } from "../src/context/types";
 import { ALL_STATIC_RULES } from "../src/rules/index";
+import { installAdvisoryStub } from "./advisory-stub";
 
 const VULN = "fixtures/vulnerable-saas";
 const CLEAN = "fixtures/clean-saas";
@@ -27,6 +28,9 @@ const HAS_SYS = !sysLangUnavailable("go") && !sysLangUnavailable("rust");
 /** Route rules with Go/Rust parity (Sprint 15): their usual fixture plus the Go/Rust fixtures and clean twins (when the grammars load). */
 const SYS_PARITY = new Set(["SEC-07", "SEC-08", "SEC-09", "PAY-01", "PCI-03"]);
 const isSysFile = (file: string) => /\.(?:go|rs)$/.test(file);
+/** Dependency rules: DEP-01/02 run online against the recorded OSV/KEV/registry stub; DEP-03 also fires on the manifest-only fixture. */
+const ON_DEP = new Set(["DEP-01", "DEP-02", "DEP-03"]);
+const DEP_CLEAN = ["clean-saas", "clean-fastapi", "clean-go", "clean-rust"];
 const vulnRoot = (id: string) =>
   ON_BAAS.has(id)
     ? BAAS
@@ -38,7 +42,9 @@ const vulnRoot = (id: string) =>
           ? COMPLIANCE
           : ON_SYS.has(id)
             ? "fixtures/vulnerable-go + vulnerable-rust"
-            : VULN;
+            : id === "DEP-03"
+              ? `${VULN} + vulnerable-nolock`
+              : VULN;
 const cleanTwin = (id: string) =>
   ON_INFRA.has(id)
     ? CLEAN_INFRA
@@ -48,7 +54,9 @@ const cleanTwin = (id: string) =>
         ? CLEAN_COMPLIANCE
         : ON_SYS.has(id)
           ? "fixtures/clean-go + clean-rust"
-          : undefined;
+          : ON_DEP.has(id)
+            ? "clean-fastapi + clean-go + clean-rust"
+            : undefined;
 
 /** What each rule must report on the vulnerable fixture: [file, evidence substring]. */
 const EXPECT: Record<string, Array<[string, string]>> = {
@@ -276,6 +284,20 @@ const EXPECT: Record<string, Array<[string, string]>> = {
   ],
   "LGL-03": [["package.json", "@ai-sdk/deepseek"]],
   "AIA-01": [["package.json", "AI_INVENTORY.md not found"]],
+  "DEP-01": [
+    ["package.json", "jquery@3.4.1 (package-lock.json:"],
+    ["package.json", "imported at components/Tooltip.tsx:2 · GHSA-jpcq-cgw6-v4j6 / CVE-2020-11023 (CISA KEV"],
+    ["package.json", "lodash@4.17.20"],
+  ],
+  "DEP-02": [["package-lock.json", "dayjs@1.11.13 (package-lock.json) · published 2 days ago"]],
+  "DEP-03": [
+    ["package-lock.json", "deasync@0.1.29 runs an install script"],
+    ["package.json", "package-lock.json has no entry for axois"],
+    ["package.json", '"dayjs": "latest"'],
+    ["package.json", "no package-lock.json, bun.lock, pnpm-lock.yaml or yarn.lock is committed"],
+    ["package.json", '"left-pad": "*"'],
+    ["package.json", '"internal-ui": "github:acme-labs/internal-ui"'],
+  ],
   "SYS-01": [
     ["handlers/orders.go", "go sendReceipt("],
     ["handlers/orders.go", "go push(id)"],
@@ -328,7 +350,18 @@ beforeAll(async () => {
     }
   }
   const vulnCtx = (id: string) => (ON_BAAS.has(id) ? baas : ON_INFRA.has(id) ? infra : ON_PY.has(id) ? fastapi : ON_COMP.has(id) ? compliance : vuln);
-  const rest = ALL_STATIC_RULES.filter((r) => !ON_SYS.has(r.id));
+  const rest = ALL_STATIC_RULES.filter((r) => !ON_SYS.has(r.id) && !ON_DEP.has(r.id));
+  const stub = installAdvisoryStub({ ages: { "dayjs@1.11.13": 2 } });
+  try {
+    const online = (f: string) => buildRepoContext(`fixtures/${f}`, { config: { offline: false } });
+    const [v, nolock, ...cleans] = await Promise.all(["vulnerable-saas", "vulnerable-nolock", ...DEP_CLEAN].map(online));
+    for (const r of ALL_STATIC_RULES.filter((r) => ON_DEP.has(r.id))) {
+      vulnOut.set(r.id, [...(await r.run(v)), ...(r.id === "DEP-03" ? await r.run(nolock) : [])]);
+      cleanOut.set(r.id, (await Promise.all(cleans.map((c) => r.run(c)))).flat());
+    }
+  } finally {
+    stub.restore();
+  }
   await Promise.all(rest.map(async (r) => vulnOut.set(r.id, await r.run(vulnCtx(r.id)))));
   // Profile-only rules (SOV-01) never run on clean-saas without their profile, so they're held to the clean twin instead.
   await Promise.all(rest.map(async (r) => cleanOut.set(r.id, r.profiles ? [] : await r.run(clean))));
@@ -342,10 +375,10 @@ beforeAll(async () => {
     }
 });
 
-test("registry has 71 unique rules covering every expectation", () => {
+test("registry has 74 unique rules covering every expectation", () => {
   const ids = ALL_STATIC_RULES.map((r) => r.id);
-  expect(ids.length).toBe(71);
-  expect(new Set(ids).size).toBe(71);
+  expect(ids.length).toBe(74);
+  expect(new Set(ids).size).toBe(74);
   expect(Object.keys(EXPECT).sort()).toEqual([...ids].sort());
 });
 

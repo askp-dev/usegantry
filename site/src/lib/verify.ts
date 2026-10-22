@@ -13,6 +13,8 @@ export type Cert = {
   failedRules: string[];
   subprocessors: string[];
   rulesetVersion: string;
+  /** When the dependency-advisory data was fetched (DEP-01); absent = advisories weren't checked. */
+  advisoriesAsOf?: string;
   issuer?: "self-signed" | "gantry-ci";
   repository?: string;
   runId?: string;

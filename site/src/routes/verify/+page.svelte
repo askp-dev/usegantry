@@ -112,6 +112,7 @@
                 ["Project", cert.repository ?? cert.projectName],
                 ["Commit", (cert.commitSha || "—").slice(0, 12)],
                 ["Ruleset", cert.rulesetVersion],
+                ["Advisories", cert.advisoriesAsOf ? `as of ${when(cert.advisoriesAsOf)}` : "not checked"],
                 ["Issued", when(cert.signedAt ?? cert.timestamp)],
                 ["Signed", cert.issuer === "gantry-ci" ? `Gantry CI · run ${cert.runId ?? "?"}` : "Local key"],
               ]}

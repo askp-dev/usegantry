@@ -1,7 +1,8 @@
-/** Vendor security-questionnaire pack: CycloneDX 1.5 SBOM + RoPA data-flow diagram (Mermaid). */
+/** Vendor security-questionnaire pack: CycloneDX 1.6 SBOM (+ known advisories) + RoPA data-flow diagram (Mermaid). */
 import { randomUUID } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { type AdvisoryResult, firstFix } from "../context/advisories";
 import type { AuditReport, Dependency, RepoContext } from "../context/types";
 import { VERSION } from "../engine";
 import { requireFeature } from "../entitlements";
@@ -14,11 +15,52 @@ export function purl(d: Dependency): string {
   return `pkg:${eco === "go" ? "golang" : eco}/${name}@${encodeURIComponent(cleanVersion(d.version))}`;
 }
 
-export function buildSbom(ctx: RepoContext, now = new Date()): Record<string, unknown> {
+const RATING = (s: number) => (s >= 9 ? "critical" : s >= 7 ? "high" : s >= 4 ? "medium" : s > 0 ? "low" : "none");
+const LABEL: Record<string, string> = { CRITICAL: "critical", HIGH: "high", MODERATE: "medium", MEDIUM: "medium", LOW: "low" };
+
+/** CycloneDX 1.6 `vulnerabilities[]` from DEP-01's lookup: one entry per advisory, `affects` every package it hits. */
+function sbomVulns(ctx: RepoContext, adv: AdvisoryResult) {
+  const byId = new Map<string, any>();
+  for (const [key, list] of adv.byKey) {
+    const d = ctx.dependencies.get(key);
+    if (!d) continue;
+    for (const a of list) {
+      const v = byId.get(a.id) ?? {
+        "bom-ref": `vuln:${a.id}`,
+        id: a.id,
+        source: { name: "OSV", url: `https://osv.dev/vulnerability/${a.id}` },
+        references: a.aliases.map((id) => ({
+          id,
+          source: {
+            name: id.startsWith("CVE-") ? "NVD" : "OSV",
+            url: id.startsWith("CVE-") ? `https://nvd.nist.gov/vuln/detail/${id}` : `https://osv.dev/vulnerability/${id}`,
+          },
+        })),
+        ratings: [
+          a.cvss !== undefined
+            ? { score: a.cvss, severity: RATING(a.cvss), method: "CVSSv3" }
+            : { severity: LABEL[a.label ?? ""] ?? "unknown", method: "other" },
+        ],
+        description: a.summary,
+        affects: [],
+        properties: [{ name: "gantry:cisa-kev", value: String(a.kev) }],
+      };
+      const fix = firstFix(d.version, a.fixed);
+      v.affects.push({ ref: purl(d) });
+      if (fix && !v.recommendation) v.recommendation = `Upgrade ${d.name} to ${fix} or later.`;
+      byId.set(a.id, v);
+    }
+  }
+  return [...byId.values()];
+}
+
+export function buildSbom(ctx: RepoContext, now = new Date(), advisories?: AdvisoryResult): Record<string, unknown> {
   const deps = [...ctx.dependencies.values()].filter((d) => !d.isLocal);
+  const vulns = advisories ? sbomVulns(ctx, advisories) : [];
   return {
+    $schema: "http://cyclonedx.org/schema/bom-1.6.schema.json",
     bomFormat: "CycloneDX",
-    specVersion: "1.5",
+    specVersion: "1.6",
     serialNumber: `urn:uuid:${randomUUID()}`,
     version: 1,
     metadata: {
@@ -38,8 +80,12 @@ export function buildSbom(ctx: RepoContext, now = new Date()): Record<string, un
       version: cleanVersion(d.version),
       purl: purl(d),
       scope: d.isDev ? "optional" : "required",
+      properties: [{ name: "gantry:dependency", value: d.isDirect ? "direct" : "transitive" }],
       ...(d.spdxLicense ? { licenses: [/\s(OR|AND|WITH)\s/.test(d.spdxLicense) ? { expression: d.spdxLicense } : { license: { id: d.spdxLicense } }] } : {}),
     })),
+    // Only direct edges are known (lockfile parents aren't modelled), so the graph is root → direct deps.
+    dependencies: [{ ref: "root", dependsOn: [...new Set(deps.filter((d) => d.isDirect).map(purl))] }],
+    ...(vulns.length ? { vulnerabilities: vulns } : {}),
     services: ctx.detectedSubprocessors.map((s) => ({
       "bom-ref": `vendor:${s.id}`,
       provider: { name: s.entityName },
