@@ -1,5 +1,5 @@
 /**
- * `gantry hook <stop|pre-commit> --agent <claude|cursor>`: agent lifecycle hooks installed by `gantry init`.
+ * `gantry hook <stop|pre-commit> --agent <claude|cursor|windsurf|antigravity|codex>`: agent lifecycle hooks installed by `gantry init`.
  * Runs a changed-only scan and blocks only on **new** blocking findings (not in `.gantry/baseline.json`),
  * so pre-existing debt never traps the agent. Fails open on internal errors: a crashing scanner must not brick the agent.
  */
@@ -15,8 +15,8 @@ import { renderCompact } from "./reporters/compact";
 export const BASELINE = ".gantry/baseline.json";
 /** Pre-rename location, still read for one release. */
 const LEGACY_BASELINE = ".preflight/baseline.json";
-/** Cursor's stop hook has no `stop_hook_active`; cap our own auto follow-ups (Cursor's default cap is 5). */
-const CURSOR_MAX_FOLLOWUPS = 3;
+/** Cursor / Antigravity stop hooks have no `stop_hook_active`; cap our own auto follow-ups (Cursor's default cap is 5). */
+const MAX_FOLLOWUPS = 3;
 /** `git commit`, also with global options (`git -C dir commit`, `git -c k=v commit`). */
 const COMMIT_RE = /(^|[;&|(]\s*|\s)git\s+(-\S+(\s+[^-\s]\S*)?\s+)*commit\b/;
 
@@ -62,34 +62,75 @@ export interface HookResult {
   stderr?: string;
 }
 
+const HOOK_AGENTS = ["claude", "cursor", "windsurf", "antigravity", "codex"] as const;
+type HookAgent = (typeof HOOK_AGENTS)[number];
+
+/**
+ * Per-agent hook I/O contract (vendor docs, 2026-10):
+ * - Claude Code / Codex: `stop_hook_active` loop guard, shell command in `tool_input.command`, block = exit 2 + stderr.
+ * - Cursor: JSON on stdout for every exit (`followup_message` / `permission`), loop guard `loop_count`.
+ * - Windsurf (Devin Desktop): command in `tool_info.command_line`, block = exit 2 + stderr. Its stop event
+ *   (`post_cascade_response`) can't block, so the stop hook only reports (stdout, shown via `show_output`).
+ * - Antigravity: JSON on stdout. Stop continues with `{decision:"continue"}`, only once fully idle after a model stop,
+ *   capped by `executionNum`; `run_command` args in `toolCall.args.CommandLine`, deny = `{decision:"deny"}`.
+ */
+interface Contract {
+  /** True = let the agent stop without scanning (loop guard, aborted turn). */
+  skipStop(input: Json): boolean;
+  command(input: Json): unknown;
+  allow?: (event: string) => string;
+  block(event: string, msg: string, n: number): HookResult;
+}
+const exit2: Contract["block"] = (_e, msg) => ({ code: 2, stderr: msg });
+const CONTRACTS: Record<HookAgent, Contract> = {
+  claude: { skipStop: (i) => !!i.stop_hook_active, command: (i) => i.tool_input?.command, block: exit2 },
+  codex: { skipStop: (i) => !!i.stop_hook_active, command: (i) => i.tool_input?.command, block: exit2 },
+  cursor: {
+    skipStop: (i) => i.status !== "completed" || Number(i.loop_count ?? 0) >= MAX_FOLLOWUPS,
+    command: (i) => i.command,
+    allow: cursorAllow,
+    block: (event, msg, n) => ({
+      code: 0,
+      stdout: JSON.stringify(
+        event === "stop"
+          ? { followup_message: msg }
+          : { permission: "deny", user_message: `Gantry blocked the commit: ${n} new launch blocker(s).`, agent_message: msg },
+      ),
+    }),
+  },
+  windsurf: {
+    skipStop: () => false,
+    command: (i) => i.tool_info?.command_line,
+    block: (event, msg) => (event === "stop" ? { code: 0, stdout: msg } : { code: 2, stderr: msg }),
+  },
+  antigravity: {
+    skipStop: (i) => i.fullyIdle === false || (i.terminationReason ?? "model_stop") !== "model_stop" || Number(i.executionNum ?? 0) > MAX_FOLLOWUPS,
+    command: (i) => i.toolCall?.args?.CommandLine,
+    allow: () => "{}",
+    block: (event, msg) => ({ code: 0, stdout: JSON.stringify({ decision: event === "stop" ? "continue" : "deny", reason: msg }) }),
+  },
+};
+
+const hookAgent = (v: unknown): HookAgent => (HOOK_AGENTS.includes(v as HookAgent) ? (v as HookAgent) : "claude");
+
 /** Pure hook decision (stdin JSON in, exit code + streams out) so tests don't spawn processes. */
 export async function runHook(event: string, agent: string, input: Json, root: string): Promise<HookResult> {
-  const cursor = agent === "cursor";
+  const c = CONTRACTS[hookAgent(agent)];
+  const allow = (): HookResult => ({ code: 0, stdout: c.allow?.(event) });
   if (event === "stop") {
-    // Claude Code: stop_hook_active = we already blocked once this turn; let it stop (no infinite loop).
-    if (!cursor && input.stop_hook_active) return { code: 0 };
-    if (cursor && (input.status !== "completed" || Number(input.loop_count ?? 0) >= CURSOR_MAX_FOLLOWUPS)) return { code: 0, stdout: "{}" };
+    if (c.skipStop(input)) return allow();
   } else if (event === "pre-commit") {
-    const cmd = String((cursor ? input.command : input.tool_input?.command) ?? "");
-    if (!COMMIT_RE.test(cmd)) return { code: 0, stdout: cursor ? cursorAllow(event) : undefined };
+    if (!COMMIT_RE.test(String(c.command(input) ?? ""))) return allow();
   } else return { code: 2, stderr: `unknown hook event "${event}" (expected stop | pre-commit)` };
 
   const { report, findings } = await newBlockers(root);
-  if (!findings.length) return { code: 0, stdout: cursor ? cursorAllow(event) : undefined };
-  const msg = message(report, findings);
-  if (!cursor) return { code: 2, stderr: msg };
-  return {
-    code: 0,
-    stdout: JSON.stringify(
-      event === "stop"
-        ? { followup_message: msg }
-        : { permission: "deny", user_message: `Gantry blocked the commit: ${findings.length} new launch blocker(s).`, agent_message: msg },
-    ),
-  };
+  if (!findings.length) return allow();
+  return c.block(event, message(report, findings), findings.length);
 }
 
 export async function main({ path, flags, event = "" }: { path: string; flags: Record<string, string | boolean>; event?: string }): Promise<number> {
-  const agent = flags.agent === "cursor" ? "cursor" : "claude";
+  const agent = hookAgent(flags.agent);
+  const allow = CONTRACTS[agent].allow?.(event);
   let input: Json = {};
   try {
     const raw = await Bun.stdin.text();
@@ -100,13 +141,9 @@ export async function main({ path, flags, event = "" }: { path: string; flags: R
   const root = resolve(path);
   let res: HookResult;
   try {
-    res = existsSync(root) ? await runHook(event, agent, input, root) : { code: 0, stdout: agent === "cursor" ? cursorAllow(event) : undefined };
+    res = existsSync(root) ? await runHook(event, agent, input, root) : { code: 0, stdout: allow };
   } catch (e) {
-    res = {
-      code: 0,
-      stderr: `gantry hook skipped: ${e instanceof Error ? e.message : String(e)}`,
-      stdout: agent === "cursor" ? cursorAllow(event) : undefined,
-    };
+    res = { code: 0, stderr: `gantry hook skipped: ${e instanceof Error ? e.message : String(e)}`, stdout: allow };
   }
   if (res.stdout) process.stdout.write(`${res.stdout}\n`);
   if (res.stderr) process.stderr.write(`${res.stderr}\n`);

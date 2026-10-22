@@ -7,12 +7,17 @@ import { dirname, join } from "node:path";
 import { compileSafeHarbor } from "./compilers/safe-harbor";
 import { buildRepoContext } from "./context/builder";
 import { CONFIG_FILES } from "./context/config";
+import { parseToml } from "./context/toml";
 import { audit } from "./engine";
 import { requireFeature } from "./entitlements";
 import { BASELINE, writeBaseline } from "./hooks";
 import ADVISORIES_WORKFLOW from "./templates/gantry-advisories.yml" with { type: "text" };
 
-export type InitAction = { path: string; action: "created" | "updated" | "unchanged" | "skipped"; reason?: string };
+/** `manual` = user-level config Gantry won't write into `$HOME`; `reason` carries the snippet to paste. */
+export type InitAction = { path: string; action: "created" | "updated" | "unchanged" | "skipped" | "manual"; reason?: string };
+
+export const INIT_AGENTS = ["claude", "cursor", "windsurf", "antigravity", "codex"] as const;
+export type InitAgent = (typeof INIT_AGENTS)[number];
 
 const BEGIN = "<!-- GANTRY:BEGIN -->";
 const END = "<!-- GANTRY:END -->";
@@ -23,6 +28,13 @@ export const CLAUDE_HOOKS = {
   preCommit: 'gantry hook pre-commit --agent claude "$CLAUDE_PROJECT_DIR"',
 };
 export const CURSOR_HOOKS = { stop: "gantry hook stop --agent cursor", preCommit: "gantry hook pre-commit --agent cursor" };
+// Windsurf runs hooks in the workspace root; Antigravity's hook cwd is undocumented but its agent runs in the workspace.
+export const WINDSURF_HOOKS = { stop: "gantry hook stop --agent windsurf", preCommit: "gantry hook pre-commit --agent windsurf" };
+export const ANTIGRAVITY_HOOKS = { stop: "gantry hook stop --agent antigravity", preCommit: "gantry hook pre-commit --agent antigravity" };
+// Codex runs hooks in the session cwd (may be a subdirectory); its docs resolve the repo root with git.
+const CODEX_ROOT = '"$(git rev-parse --show-toplevel 2>/dev/null || pwd)"';
+export const CODEX_HOOKS = { stop: `gantry hook stop --agent codex ${CODEX_ROOT}`, preCommit: `gantry hook pre-commit --agent codex ${CODEX_ROOT}` };
+const CODEX_MCP = `[mcp_servers.gantry]\ncommand = "${MCP_SERVER.command}"\nargs = ${JSON.stringify(MCP_SERVER.args)}\n`;
 
 const AGENT_GUIDE = `## Gantry launch-readiness checks
 - Before declaring a feature done, run \`gantry scan\` (or the \`run_readiness_audit\` MCP tool) and fix every CRITICAL finding.
@@ -39,6 +51,42 @@ ${BEGIN}
 ${AGENT_GUIDE}
 ${END}
 `;
+
+/** Windsurf / Antigravity workspace rules: one Markdown file, `trigger` frontmatter required by Antigravity. */
+const ALWAYS_ON_RULE = `---
+trigger: always_on
+description: Gantry launch-readiness guardrails
+---
+${BEGIN}
+${AGENT_GUIDE}
+${END}
+`;
+
+/** Agents whose config dirs already exist; claude + cursor when none do (the pre-`--agent` default). */
+export function detectAgents(root: string): InitAgent[] {
+  const has = (...rels: string[]) => rels.some((r) => existsSync(join(root, r)));
+  const found = INIT_AGENTS.filter(
+    (a) =>
+      ({
+        claude: has(".claude", "CLAUDE.md", ".mcp.json"),
+        cursor: has(".cursor", ".cursorrules"),
+        windsurf: has(".windsurf", ".devin", ".windsurfrules"),
+        antigravity: has(".agents", ".agent"),
+        codex: has(".codex", "AGENTS.md"),
+      })[a],
+  );
+  return found.length ? found : ["claude", "cursor"];
+}
+
+/** `--agent claude,codex` / `--agent all` / absent (detect). Unknown names throw so a typo never silently wires nothing. */
+export function parseAgents(root: string, flag: string | boolean | undefined): InitAgent[] {
+  if (typeof flag !== "string") return detectAgents(root);
+  const names = flag.split(",").map((s) => s.trim().toLowerCase());
+  if (names.includes("all")) return [...INIT_AGENTS];
+  const bad = names.filter((n) => !INIT_AGENTS.includes(n as InitAgent));
+  if (bad.length) throw new Error(`unknown --agent ${bad.join(", ")} (expected ${INIT_AGENTS.join(" | ")} | all)`);
+  return names as InitAgent[];
+}
 
 const WORKFLOW = `name: gantry
 on: [pull_request]
@@ -82,35 +130,26 @@ function addHook(json: Record<string, any>, event: string, entry: Record<string,
   return true;
 }
 
-export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean; preCommit?: boolean } = {}): InitAction[] {
+export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean; preCommit?: boolean; agents?: readonly InitAgent[] } = {}): InitAction[] {
   requireFeature("init");
+  const agents = new Set(opts.agents ?? detectAgents(root));
+  const hooks = opts.hooks !== false;
   const out: InitAction[] = [];
-  const put = (rel: string, next: string, prev: string | null) => {
+  const put = (rel: string, next: string, prev: string | null, reason?: string) => {
     if (prev === next) return out.push({ path: rel, action: "unchanged" });
     mkdirSync(dirname(join(root, rel)), { recursive: true });
     writeFileSync(join(root, rel), next);
-    out.push({ path: rel, action: prev === null ? "created" : "updated" });
+    out.push({ path: rel, action: prev === null ? "created" : "updated", ...(reason ? { reason } : {}) });
   };
   const read = (rel: string) => (existsSync(join(root, rel)) ? readFileSync(join(root, rel), "utf8") : null);
-
-  const rule = ".cursor/rules/gantry.mdc";
-  const prevRule = read(rule);
-  put(rule, prevRule === null ? CURSOR_RULE : upsertBlock(prevRule, AGENT_GUIDE), prevRule);
-
-  const claude = read("CLAUDE.md");
-  put("CLAUDE.md", upsertBlock(claude ?? "", AGENT_GUIDE), claude);
-
-  if (CONFIG_FILES.some((f) => existsSync(join(root, f))))
-    out.push({ path: CONFIG_FILES.find((f) => existsSync(join(root, f)))!, action: "skipped", reason: "config already exists" });
-  else
-    put(
-      "gantry.config.json",
-      `${JSON.stringify({ mode: "commercial", companyName: "", contactEmail: "", securityContact: "", siteUrl: "", jurisdiction: "US-DE", legalDir: "legal", ignoreRules: [], ignorePaths: [] }, null, 2)}\n`,
-      null,
-    );
+  /** A rule file Gantry owns (created whole) or a user file it upserts its marker block into. */
+  const ruleFile = (rel: string, fresh?: string) => {
+    const prev = read(rel);
+    put(rel, prev === null && fresh ? fresh : upsertBlock(prev ?? "", AGENT_GUIDE), prev);
+  };
 
   /** Merge into a JSON config; `apply` returns false when Gantry is already wired (nothing to write). */
-  const mergeJson = (rel: string, apply: (json: any) => boolean) => {
+  const mergeJson = (rel: string, apply: (json: any) => boolean, reason?: string) => {
     const prev = read(rel);
     let json: any = {};
     if (prev !== null) {
@@ -126,31 +165,97 @@ export function initProject(root: string, opts: { ci?: boolean; hooks?: boolean;
       return;
     }
     if (!apply(json)) return void out.push({ path: rel, action: "unchanged" });
-    put(rel, `${JSON.stringify(json, null, 2)}\n`, prev);
+    put(rel, `${JSON.stringify(json, null, 2)}\n`, prev, reason);
+  };
+  const addMcp = (json: any) => {
+    if (json.mcpServers?.gantry) return false;
+    json.mcpServers = { ...(json.mcpServers ?? {}), gantry: MCP_SERVER };
+    return true;
   };
 
-  for (const rel of [".mcp.json", ".cursor/mcp.json"])
-    mergeJson(rel, (json) => {
-      if (json.mcpServers?.gantry) return false;
-      json.mcpServers = { ...(json.mcpServers ?? {}), gantry: MCP_SERVER };
-      return true;
-    });
+  if (agents.has("cursor")) ruleFile(".cursor/rules/gantry.mdc", CURSOR_RULE);
+  if (agents.has("claude")) ruleFile("CLAUDE.md");
+  if (agents.has("codex")) ruleFile("AGENTS.md");
+  // Windsurf is now Devin Desktop: `.devin/` wins when present, `.windsurf/` is read by both old and new builds.
+  const ws = existsSync(join(root, ".devin")) ? ".devin" : ".windsurf";
+  if (agents.has("windsurf")) ruleFile(`${ws}/rules/gantry.md`, ALWAYS_ON_RULE);
+  if (agents.has("antigravity")) ruleFile(".agents/rules/gantry.md", ALWAYS_ON_RULE);
 
-  if (opts.hooks !== false) {
-    mergeJson(".claude/settings.json", (json) => {
-      let changed = addHook(json, "Stop", { hooks: [{ type: "command", command: CLAUDE_HOOKS.stop }] }, CLAUDE_HOOKS.stop);
-      if (opts.preCommit)
-        changed =
-          addHook(json, "PreToolUse", { matcher: "Bash", hooks: [{ type: "command", command: CLAUDE_HOOKS.preCommit }] }, CLAUDE_HOOKS.preCommit) || changed;
-      return changed;
+  if (CONFIG_FILES.some((f) => existsSync(join(root, f))))
+    out.push({ path: CONFIG_FILES.find((f) => existsSync(join(root, f)))!, action: "skipped", reason: "config already exists" });
+  else
+    put(
+      "gantry.config.json",
+      `${JSON.stringify({ mode: "commercial", companyName: "", contactEmail: "", securityContact: "", siteUrl: "", jurisdiction: "US-DE", legalDir: "legal", ignoreRules: [], ignorePaths: [] }, null, 2)}\n`,
+      null,
+    );
+
+  if (agents.has("claude")) mergeJson(".mcp.json", addMcp);
+  if (agents.has("cursor")) mergeJson(".cursor/mcp.json", addMcp);
+  if (agents.has("antigravity")) mergeJson(".agents/mcp_config.json", addMcp);
+  if (agents.has("windsurf"))
+    out.push({
+      path: "~/.config/devin/mcp_config.json",
+      action: "manual",
+      reason: `Windsurf/Devin MCP config is user-level only (legacy ~/.codeium/windsurf/mcp_config.json); add: ${JSON.stringify({ mcpServers: { gantry: MCP_SERVER } })}`,
     });
-    mergeJson(".cursor/hooks.json", (json) => {
-      json.version ??= 1;
-      let changed = addHook(json, "stop", { command: CURSOR_HOOKS.stop }, CURSOR_HOOKS.stop);
-      if (opts.preCommit)
-        changed = addHook(json, "beforeShellExecution", { command: CURSOR_HOOKS.preCommit, matcher: "git.*commit" }, CURSOR_HOOKS.preCommit) || changed;
-      return changed;
-    });
+  if (agents.has("codex")) {
+    const rel = ".codex/config.toml";
+    const prev = read(rel);
+    const toml = prev === null ? {} : parseToml(prev);
+    const servers = toml?.mcp_servers as Record<string, unknown> | undefined;
+    if (!toml) out.push({ path: rel, action: "skipped", reason: "existing file is not TOML Gantry can read; left untouched" });
+    else if (servers?.gantry) out.push({ path: rel, action: "unchanged" });
+    else put(rel, prev?.trim() ? `${prev.trimEnd()}\n\n${CODEX_MCP}` : CODEX_MCP, prev, "Codex loads project config only once you trust the project");
+  }
+
+  if (hooks) {
+    const hook = (command: string, extra: Record<string, unknown> = {}) => ({ ...extra, hooks: [{ type: "command", command }] });
+    if (agents.has("claude"))
+      mergeJson(".claude/settings.json", (json) => {
+        let changed = addHook(json, "Stop", hook(CLAUDE_HOOKS.stop), CLAUDE_HOOKS.stop);
+        if (opts.preCommit) changed = addHook(json, "PreToolUse", hook(CLAUDE_HOOKS.preCommit, { matcher: "Bash" }), CLAUDE_HOOKS.preCommit) || changed;
+        return changed;
+      });
+    if (agents.has("cursor"))
+      mergeJson(".cursor/hooks.json", (json) => {
+        json.version ??= 1;
+        let changed = addHook(json, "stop", { command: CURSOR_HOOKS.stop }, CURSOR_HOOKS.stop);
+        if (opts.preCommit)
+          changed = addHook(json, "beforeShellExecution", { command: CURSOR_HOOKS.preCommit, matcher: "git.*commit" }, CURSOR_HOOKS.preCommit) || changed;
+        return changed;
+      });
+    if (agents.has("windsurf"))
+      mergeJson(`${ws}/hooks.json`, (json) => {
+        // post_cascade_response can't block: the stop hook reports, `show_output` surfaces it in Cascade.
+        let changed = addHook(json, "post_cascade_response", { command: WINDSURF_HOOKS.stop, show_output: true }, WINDSURF_HOOKS.stop);
+        if (opts.preCommit)
+          changed = addHook(json, "pre_run_command", { command: WINDSURF_HOOKS.preCommit, show_output: true }, WINDSURF_HOOKS.preCommit) || changed;
+        return changed;
+      });
+    if (agents.has("antigravity"))
+      // Antigravity keys hooks by name at the top level: { "<name>": { "<Event>": [matcher groups] } }.
+      mergeJson(".agents/hooks.json", (json) => {
+        let changed = false;
+        const named = (name: string, event: string, entry: Record<string, unknown>) => {
+          if (JSON.stringify(json).includes(JSON.stringify((entry.hooks as Array<{ command: string }>)[0].command))) return;
+          json[name] = { [event]: [entry] };
+          changed = true;
+        };
+        named("gantry-stop", "Stop", hook(ANTIGRAVITY_HOOKS.stop));
+        if (opts.preCommit) named("gantry-pre-commit", "PreToolUse", hook(ANTIGRAVITY_HOOKS.preCommit, { matcher: "run_command" }));
+        return changed;
+      });
+    if (agents.has("codex"))
+      mergeJson(
+        ".codex/hooks.json",
+        (json) => {
+          let changed = addHook(json, "Stop", hook(CODEX_HOOKS.stop), CODEX_HOOKS.stop);
+          if (opts.preCommit) changed = addHook(json, "PreToolUse", hook(CODEX_HOOKS.preCommit, { matcher: "Bash" }), CODEX_HOOKS.preCommit) || changed;
+          return changed;
+        },
+        "Codex loads project hooks only once you trust the project",
+      );
   }
 
   if (opts.ci)
@@ -183,7 +288,14 @@ export async function initSafeHarbor(root: string): Promise<InitAction[]> {
 
 export async function main({ path, flags }: { path: string; flags: Record<string, string | boolean> }): Promise<number> {
   const hooks = flags["no-hooks"] !== true;
-  const actions = initProject(path, { ci: flags.ci === true, hooks, preCommit: flags["pre-commit"] === true });
+  let agents: InitAgent[];
+  try {
+    agents = parseAgents(path, flags.agent);
+  } catch (e) {
+    console.error(`gantry init: ${(e as Error).message}`);
+    return 2;
+  }
+  const actions = initProject(path, { ci: flags.ci === true, hooks, preCommit: flags["pre-commit"] === true, agents });
   actions.push(...(await initSafeHarbor(path)));
   if (hooks) actions.push(await initBaseline(path));
   for (const a of actions) console.log(`${a.action.padEnd(9)} ${a.path}${a.reason ? `  (${a.reason})` : ""}`);

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "search": {
+      "command": "npx",
+      "args": ["-y", "brave-search-mcp", "--api-key", "Xk3Pq9Lm2Vr7Tz4Nw8Bc5Yd1Hf6Gj0Ks"]
+    }
+  }
+}

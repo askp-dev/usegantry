@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { requireFeature } from "../../core/src/entitlements";
+import { AGENT_COMMAND_RE, agentLabel, pickAgentCommand } from "./agents";
 import { FindingCodeLensProvider } from "./codelens-provider";
 import { type AuditReport, type Finding, runScan } from "./scan";
 import { SidebarProvider } from "./sidebar-provider";
@@ -65,10 +66,27 @@ export function activate(context: vscode.ExtensionContext) {
     if (!f) return;
     const prompt = `[${f.ruleId}] ${f.file}:${f.line}\n${f.agentRemediationPrompt}`;
     await vscode.env.clipboard.writeText(prompt);
-    const available = new Set(await vscode.commands.getCommands(true));
-    const cmd = (config().get<string[]>("agentCommands") ?? []).find((c) => available.has(c));
-    if (cmd) await vscode.commands.executeCommand(cmd, prompt).then(undefined, () => undefined);
-    vscode.window.showInformationMessage(`Gantry: fix prompt for ${f.ruleId} copied${cmd ? " and sent to your agent" : ". Paste it into your AI agent"}.`);
+    const cmd = pickAgentCommand(config().get<string[]>("agentCommands") ?? [], new Set(await vscode.commands.getCommands(true)));
+    // VS Code's own chat takes `{ query, isPartialQuery }`: prefill, let the user review before sending.
+    const arg = cmd === "workbench.action.chat.open" ? { query: prompt, isPartialQuery: true } : prompt;
+    if (cmd) await vscode.commands.executeCommand(cmd, arg).then(undefined, () => undefined);
+    const agent = agentLabel(cmd, vscode.env.appName);
+    vscode.window.showInformationMessage(`Gantry: fix prompt for ${f.ruleId} copied${cmd ? ` and ${agent} opened` : `. Paste it into ${agent}`}.`);
+  }
+
+  /** Lists this host's chat/agent command IDs so `gantry.agentCommands` defaults can be checked per IDE. */
+  let out: vscode.OutputChannel | undefined;
+  async function debugAgentCommands(): Promise<string[]> {
+    const ids = (await vscode.commands.getCommands(true)).filter((c) => AGENT_COMMAND_RE.test(c)).sort();
+    if (!out) {
+      out = vscode.window.createOutputChannel("Gantry: agent commands");
+      context.subscriptions.push(out);
+    }
+    out.clear();
+    out.appendLine(`${vscode.env.appName} ${vscode.version}: ${ids.length} agent-like command(s)`);
+    for (const id of ids) out.appendLine(id);
+    out.show(true);
+    return ids;
   }
 
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -79,6 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider("gantry.sidebar", sidebar),
     vscode.commands.registerCommand("gantry.scan", scan),
     vscode.commands.registerCommand("gantry.fixWithAgent", fixWithAgent),
+    vscode.commands.registerCommand("gantry.debugAgentCommands", debugAgentCommands),
     vscode.commands.registerCommand("gantry.openMissionControl", () => vscode.commands.executeCommand("workbench.view.extension.gantry")),
     vscode.workspace.onDidSaveTextDocument((doc) => {
       if (!config().get<boolean>("scanOnSave", true) || !doc.uri.fsPath.startsWith(folder.uri.fsPath)) return;

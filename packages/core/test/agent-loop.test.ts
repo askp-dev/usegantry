@@ -175,6 +175,32 @@ describe("--changed-only", () => {
     const deny = JSON.parse((await runHook("pre-commit", "cursor", { command: "git -c x=y commit -m x" }, root)).stdout!);
     expect(deny.permission).toBe("deny");
     expect(deny.agent_message).toContain(copy);
+    // Codex: Claude-style contract (stop_hook_active, tool_input.command, exit 2 + stderr).
+    expect((await runHook("stop", "codex", { hook_event_name: "Stop", stop_hook_active: false, turn_id: "t" }, root)).stderr).toContain(copy);
+    expect(await runHook("stop", "codex", { stop_hook_active: true }, root)).toEqual({ code: 0 });
+    expect((await runHook("pre-commit", "codex", { tool_name: "Bash", tool_input: { command: "git commit -m x" } }, root)).code).toBe(2);
+
+    // Windsurf: stop can't block (post_cascade_response) → report on stdout, exit 0; pre_run_command blocks with exit 2.
+    const ws = await runHook("stop", "windsurf", { agent_action_name: "post_cascade_response", tool_info: { response: "done" } }, root);
+    expect(ws.code).toBe(0);
+    expect(ws.stdout).toContain(copy);
+    expect((await runHook("pre-commit", "windsurf", { tool_info: { command_line: "npm test", cwd: root } }, root)).code).toBe(0);
+    const wsDeny = await runHook("pre-commit", "windsurf", { tool_info: { command_line: "git commit -am x", cwd: root } }, root);
+    expect(wsDeny.code).toBe(2);
+    expect(wsDeny.stderr).toContain(copy);
+
+    // Antigravity: JSON decisions; stop continues only when fully idle after a model stop, capped by executionNum.
+    const ag = JSON.parse((await runHook("stop", "antigravity", { executionNum: 1, terminationReason: "model_stop", fullyIdle: true }, root)).stdout!);
+    expect(ag.decision).toBe("continue");
+    expect(ag.reason).toContain(copy);
+    for (const quiet of [{ fullyIdle: false }, { terminationReason: "max_steps_exceeded", fullyIdle: true }, { executionNum: 4, fullyIdle: true }])
+      expect(await runHook("stop", "antigravity", quiet, root)).toEqual({ code: 0, stdout: "{}" });
+    expect((await runHook("pre-commit", "antigravity", { toolCall: { name: "run_command", args: { CommandLine: "ls" } } }, root)).stdout).toBe("{}");
+    const agDeny = JSON.parse(
+      (await runHook("pre-commit", "antigravity", { toolCall: { name: "run_command", args: { CommandLine: "git commit -m x" } } }, root)).stdout!,
+    );
+    expect(agDeny.decision).toBe("deny");
+
     expect((await runHook("bogus", "claude", {}, root)).code).toBe(2);
   });
 });
@@ -185,7 +211,8 @@ describe("init hooks", () => {
     const userHook = { matcher: "Edit", hooks: [{ type: "command", command: "biome format" }] };
     mkdirSync(join(root, ".claude"), { recursive: true });
     writeFileSync(join(root, ".claude/settings.json"), JSON.stringify({ permissions: { allow: ["Bash(ls)"] }, hooks: { PostToolUse: [userHook] } }));
-    const first = initProject(root);
+    const both = ["claude", "cursor"] as const;
+    const first = initProject(root, { agents: both });
     expect(first.find((a) => a.path === ".claude/settings.json")?.action).toBe("updated");
     expect(first.find((a) => a.path === ".cursor/hooks.json")?.action).toBe("created");
     const settings = JSON.parse(readFileSync(join(root, ".claude/settings.json"), "utf8"));
@@ -196,9 +223,9 @@ describe("init hooks", () => {
     const cursor = JSON.parse(readFileSync(join(root, ".cursor/hooks.json"), "utf8"));
     expect(cursor).toEqual({ version: 1, hooks: { stop: [{ command: CURSOR_HOOKS.stop }] } });
 
-    expect(initProject(root).every((a) => a.action === "unchanged" || a.action === "skipped")).toBe(true);
+    expect(initProject(root, { agents: both }).every((a) => a.action === "unchanged" || a.action === "skipped")).toBe(true);
 
-    const withCommit = initProject(root, { preCommit: true });
+    const withCommit = initProject(root, { preCommit: true, agents: both });
     expect(withCommit.find((a) => a.path === ".claude/settings.json")?.action).toBe("updated");
     const s2 = JSON.parse(readFileSync(join(root, ".claude/settings.json"), "utf8"));
     expect(s2.hooks.Stop.length).toBe(1);
@@ -206,7 +233,7 @@ describe("init hooks", () => {
     expect(JSON.parse(readFileSync(join(root, ".cursor/hooks.json"), "utf8")).hooks.beforeShellExecution).toEqual([
       { command: CURSOR_HOOKS.preCommit, matcher: "git.*commit" },
     ]);
-    expect(initProject(root, { preCommit: true }).every((a) => a.action === "unchanged" || a.action === "skipped")).toBe(true);
+    expect(initProject(root, { preCommit: true, agents: both }).every((a) => a.action === "unchanged" || a.action === "skipped")).toBe(true);
   });
 
   test("invalid JSON is left untouched; --no-hooks writes no hook files", () => {

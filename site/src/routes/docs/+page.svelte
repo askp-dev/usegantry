@@ -11,6 +11,7 @@
     ["profiles", "Compliance profiles"],
     ["ci", "GitHub Actions"],
     ["agents", "Agents and MCP"],
+    ["editors", "Editors"],
     ["certs", "Certificates and badges"],
     ["json", "JSON output"],
     ["privacy", "What leaves your machine"],
@@ -24,8 +25,8 @@
     ["gantry badge [path] [--cert <url>]", "Writes .gantry/badge.svg and prints a README snippet."],
     ["gantry attack --target <url> [path]", "Six non-destructive live probes against routes the scan found. Loopback only unless --allow-remote."],
     ["gantry ui [path] [--port 4400]", "Mission Control in your browser on 127.0.0.1."],
-    ["gantry init [path] [--ci] [--pre-commit] [--no-hooks]", "MCP config, agent rules, gantry.config.json, stop hooks and a baseline. Safe to re-run."],
-    ["gantry hook <stop|pre-commit> [path] --agent claude|cursor", "Hook entry point used by init."],
+    ["gantry init [path] [--agent claude,cursor,windsurf,antigravity,codex|all] [--ci] [--pre-commit] [--no-hooks]", "MCP config, agent rules, gantry.config.json, stop hooks and a baseline. Without --agent it wires the agents whose folders already exist (else Claude Code + Cursor). Safe to re-run."],
+    ["gantry hook <stop|pre-commit> [path] --agent <name>", "Hook entry point used by init."],
     ["gantry mcp", "Stdio MCP server (also: bunx @usegantry/mcp)."],
   ];
   const config = `{
@@ -129,6 +130,24 @@
       <p><span class="font-mono text-[13px]">gantry init</span> writes the MCP config, agent rules and a stop hook. The MCP server exposes three tools: <span class="font-mono text-[13px]">run_readiness_audit</span>, <span class="font-mono text-[13px]">sync_stack_legal_docs</span> and <span class="font-mono text-[13px]">run_active_pentest</span>.</p>
       <CodeBlock code={'{ "mcpServers": { "gantry": { "command": "bunx", "args": ["@usegantry/mcp"] } } }'} label=".mcp.json" />
       <p>The stop hook blocks your agent from finishing only on blockers it introduced. Existing ones are baselined in <span class="font-mono text-[13px]">.gantry/baseline.json</span>; delete that file to re-baseline.</p>
+      <p>Per agent, <span class="font-mono text-[13px]">init --agent</span> writes:</p>
+      <ul class="flex list-disc flex-col gap-1 pl-5">
+        <li><strong class="text-ink">Claude Code:</strong> CLAUDE.md, .mcp.json, a Stop hook in .claude/settings.json.</li>
+        <li><strong class="text-ink">Cursor:</strong> .cursor/rules, .cursor/mcp.json, .cursor/hooks.json.</li>
+        <li><strong class="text-ink">Codex:</strong> AGENTS.md, <span class="font-mono text-[13px]">[mcp_servers.gantry]</span> in .codex/config.toml, a Stop hook in .codex/hooks.json. Codex loads project config only after you trust the project.</li>
+        <li><strong class="text-ink">Antigravity:</strong> .agents/rules, .agents/mcp_config.json, .agents/hooks.json.</li>
+        <li><strong class="text-ink">Windsurf:</strong> .windsurf/rules (.devin/ if you have it) and hooks. Its stop hook can only report, not block. Its MCP config is user-level, so init prints the snippet instead of writing to your home folder.</li>
+      </ul>
+    </section>
+
+    <section id="editors" class="flex scroll-mt-24 flex-col gap-4">
+      <h2 class="display text-[26px]">Editors</h2>
+      <p>The extension puts findings in Problems and adds a <strong class="text-ink">Fix with AI Agent</strong> CodeLens that copies the fix prompt and opens the editor's agent. Verified so far:</p>
+      <ul class="flex list-disc flex-col gap-1 pl-5">
+        <li><strong class="text-ink">VS Code:</strong> Extensions → … → Install from VSIX (Marketplace listing pending).</li>
+        <li><strong class="text-ink">Antigravity IDE:</strong> Install from VSIX the same way (Open VSX listing pending). Fix with AI Agent sends the prompt to the agent panel.</li>
+      </ul>
+      <p>You need the <span class="font-mono text-[13px]">gantry</span> CLI on your PATH, or set <span class="font-mono text-[13px]">gantry.command</span> in your user settings.</p>
     </section>
 
     <section id="certs" class="flex scroll-mt-24 flex-col gap-4">

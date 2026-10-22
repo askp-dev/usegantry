@@ -34,7 +34,7 @@ Bun ≥1.2 TypeScript monorepo: a static readiness scanner, legal compiler, FinO
 | Design tokens / contrast / typography / motion | DESIGN.md 35–124 |
 | UI components (header, go/no-go board, tag, findings, schematic, Range, legal, budget, title block) | DESIGN.md 125–210 |
 | Certificate, roast card, badge, CLI, site, voice, implementation plan | DESIGN.md 211–262 |
-| Handoff: status / quirks / remaining work | handoff.md 25–50 / 360–514 / 515–604 (Sprint 17 plan: grep `^#### Sprint 17`) |
+| Handoff: status / quirks / remaining work | handoff.md 25–50 / 374–537 / 538–615 |
 
 ## Architecture essentials (no need to rediscover)
 - Rules take `RepoContext` from `buildRepoContext(root)` in `packages/core/src/context/builder.ts`.

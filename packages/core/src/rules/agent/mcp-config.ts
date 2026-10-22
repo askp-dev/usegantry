@@ -1,8 +1,16 @@
 /** Shared parsing for agent / MCP config files (MCP-01, MCP-02). */
+
+import { parseToml } from "../../context/toml";
 import type { RepoContext } from "../../context/types";
 import { isGitIgnored } from "../helpers";
 
-export const AGENT_CONFIG_RE = /(^|\/)(\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.claude\/settings(\.local)?\.json)$/;
+/**
+ * Claude / Cursor / VS Code project configs, Windsurf (Devin Desktop) and Antigravity `mcp_config.json`
+ * (workspace `.agents/`, or a user-level copy committed under `.windsurf/`, `.devin/`, `.codeium/windsurf/`, `.gemini/`),
+ * and Codex `.codex/config.toml`.
+ */
+export const AGENT_CONFIG_RE =
+  /(^|\/)(\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.claude\/settings(\.local)?\.json|\.(windsurf|devin|agents?|codeium\/windsurf|gemini(\/config|\/antigravity)?)\/mcp_config\.json|\.codex\/config\.toml)$/;
 /** `${VAR}`, `${env:VAR}`, `${input:id}`, `${VAR:-default}`, `$VAR`, `%VAR%`: resolved at launch, never a literal. */
 export const ENV_REF_RE = /\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|%[A-Za-z_][A-Za-z0-9_]*%/g;
 
@@ -10,7 +18,7 @@ export interface AgentConfig {
   file: string;
   text: string;
   json: Record<string, unknown>;
-  /** `mcpServers` (Claude, Cursor) or `servers` (VS Code) */
+  /** `mcpServers` (Claude, Cursor, Windsurf, Antigravity), `servers` (VS Code) or `mcp_servers` (Codex TOML) */
   servers: Array<[name: string, def: Record<string, unknown>]>;
 }
 
@@ -49,9 +57,9 @@ export function agentConfigs(ctx: RepoContext): AgentConfig[] {
   for (const file of ctx.files.all) {
     if (!AGENT_CONFIG_RE.test(file) || isGitIgnored(ctx, file)) continue;
     const text = ctx.getText(file);
-    const json = parseJsonc(text);
+    const json = file.endsWith(".toml") ? parseToml(text) : parseJsonc(text);
     if (!isObj(json)) continue;
-    const map = isObj(json.mcpServers) ? json.mcpServers : isObj(json.servers) ? json.servers : {};
+    const map = [json.mcpServers, json.servers, json.mcp_servers].find(isObj) ?? {};
     out.push({ file, text, json, servers: Object.entries(map).filter((e): e is [string, Record<string, unknown>] => isObj(e[1])) });
   }
   return out;

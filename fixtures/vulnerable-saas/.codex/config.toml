@@ -1,0 +1,10 @@
+model = "gpt-5-codex"
+
+[mcp_servers.linear]
+command = "npx"
+args = ["-y", "linear-mcp-server"]
+env = { LINEAR_API_KEY = "lin_api_9fQwT2xLmZ8rVb4KpN7sYc1HdJ6gE3uA0oXi5Rt" }
+
+[mcp_servers.gantry]
+command = "gantry"
+args = ["mcp"]

@@ -32,8 +32,8 @@ Usage:
   gantry badge [path] [--cert <verify-url>]
   gantry attack --target <url> [path]
   gantry ui [path] [--port 4400]
-  gantry init [path] [--ci] [--no-hooks] [--pre-commit]
-  gantry hook <stop|pre-commit> [path] [--agent claude|cursor]   (agent hooks; reads the event JSON on stdin)
+  gantry init [path] [--agent claude,cursor,windsurf,antigravity,codex|all] [--ci] [--no-hooks] [--pre-commit]
+  gantry hook <stop|pre-commit> [path] [--agent claude|cursor|windsurf|antigravity|codex]   (agent hooks; reads the event JSON on stdin)
   gantry mcp
 
 Exit codes: 0 ok · 1 launch blockers found · 2 usage/runtime error`;

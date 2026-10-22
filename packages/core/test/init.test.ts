@@ -1,9 +1,10 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseToml } from "../src/context/toml";
 import { VERSION } from "../src/engine";
-import { initProject, MCP_SERVER, upsertBlock } from "../src/init";
+import { ANTIGRAVITY_HOOKS, CODEX_HOOKS, detectAgents, initProject, MCP_SERVER, parseAgents, upsertBlock, WINDSURF_HOOKS } from "../src/init";
 
 const dirs: string[] = [];
 const tmp = () => {
@@ -83,5 +84,69 @@ describe("initProject", () => {
     expect(actions.find((a) => a.path === "gantry.config.json")?.action).toBe("skipped");
     expect(read(root, ".mcp.json")).toBe("{ not json");
     expect(actions.find((a) => a.path === ".mcp.json")?.reason).toMatch(/not valid JSON/);
+  });
+});
+
+describe("init --agent", () => {
+  const settled = (as: { action: string }[]) => as.every((a) => ["unchanged", "skipped", "manual"].includes(a.action));
+  test("detects agents from existing dirs, defaults to claude + cursor, rejects typos", () => {
+    expect(detectAgents(tmp())).toEqual(["claude", "cursor"]);
+    const root = tmp();
+    mkdirSync(join(root, ".windsurf"));
+    writeFileSync(join(root, "AGENTS.md"), "# agents\n");
+    expect(detectAgents(root)).toEqual(["windsurf", "codex"]);
+    expect(parseAgents(root, "all")).toHaveLength(5);
+    expect(parseAgents(root, "Codex, cursor")).toEqual(["codex", "cursor"]);
+    expect(() => parseAgents(root, "claud")).toThrow(/unknown --agent claud/);
+  });
+
+  test("all agents: rules, MCP, hooks; user-level Windsurf MCP printed, not written; idempotent", () => {
+    const root = tmp();
+    writeFileSync(join(root, "AGENTS.md"), "# House rules\n\nKeep me.\n");
+    mkdirSync(join(root, ".codex"));
+    writeFileSync(join(root, ".codex/config.toml"), 'model = "o3"\n\n[mcp_servers.other]\ncommand = "x"\n');
+    const first = initProject(root, { agents: ["windsurf", "antigravity", "codex"], preCommit: true });
+    const by = Object.fromEntries(first.map((a) => [a.path, a]));
+    expect(by["~/.config/devin/mcp_config.json"].action).toBe("manual");
+    expect(by["~/.config/devin/mcp_config.json"].reason).toContain('"gantry":{"command":"gantry","args":["mcp"]}');
+    expect(by[".codex/config.toml"].reason).toMatch(/trust/);
+    expect(existsSync(join(root, ".cursor"))).toBe(false); // only the requested agents
+
+    expect(read(root, ".windsurf/rules/gantry.md")).toStartWith("---\ntrigger: always_on\n");
+    expect(read(root, ".agents/rules/gantry.md")).toContain("gantry scan");
+    expect(read(root, "AGENTS.md")).toContain("Keep me.");
+    expect(read(root, "AGENTS.md")).toContain("GANTRY:BEGIN");
+
+    const toml = parseToml(read(root, ".codex/config.toml"))!;
+    expect(toml.model).toBe("o3");
+    expect(toml.mcp_servers).toEqual({ other: { command: "x" }, gantry: MCP_SERVER });
+    expect(JSON.parse(read(root, ".agents/mcp_config.json")).mcpServers.gantry).toEqual(MCP_SERVER);
+
+    expect(JSON.parse(read(root, ".windsurf/hooks.json")).hooks).toEqual({
+      post_cascade_response: [{ command: WINDSURF_HOOKS.stop, show_output: true }],
+      pre_run_command: [{ command: WINDSURF_HOOKS.preCommit, show_output: true }],
+    });
+    expect(JSON.parse(read(root, ".agents/hooks.json"))).toEqual({
+      "gantry-stop": { Stop: [{ hooks: [{ type: "command", command: ANTIGRAVITY_HOOKS.stop }] }] },
+      "gantry-pre-commit": { PreToolUse: [{ matcher: "run_command", hooks: [{ type: "command", command: ANTIGRAVITY_HOOKS.preCommit }] }] },
+    });
+    const codex = JSON.parse(read(root, ".codex/hooks.json")).hooks;
+    expect(codex.Stop).toEqual([{ hooks: [{ type: "command", command: CODEX_HOOKS.stop }] }]);
+    expect(codex.PreToolUse[0].matcher).toBe("Bash");
+
+    expect(settled(initProject(root, { agents: ["windsurf", "antigravity", "codex"], preCommit: true }))).toBe(true);
+  });
+
+  test("Devin Desktop dir wins over legacy .windsurf; unreadable TOML is left untouched", () => {
+    const root = tmp();
+    mkdirSync(join(root, ".devin"));
+    mkdirSync(join(root, ".codex"));
+    writeFileSync(join(root, ".codex/config.toml"), "not = [toml");
+    const a = initProject(root, { agents: ["windsurf", "codex"] });
+    expect(existsSync(join(root, ".devin/rules/gantry.md"))).toBe(true);
+    expect(existsSync(join(root, ".devin/hooks.json"))).toBe(true);
+    expect(existsSync(join(root, ".windsurf"))).toBe(false);
+    expect(a.find((x) => x.path === ".codex/config.toml")?.action).toBe("skipped");
+    expect(read(root, ".codex/config.toml")).toBe("not = [toml");
   });
 });

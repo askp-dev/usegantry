@@ -25,3 +25,30 @@ jobs:
           cd packages/core/dist
           gh release create "$TAG" gantry-darwin-arm64 gantry-darwin-x64 gantry-linux-x64 gantry-linux-arm64 SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes --verify-tag
+  # One .vsix, two registries: VS Code Marketplace, and Open VSX for Cursor / Windsurf / Antigravity.
+  # Each publish step is skipped when its token secret isn't configured; the .vsix is always attached to the release.
+  vscode-extension:
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # attach the .vsix to the release created above
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.10 }
+      - run: bun install --frozen-lockfile
+      - run: bun run build:ui
+      - run: bun run --cwd packages/vscode-ext package
+      - name: Attach .vsix to the release
+        env: { GH_TOKEN: "${{ github.token }}", TAG: "${{ github.ref_name }}" }
+        run: gh release upload "$TAG" packages/vscode-ext/gantry-vscode-*.vsix --repo "$GITHUB_REPOSITORY"
+      - name: Publish to the VS Code Marketplace
+        if: env.VSCE_PAT != ''
+        run: bunx @vscode/vsce@3.9.2 publish --packagePath packages/vscode-ext/gantry-vscode-*.vsix
+      - name: Publish to Open VSX
+        if: env.OVSX_PAT != ''
+        run: bunx ovsx@1.2.0 publish packages/vscode-ext/gantry-vscode-*.vsix -p "$OVSX_PAT"

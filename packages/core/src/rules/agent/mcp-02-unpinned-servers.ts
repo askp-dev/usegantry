@@ -81,7 +81,7 @@ export const mcp02UnpinnedServers = defineRule(
             ...(known || remote || near ? [] : ["isn't in the verified package seed or official MCP server list"]),
           ];
           if (!why.length) return;
-          const at = cfg.text.indexOf(`"${server}"`);
+          const at = [`"${server}"`, `mcp_servers.${server}]`].map((n) => cfg.text.indexOf(n)).find((n) => n >= 0) ?? -1;
           emit({
             file: cfg.file,
             line: at >= 0 ? lineAt(cfg.text, at) : 1,

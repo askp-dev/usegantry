@@ -39,6 +39,10 @@
       {
         "command": "gantry.openMissionControl",
         "title": "Gantry: Open Mission Control"
+      },
+      {
+        "command": "gantry.debugAgentCommands",
+        "title": "Gantry (Developer): List Agent Chat Commands"
       }
     ],
     "viewsContainers": {
@@ -86,10 +90,13 @@
           "default": [
             "composer.startComposerPrompt",
             "aichat.newchataction",
-            "claude-vscode.editor.open"
+            "antigravity.sendPromptToAgentPanel",
+            "claude-vscode.editor.open",
+            "chatgpt.openSidebar",
+            "workbench.action.chat.open"
           ],
           "scope": "machine",
-          "description": "VS Code command IDs tried in order after the fix prompt is copied (Cursor, then Claude Code). The first one installed is run."
+          "description": "Command IDs tried in order after the fix prompt is copied: Cursor, Antigravity, Claude Code, Codex, then VS Code's built-in chat. The first one the IDE has is run. Run \"Gantry (Developer): List Agent Chat Commands\" to see your IDE's IDs."
         }
       }
     }
@@ -97,10 +104,12 @@
   "scripts": {
     "build": "bun run scripts/build.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "package": "bun run build && bunx @vscode/vsce@3 package --no-dependencies --skip-license --allow-missing-repository"
+    "package": "bun run build && bunx @vscode/vsce@3.9.2 package --no-dependencies",
+    "test:edh": "bun run build && bun run test/run-edh.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@types/vscode": "~1.90.0"
+    "@types/vscode": "~1.90.0",
+    "@vscode/test-electron": "^2.5.2"
   }
 }

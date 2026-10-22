@@ -4,10 +4,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { buildRepoContext } from "../src/context/builder";
-import { initProject } from "../src/init";
+import { parseToml } from "../src/context/toml";
+import { INIT_AGENTS, initProject } from "../src/init";
 import { mcp01HardcodedCreds } from "../src/rules/agent/mcp-01-hardcoded-creds";
 import { mcp02UnpinnedServers, serverPackage } from "../src/rules/agent/mcp-02-unpinned-servers";
-import { parseJsonc, stringLeaves } from "../src/rules/agent/mcp-config";
+import { AGENT_CONFIG_RE, parseJsonc, stringLeaves } from "../src/rules/agent/mcp-config";
 
 const dirs: string[] = [];
 afterAll(() => {
@@ -61,6 +62,43 @@ describe("parsing", () => {
   });
 });
 
+describe("TOML subset reader", () => {
+  test("tables, dotted/quoted keys, inline tables, multi-line arrays and strings", () => {
+    const t = parseToml(`x = 1_000 # c
+[mcp_servers."my srv"]
+args = [
+  "-y", 'lit\\n', # comment
+]
+env = { "A-B" = """
+multi""", c.d = true }
+[[p]]
+v = 1979-05-27
+[[p]]
+v = -2.5
+`);
+    expect(t).toEqual({
+      x: 1000,
+      mcp_servers: { "my srv": { args: ["-y", "lit\\n"], env: { "A-B": "multi", c: { d: true } } } },
+      p: [{ v: "1979-05-27" }, { v: -2.5 }],
+    });
+  });
+  test("malformed input → null (duplicate key, unterminated string, junk after value)", () => {
+    for (const bad of ["a = 1\na = 2", 'a = "x', "a = 1 2", "[t\nb = 1", "a = [1, 2"]) expect(parseToml(bad)).toBeNull();
+  });
+  test("agent config paths cover Windsurf/Devin, Antigravity and Codex, not look-alikes", () => {
+    for (const ok of [
+      ".codex/config.toml",
+      "app/.agents/mcp_config.json",
+      ".agent/mcp_config.json",
+      ".windsurf/mcp_config.json",
+      ".devin/mcp_config.json",
+      ".gemini/config/mcp_config.json",
+    ])
+      expect(AGENT_CONFIG_RE.test(ok)).toBe(true);
+    for (const no of ["config.toml", ".codex/hooks.json", "agents/mcp_config.json", ".agents/hooks.json"]) expect(AGENT_CONFIG_RE.test(no)).toBe(false);
+  });
+});
+
 describe("MCP-01", () => {
   test("references are never flagged, literals are", async () => {
     const root = repo({
@@ -76,6 +114,15 @@ describe("MCP-01", () => {
     expect(fs.map((f) => f.evidence.split(":")[0]).sort()).toEqual(["mcpServers.bad.env.SERVICE_TOKEN", "mcpServers.bad.url?api_key"]);
     expect(fs.every((f) => !f.evidence.includes(KEY))).toBe(true);
     expect(fs[0].agentRemediationPrompt).toContain("${SERVICE_TOKEN}");
+  });
+  test("Codex TOML: literals flagged with a Codex-specific fix, env-var *names* never", async () => {
+    const root = repo({
+      ".codex/config.toml": `[mcp_servers.a]\ncommand = "x"\nenv = { SERVICE_TOKEN = "${KEY}" }\nenv_vars = ["SERVICE_TOKEN_FROM_THE_SHELL_ENV"]\n[mcp_servers.b]\nurl = "https://h.dev/mcp"\nbearer_token_env_var = "SERVICE_ACCESS_TOKEN_ENVIRONMENT"\nenv_http_headers = { Authorization = "SERVICE_AUTHORIZATION_HEADER_VAR" }\n`,
+    });
+    const fs = await run(root);
+    expect(fs.map((f) => f.evidence.split(":")[0])).toEqual(["mcp_servers.a.env.SERVICE_TOKEN"]);
+    expect(fs[0].line).toBe(3);
+    expect(fs[0].agentRemediationPrompt).toContain('env_vars = ["SERVICE_TOKEN"]');
   });
   test("git-ignored configs are skipped; SEC-06-style vendor keys caught anywhere in a server", async () => {
     const pat = `ghp_${"a1B2c3D4e5".repeat(3)}a1B2c3`;
@@ -128,7 +175,7 @@ describe("MCP-02", () => {
   });
   test("our own `init` output passes MCP-01 and MCP-02", async () => {
     const root = repo({ "package.json": JSON.stringify({ name: "t" }) });
-    initProject(root, { preCommit: true });
+    initProject(root, { preCommit: true, agents: INIT_AGENTS });
     expect(await run(root)).toEqual([]);
     expect(await run(root, mcp02UnpinnedServers)).toEqual([]);
   });

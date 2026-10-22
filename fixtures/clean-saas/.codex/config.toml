@@ -1,0 +1,15 @@
+model = "gpt-5-codex"
+
+[mcp_servers.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github@2025.4.8"]
+env_vars = ["GITHUB_PERSONAL_ACCESS_TOKEN"]
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp"
+bearer_token_env_var = "SUPABASE_ACCESS_TOKEN"
+env_http_headers = { "X-Project-Ref" = "SUPABASE_PROJECT_REF_ENVIRONMENT_VARIABLE" }
+
+[mcp_servers.gantry]
+command = "gantry"
+args = ["mcp"]

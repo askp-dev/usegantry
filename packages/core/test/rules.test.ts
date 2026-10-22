@@ -125,11 +125,16 @@ const EXPECT: Record<string, Array<[string, string]>> = {
     [".cursor/mcp.json", "headers.Authorization"],
     [".vscode/mcp.json", "args[2]"],
     [".claude/settings.json", "env.OPENAI_API_KEY"],
+    [".codex/config.toml", "env.LINEAR_API_KEY"],
+    [".agents/mcp_config.json", "headers.Authorization"],
+    [".windsurf/mcp_config.json", "args[3]"],
   ],
   "MCP-02": [
     [".mcp.json", "server-github` isn't pinned"],
     [".mcp.json", "likely typosquat"],
     [".vscode/mcp.json", "mcp-server-fetch"],
+    [".codex/config.toml", "linear-mcp-server"],
+    [".windsurf/mcp_config.json", "brave-search-mcp"],
   ],
   "VEC-01": [["app/api/rag/route.ts", 'qdrant.search("documents"']],
   "VEC-02": [

@@ -1,0 +1,6 @@
+{
+  "mcpServers": {
+    "gantry": { "command": "gantry", "args": ["mcp"] },
+    "docs": { "serverUrl": "https://mcp.context7.com/mcp" }
+  }
+}

@@ -4,14 +4,18 @@ import { defineRule, lineAt, redact, redactUrl } from "../helpers";
 import { agentConfigs, ENV_REF_RE, stringLeaves } from "./mcp-config";
 
 /** Names that carry a credential in env maps, headers, CLI flags and query params. */
-const SECRET_KEY_RE =
-  /api[-_]?key|token|secret|passw|(^|[-_])auth($|[-_]|orization)|bearer|credential|private[-_]?key|access[-_]?key|(^|[-_])pat($|[-_])/i;
+const SECRET_KEY_RE = /api[-_]?key|token|secret|passw|(^|[-_])auth($|[-_]|orization)|bearer|credential|private[-_]?key|access[-_]?key|(^|[-_])pat($|[-_])/i;
 
 function fixFor(file: string, path: string): string {
   const name = path.split(/[.?]/).pop()!.replace(/[^\w]/g, "_").toUpperCase();
+  if (file.endsWith(".toml"))
+    return `Remove the literal at \`${path}\` from ${file} (Codex config.toml has no \`\${VAR}\` interpolation). For a stdio server list the name in \`env_vars = ["${name}"]\` so Codex forwards it from your shell; for an HTTP server use \`bearer_token_env_var = "${name}"\` or \`env_http_headers\`. The value is in git history: rotate it in the vendor dashboard first.`;
+  // Antigravity documents no env interpolation in mcp_config.json, so the secret has to leave the repo.
+  if (/\.(agents?|gemini)\//.test(file))
+    return `Remove the server with the literal at \`${path}\` from ${file} and define it in your user-level \`~/.gemini/config/mcp_config.json\` (never committed). The value is in git history: rotate it in the vendor dashboard first.`;
   if (/\.claude\/settings/.test(file))
     return `Remove the literal from \`${path}\` in ${file}. Export ${name} in your shell (or put it in the git-ignored \`.claude/settings.local.json\`; \`git rm --cached\` it if it's tracked) so the committed settings carry no secret.`;
-  const ref = /\.cursor\//.test(file)
+  const ref = /\.(cursor|windsurf|devin|codeium)\//.test(file)
     ? `\`\${env:${name}}\``
     : /\.vscode\//.test(file)
       ? `\`\${input:${name.toLowerCase()}}\` with a matching \`inputs\` entry \`{ "type": "promptString", "id": "${name.toLowerCase()}", "password": true }\``
@@ -44,7 +48,8 @@ export const mcp01HardcodedCreds = defineRule(
           report(path, hit.name, literal.match(hit.re)![0], hit.severity);
           continue;
         }
-        if (!key || !SECRET_KEY_RE.test(key)) continue;
+        // Codex `bearer_token_env_var` / `env_vars` / `env_http_headers` hold variable *names*, not values.
+        if (!key || !SECRET_KEY_RE.test(key) || /env_vars?$/.test(key) || /\.env_http_headers\./.test(path)) continue;
         const v = literal.replace(/^\s*(?:Bearer|Basic|Token)\s+/i, "").trim();
         // URLs and paths aren't credentials (a URL with an inline password matches a SECRET_PATTERN above).
         if (v.length < 16 || /\s|^[a-z][\w+.-]*:\/\/|^[./~]/i.test(v) || SECRET_PLACEHOLDER_RE.test(v) || shannonEntropy(v) < 3.5) continue;
