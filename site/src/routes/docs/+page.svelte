@@ -145,6 +145,8 @@
       <p>The extension puts findings in Problems and adds a <strong class="text-ink">Fix with AI Agent</strong> CodeLens that copies the fix prompt and opens the editor's agent. Verified so far:</p>
       <ul class="flex list-disc flex-col gap-1 pl-5">
         <li><strong class="text-ink">VS Code:</strong> Extensions → … → Install from VSIX (Marketplace listing pending).</li>
+        <li><strong class="text-ink">Cursor:</strong> Install from VSIX the same way. Fix with AI Agent opens Composer.</li>
+        <li><strong class="text-ink">Windsurf (Devin Desktop):</strong> Install from VSIX the same way. Fix with AI Agent sends the prompt to Cascade.</li>
         <li><strong class="text-ink">Antigravity IDE:</strong> Install from VSIX the same way (Open VSX listing pending). Fix with AI Agent sends the prompt to the agent panel.</li>
       </ul>
       <p>You need the <span class="font-mono text-[13px]">gantry</span> CLI on your PATH, or set <span class="font-mono text-[13px]">gantry.command</span> in your user settings.</p>

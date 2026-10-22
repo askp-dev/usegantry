@@ -12,7 +12,7 @@ You need the `gantry` CLI on your `PATH`. Otherwise, set `gantry.command`, e.g. 
 
 ## Editors
 
-One `.vsix` is published to the VS Code Marketplace and to Open VSX. Cursor, Windsurf and Antigravity IDE install from Open VSX. **Fix with AI Agent** copies the prompt, then runs the first `gantry.agentCommands` entry the IDE has: Cursor's composer, `antigravity.sendPromptToAgentPanel`, Claude Code, Codex (`chatgpt.openSidebar`), and finally VS Code's built-in chat (prefilled, not sent). Run **Gantry (Developer): List Agent Chat Commands** to list your IDE's chat command IDs.
+One `.vsix` is published to the VS Code Marketplace and to Open VSX. Antigravity IDE installs from Open VSX; Cursor (`marketplace.cursorapi.com`) and Windsurf/Devin (`marketplace.windsurf.com`) use their own galleries, which mirror Open VSX. **Fix with AI Agent** copies the prompt, then runs the first `gantry.agentCommands` entry the IDE has: Cursor's composer, Windsurf/Devin Cascade (`windsurf.sendTextToChat`), `antigravity.sendPromptToAgentPanel`, Claude Code, Codex (`chatgpt.openSidebar`), and finally VS Code's built-in chat (prefilled, not sent). Run **Gantry (Developer): List Agent Chat Commands** to list your IDE's chat command IDs.
 
 To wire the agent side (rules, MCP, hooks), run `gantry init --agent <claude|cursor|windsurf|antigravity|codex|all>`.
 
@@ -33,5 +33,5 @@ For IDEs that can't run the harness, use this manual checklist:
 |---|---|---|
 | VS Code | 1.142.0 | ✅ EDH harness, 2026-10-22: 98 diagnostics in 30 files, CodeLens, clipboard, sidebar; fix → `workbench.action.chat.open` |
 | Antigravity IDE | 2.5.5 (VS Code 1.107.0) | ✅ EDH harness, 2026-10-22: same results; fix → `antigravity.sendPromptToAgentPanel`; gallery is Open VSX |
-| Cursor | — | ⏳ not installed on the build machine; run the checklist |
-| Windsurf (Devin Desktop) | — | ⏳ not installed on the build machine; run the checklist and record the Cascade command ID |
+| Cursor | 3.27.6 (VS Code 1.128.0) | ✅ EDH harness, 2026-10-22: same results; fix → `composer.startComposerPrompt` (`aichat.newchataction` also present) |
+| Windsurf → Devin Desktop | 1.126.0 base | ✅ EDH harness, 2026-10-22: same results; fix → `windsurf.sendTextToChat` (`devin.sendTextToChat` also present) |

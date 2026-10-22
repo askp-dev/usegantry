@@ -243,7 +243,7 @@ jobs:
     <div class="flex flex-col gap-2 border-t-2 border-ink pt-4 sm:flex-row sm:items-baseline sm:gap-6">
       <h3 class="label shrink-0 text-[12px]">Editors</h3>
       <p class="text-[14px] text-ink-2">
-        Findings inline, with a Fix with AI Agent lens, in <strong class="text-ink">VS Code</strong> and <strong class="text-ink">Antigravity</strong>.
+        Findings inline, with a Fix with AI Agent lens, in <strong class="text-ink">VS Code</strong>, <strong class="text-ink">Cursor</strong>, <strong class="text-ink">Windsurf</strong> and <strong class="text-ink">Antigravity</strong>.
         <a class="text-signal-ink underline" href={resolve("/docs") + "#editors"}>Install steps</a>
       </p>
     </div>

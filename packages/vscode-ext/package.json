@@ -90,13 +90,14 @@
           "default": [
             "composer.startComposerPrompt",
             "aichat.newchataction",
+            "windsurf.sendTextToChat",
             "antigravity.sendPromptToAgentPanel",
             "claude-vscode.editor.open",
             "chatgpt.openSidebar",
             "workbench.action.chat.open"
           ],
           "scope": "machine",
-          "description": "Command IDs tried in order after the fix prompt is copied: Cursor, Antigravity, Claude Code, Codex, then VS Code's built-in chat. The first one the IDE has is run. Run \"Gantry (Developer): List Agent Chat Commands\" to see your IDE's IDs."
+          "description": "Command IDs tried in order after the fix prompt is copied: Cursor, Windsurf/Devin Cascade, Antigravity, Claude Code, Codex, then VS Code's built-in chat. The first one the IDE has is run. Run \"Gantry (Developer): List Agent Chat Commands\" to see your IDE's IDs."
         }
       }
     }

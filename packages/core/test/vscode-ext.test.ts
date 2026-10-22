@@ -29,6 +29,7 @@ describe("vscode-ext agent routing", () => {
     expect(agentLabel("chatgpt.openSidebar", "Visual Studio Code")).toBe("Codex");
     expect(agentLabel("workbench.action.chat.open", "Visual Studio Code")).toBe("VS Code Chat");
     expect(agentLabel(undefined, "Windsurf")).toBe("Cascade");
+    expect(agentLabel("windsurf.sendTextToChat", "Devin")).toBe("Cascade");
     expect(agentLabel(undefined, "Cursor")).toBe("Cursor");
     expect(agentLabel(undefined, "Visual Studio Code")).toBe("your AI agent");
   });

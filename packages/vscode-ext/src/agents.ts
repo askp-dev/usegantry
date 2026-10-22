@@ -6,7 +6,7 @@ export const AGENT_COMMAND_RE = /chat|agent|cascade|composer|codex|claude|antigr
 /** Known command ID prefix → the agent it opens (toast wording). */
 const AGENTS: Array<[RegExp, string]> = [
   [/^(composer|aichat)\./, "Cursor"],
-  [/^windsurf\.|cascade/i, "Cascade"],
+  [/^(windsurf|devin)\.|cascade/i, "Cascade"],
   [/^antigravity\./, "the Antigravity agent"],
   [/^chatgpt\./, "Codex"],
   [/^claude-vscode\./, "Claude Code"],
