@@ -8,6 +8,7 @@
   },
   "scripts": {
     "data": "bun run scripts/gen-data.ts",
+    "og": "bun run data && bun run scripts/gen-og.ts",
     "dev": "bun run data && vite dev",
     "build": "bun run data && vite build",
     "preview": "vite preview",

@@ -60,6 +60,8 @@
 <svelte:head>
   <title>Docs · Gantry</title>
   <meta name="description" content="Install Gantry, run it in CI and wire it into Claude Code or Cursor." />
+  <meta property="og:title" content="Docs · Gantry" />
+  <meta property="og:description" content="Install Gantry, run it in CI and wire it into Claude Code or Cursor." />
 </svelte:head>
 
 <div class="mx-auto grid max-w-[1200px] gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[220px_1fr]">

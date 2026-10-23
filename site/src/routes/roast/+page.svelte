@@ -38,6 +38,8 @@
 <svelte:head>
   <title>Roast a repo · Gantry</title>
   <meta name="description" content="Will your vibe-coded app survive launch? Make a shareable survival card that never reveals file names, routes or secrets." />
+  <meta property="og:title" content="Roast a repo · Gantry" />
+  <meta property="og:description" content="Will your vibe-coded app survive launch? Make a shareable survival card that never reveals file names, routes or secrets." />
 </svelte:head>
 
 <section class="mx-auto grid max-w-[1200px] gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1.35fr]">
